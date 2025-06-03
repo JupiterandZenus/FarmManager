@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  farm-admin-hybrid:
+    container_name: farm-admin-hybrid
+    build:
+      context: .
+      dockerfile: Dockerfile.hybrid
+    ports:
+      - "5900:5900"
+      - "8080:80"
+      - "3333:3001"
+      - "2222:22"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
+      - DISPLAY=:1
+      - VNC_PORT=5900
+      - NOVNC_PORT=80
+      - JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64
+    volumes:
+      - farm_data:/app/data
+      - dreambot_data:/root/DreamBot
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    networks:
+      - farm-network
+
+  mariadb:
+    container_name: farm-admin-mariadb
+    image: lscr.io/linuxserver/mariadb:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - TZ=Etc/UTC
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
+    volumes:
+      - mariadb_data:/config
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
+    networks:
+      - farm-network
+
+volumes:
+  farm_data:
+    driver: local
+  dreambot_data:
+    driver: local
+  mariadb_data:
+    driver: local
+
+networks:
+  farm-network:
+    driver: bridge 

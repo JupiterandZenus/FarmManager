@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚔️ FarmBoy v0.1 - EternalFarm Command Center ⚔️</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
+</head>
+<body>
+    <header>
+        <h1>FarmBoy v0.1 - EternalFarm Command Center</h1>
+        <div class="api-key-setup">
+            <label for="apiKey">🗝️ API Key:</label>
+            <input type="password" id="apiKey" placeholder="Enter your EternalFarm API Key..." style="min-width: 400px;">
+            <button id="saveApiKey">💾 Save Key</button>
+            <p class="warning">⚠️ Warning: API key is stored in browser local storage. For development/personal use only.</p>
+        </div>
+    </header>
+
+    <main>
+        <section id="agents-section">
+            <h2>🤖 Agents</h2>
+            <div class="agent-controls">
+                <button id="loadAgents">🔍 Load Agents</button>
+                <button id="syncAgents">🔄 Sync from EternalFarm</button>
+            </div>
+            <ul id="agents-list"></ul>
+        </section>
+
+        <section id="clients-section" style="display:none;">
+            <h2 id="clients-header">👥 Clients for Agent: <span id="current-agent-id"></span></h2>
+            <button id="refreshClients">🔄 Refresh Clients</button>
+            <div id="clients-list"></div>
+        </section>
+
+        <section id="client-controls-section" style="display:none;">
+            <h3>⚙️ Manage Client: <span id="current-client-id-manage"></span></h3>
+            <div id="start-form">
+                <h4>🚀 Start New Dreambot Client</h4>
+                <label for="scriptName">📜 Script Name (e.g., P2P AI Master):</label>
+                <input type="text" id="scriptName" value="P2P AI Master">
+
+                <label for="scriptParams">⚙️ Script Parameters (e.g., -param1 value1 -param2 value2):</label>
+                <input type="text" id="scriptParams" placeholder="Enter script-specific parameters">
+
+                <label for="runDuration">⏰ Run Duration:</label>
+                <select id="runDuration">
+                    <option value="0">♾️ Manual Stop</option>
+                    <option value="3">⏳ 3 Hours</option>
+                    <option value="6">⏳ 6 Hours</option>
+                    <option value="9">⏳ 9 Hours</option>
+                </select>
+                <button id="startDreambotClient">🚀 Start Dreambot</button>
+            </div>
+        </section>
+
+        <section id="scheduled-tasks">
+            <h2>📜 Scheduled Stops</h2>
+            <ul id="scheduled-stops-list">
+                <li>🛡️ No tasks currently scheduled for auto-stop.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>⚔️ FarmBoy v0.1 - For Dreambot Management via EternalFarm ⚔️</p>
+        <p>🕐 Current Date/Time: <span id="currentDateTime"></span></p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

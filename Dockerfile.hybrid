@@ -1,0 +1,213 @@
+# Hybrid Dockerfile: Farm Manager + DreamBot with Entry.sh
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    # Node.js and npm
+    curl \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    # SSL dependencies
+    openssl \
+    # Network tools
+    net-tools \
+    iproute2 \
+    iputils-ping \
+    netcat \
+    wget \
+    unzip \
+    jq \
+    bc \
+    # System utilities
+    procps \
+    lsof \
+    dnsutils \
+    # Build tools
+    build-essential \
+    # VNC and display dependencies
+    xvfb \
+    x11vnc \
+    xfce4 \
+    xfce4-terminal \
+    mousepad \
+    supervisor \
+    openssh-server \
+    tigervnc-common \
+    # GUI utilities for EternalFarm applications
+    zenity \
+    # Browser dependencies
+    chromium-browser \
+    chromium-chromedriver \
+    # Font support
+    fonts-liberation \
+    fonts-dejavu-core \
+    fontconfig \
+    # Audio support
+    pulseaudio \
+    alsa-utils \
+    # noVNC dependencies
+    python3 \
+    python3-pip \
+    python3-numpy \
+    git \
+    websockify \
+    # CPU manager dependencies
+    wmctrl \
+    xdotool \
+    sysstat \
+    util-linux \
+    # Database client
+    mysql-client \
+    # Java dependencies
+    software-properties-common \
+    openjdk-11-jdk \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Java 8 (required for DreamBot) - Using Eclipse Temurin
+RUN apt-get update && \
+    apt-get install -y wget apt-transport-https gnupg && \
+    wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | tee /etc/apt/keyrings/adoptium.asc && \
+    echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list && \
+    apt-get update && \
+    apt-get install -y temurin-8-jdk && \
+    update-alternatives --install /usr/bin/java java /usr/lib/jvm/temurin-8-jdk-amd64/bin/java 1 && \
+    update-alternatives --set java /usr/lib/jvm/temurin-8-jdk-amd64/bin/java
+
+# Install noVNC
+RUN git clone https://github.com/novnc/noVNC.git /usr/share/novnc && \
+    git clone https://github.com/novnc/websockify /usr/share/novnc/utils/websockify && \
+    ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html && \
+    chmod -R 755 /usr/share/novnc
+
+# Set up error handling for noVNC
+RUN echo 'window.onerror = function(msg, url, line, col, error) {' > /usr/share/novnc/app/error-handler.js && \
+    echo '    if (msg && (msg.includes("addEventListener") || msg.includes("clipboard") || msg.includes("null"))) {' >> /usr/share/novnc/app/error-handler.js && \
+    echo '        console.warn("Suppressed compatibility error:", msg);' >> /usr/share/novnc/app/error-handler.js && \
+    echo '        return true;' >> /usr/share/novnc/app/error-handler.js && \
+    echo '    }' >> /usr/share/novnc/app/error-handler.js && \
+    echo '    return false;' >> /usr/share/novnc/app/error-handler.js && \
+    echo '};' >> /usr/share/novnc/app/error-handler.js
+
+# Install Node.js 18.x
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# Generate SSL certificates
+RUN mkdir -p /etc/ssl/private && \
+    # Generate VNC server certificate
+    openssl req -x509 -nodes -days 3650 \
+        -newkey rsa:4096 \
+        -keyout /etc/ssl/private/vnc-server-key.pem \
+        -out /etc/ssl/certs/vnc-server.pem \
+        -subj "/C=US/ST=State/L=City/O=Organization/CN=vnc.local" && \
+    # Generate noVNC certificate
+    openssl req -x509 -nodes -days 3650 \
+        -newkey rsa:4096 \
+        -keyout /etc/ssl/private/novnc-key.pem \
+        -out /etc/ssl/certs/novnc-cert.pem \
+        -subj "/C=US/ST=State/L=City/O=Organization/CN=novnc.local" && \
+    # Set proper permissions
+    chmod 600 /etc/ssl/private/*.pem && \
+    chmod 644 /etc/ssl/certs/*.pem
+
+# Install additional Python packages for noVNC
+RUN pip3 install --no-cache-dir numpy websockify pyOpenSSL
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /var/run/sshd \
+    /var/log \
+    /root/.vnc \
+    /root/.config/autostart \
+    /root/Desktop \
+    /root/DreamBot/BotData \
+    /tmp/.X11-unix \
+    /etc/supervisord.d \
+    /app \
+    && chmod 1777 /tmp/.X11-unix
+
+# Set up X11 permissions
+RUN touch /root/.Xauthority && \
+    chown root:root /root/.Xauthority && \
+    chmod 600 /root/.Xauthority
+
+# Create non-root user for running the Farm Manager
+RUN useradd -m -s /bin/bash farmboy && \
+    echo "farmboy:farmboy" | chpasswd && \
+    chown -R farmboy:farmboy /app
+
+# Copy application files
+COPY package*.json /app/
+WORKDIR /app
+RUN npm install --production && npm cache clean --force
+
+# Copy prisma directory and generate client
+COPY prisma ./prisma/
+RUN npx prisma generate
+
+# Copy the rest of the application
+COPY . .
+
+# Explicitly copy web interface files to ensure they're included
+COPY index.html /app/index.html
+COPY app.js /app/app.js
+COPY style.css /app/style.css
+
+# Copy and set permissions for scripts
+COPY Entry.sh /root/Entry.sh
+COPY cpu_manager.sh /root/cpu_manager.sh
+RUN chmod +x /root/Entry.sh /root/cpu_manager.sh
+
+# Pre-download EternalFarm components
+RUN echo "📥 Pre-downloading EternalFarm components..." && \
+    curl -L -o /usr/local/bin/EternalFarmAgent https://eternalfarm.ams3.cdn.digitaloceanspaces.com/agent/2.1.3/linux-amd64/EternalFarmAgent && \
+    curl -L -o /usr/local/bin/EternalFarmChecker https://eternalfarm.ams3.cdn.digitaloceanspaces.com/checker/2.0.13/linux-amd64/EternalFarmChecker && \
+    curl -L -o /usr/local/bin/EternalFarmBrowserAutomator https://eternalfarm.ams3.cdn.digitaloceanspaces.com/browser-automator/2.4.5/linux-amd64/EternalFarmBrowserAutomator && \
+    chmod +x /usr/local/bin/EternalFarm* && \
+    echo "✅ EternalFarm components installed"
+
+# Pre-download DreamBot client
+RUN echo "📥 Pre-downloading DreamBot client..." && \
+    curl -L -o /root/DreamBot/BotData/client.jar https://dreambot.org/DBLauncher.jar && \
+    chmod +x /root/DreamBot/BotData/client.jar && \
+    echo "✅ DreamBot client pre-installed"
+
+# Set environment variables
+ENV DISPLAY=:1 \
+    HOME=/root \
+    SHELL=/bin/bash \
+    USER=root \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64 \
+    PATH=$JAVA_HOME/bin:$PATH
+
+# Copy supervisord configuration
+COPY supervisord.conf /etc/supervisord.conf
+
+# Copy hybrid entrypoint script
+COPY docker-entrypoint-hybrid.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint-hybrid.sh
+
+# Set up SSH
+RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config && \
+    echo "root:farmboy" | chpasswd
+
+# Expose ports
+EXPOSE 3001 5900 8080 22
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-hybrid.sh"]
+
+# Health check - Extended start period for service initialization
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD curl -f http://localhost:3001/health || exit 1
+
+# Add metadata labels
+LABEL maintainer="Farm Admin Team" \
+      version="0.1" \
+      description="Hybrid Farm Manager + DreamBot Container with Entry.sh and noVNC - Production Ready" 

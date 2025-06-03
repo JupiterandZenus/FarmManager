@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  farm-admin-hybrid:
+    container_name: farm-admin-hybrid
+    build:
+      context: .
+      dockerfile: Dockerfile.hybrid
+      no_cache: false
+      pull: true
+      args:
+        REBUILD_TIMESTAMP: 2025-06-02-ETERNALFARM-TOOLS-AUTOSTART-FINAL
+    ports:
+      - "8080:80"       # noVNC web interface (changed to avoid conflict with NPM)
+      - "5900:5900"     # VNC port
+      - "3001:3001"     # Farm Manager API
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
+      - API_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - ETERNALFARM_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
+      - AUTH_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
+      - ETERNAL_API_URL=https://api.eternalfarm.net
+      - ETERNAL_FARM_KEY=${ETERNAL_FARM_KEY:-}
+      - ETERNAL_AUTH_KEY=${ETERNAL_AUTH_KEY:-}
+      - DISPLAY=:1
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      - DREAMBOT_USER=${DREAMBOT_USER:-}
+      - DREAMBOT_PASS=${DREAMBOT_PASS:-}
+      - PROXY_HOST=${PROXY_HOST:-}
+      - PROXY_PORT=${PROXY_PORT:-}
+      - PROXY_USER=${PROXY_USER:-}
+      - PROXY_PASS=${PROXY_PASS:-}
+      - VNC_PORT=5900
+      - NOVNC_PORT=80
+      - VIRTUAL_HOST=farm-admin-hybrid.local
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=farm-admin-hybrid.local
+    volumes:
+      - ./data:/app/data
+      - ./logs:/var/log
+      - dreambot_data:/root/DreamBot
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    networks:
+      farmboynetwork:
+        aliases:
+          - farm-admin-hybrid.local
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.farm-admin.rule=Host(`farm-admin-hybrid.local`)"
+      - "traefik.http.services.farm-admin.loadbalancer.server.port=80"
+
+  mariadb:
+    container_name: farm-admin-mariadb
+    image: lscr.io/linuxserver/mariadb:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - TZ=Etc/UTC
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
+    volumes:
+      - mariadb_data:/config
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
+    networks:
+      - farmboynetwork
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pSntioi004!"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  farm_data:
+  dreambot_data:
+  mariadb_data:
+
+networks:
+  farmboynetwork:
+    name: farmboynetwork
+    external: true 

@@ -1,0 +1,860 @@
+/* Old School RuneScape Theme for Farm Manager */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=MedievalSharp&display=swap');
+
+:root {
+  /* OSRS Color Palette */
+  --osrs-brown-dark: #3e2723;
+  --osrs-brown-medium: #5d4037;
+  --osrs-brown-light: #8d6e63;
+  --osrs-gold: #ffb300;
+  --osrs-gold-light: #ffc947;
+  --osrs-red: #d32f2f;
+  --osrs-green: #388e3c;
+  --osrs-blue: #1976d2;
+  --osrs-purple: #7b1fa2;
+  --osrs-bg: #2e2e2e;
+  --osrs-panel: #4a4a4a;
+  --osrs-border: #8d6e63;
+  --osrs-text-light: #f5f5f5;
+  --osrs-text-gold: #ffb300;
+  --osrs-shadow: rgba(0, 0, 0, 0.8);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Cinzel', serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 50%, #1a1a1a 100%);
+  background-attachment: fixed;
+  color: var(--osrs-text-light);
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Medieval parchment texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 50%, rgba(139, 110, 99, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(139, 110, 99, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(139, 110, 99, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Header - Castle Banner Style */
+header {
+  background: linear-gradient(180deg, var(--osrs-brown-dark) 0%, var(--osrs-brown-medium) 100%);
+  border-bottom: 4px solid var(--osrs-gold);
+  box-shadow: 0 4px 20px var(--osrs-shadow);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 179, 0, 0.1) 10px,
+      rgba(255, 179, 0, 0.1) 20px
+    );
+  pointer-events: none;
+}
+
+header h1 {
+  font-family: 'MedievalSharp', cursive;
+  font-size: 2.5em;
+  color: var(--osrs-gold);
+  text-align: center;
+  margin: 0;
+  padding: 20px 30px;
+  text-shadow: 
+    2px 2px 0 var(--osrs-brown-dark),
+    4px 4px 8px var(--osrs-shadow);
+  position: relative;
+  z-index: 1;
+}
+
+header h1::before {
+  content: '⚔️';
+  margin-right: 15px;
+}
+
+header h1::after {
+  content: '⚔️';
+  margin-left: 15px;
+}
+
+/* Enhanced Navigation Menu */
+#nav-menu {
+  background: linear-gradient(180deg, var(--osrs-brown-medium) 0%, var(--osrs-brown-dark) 100%);
+  border-bottom: 3px solid var(--osrs-border);
+  box-shadow: 0 2px 15px var(--osrs-shadow);
+  padding: 15px 30px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  position: relative;
+  z-index: 100;
+}
+
+#nav-menu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--osrs-gold) 20%, 
+    var(--osrs-gold-light) 50%, 
+    var(--osrs-gold) 80%, 
+    transparent 100%);
+}
+
+/* Live Indicator Enhancement */
+#live-indicator {
+  color: var(--osrs-green);
+  font-weight: bold;
+  font-size: 12px;
+  margin-right: 20px;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 15px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--osrs-border);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Navigation Buttons Enhancement */
+#nav-menu button {
+  background: linear-gradient(180deg, var(--osrs-brown-light) 0%, var(--osrs-brown-medium) 100%);
+  border: 2px solid var(--osrs-border);
+  border-radius: 8px;
+  color: var(--osrs-text-light);
+  padding: 12px 18px;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-shadow: 1px 1px 2px var(--osrs-shadow);
+  position: relative;
+  overflow: hidden;
+  min-width: 120px;
+  text-align: center;
+}
+
+#nav-menu button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+#nav-menu button:hover {
+  background: linear-gradient(180deg, var(--osrs-gold-light) 0%, var(--osrs-gold) 100%);
+  border-color: var(--osrs-gold);
+  color: var(--osrs-brown-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 179, 0, 0.3);
+}
+
+#nav-menu button:hover::before {
+  left: 100%;
+}
+
+#nav-menu button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(255, 179, 0, 0.2);
+}
+
+/* Main Container with Proper Spacing */
+.main-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px;
+  min-height: calc(100vh - 200px);
+}
+
+/* Sections Container */
+#sections-container {
+  margin-top: 20px;
+}
+
+/* API Key Setup - Scroll Style */
+.api-key-setup {
+  background: linear-gradient(135deg, var(--osrs-brown-medium) 0%, var(--osrs-brown-dark) 100%);
+  border: 2px solid var(--osrs-border);
+  border-radius: 8px;
+  margin: 20px 0;
+  padding: 25px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.api-key-setup::before {
+  content: '🗝️ API Configuration';
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  background: var(--osrs-brown-dark);
+  color: var(--osrs-gold);
+  padding: 5px 15px;
+  border: 1px solid var(--osrs-border);
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.api-key-setup label {
+  color: var(--osrs-text-gold);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.api-key-setup input[type="password"],
+.api-key-setup input[type="text"] {
+  background: var(--osrs-bg);
+  border: 2px solid var(--osrs-border);
+  border-radius: 4px;
+  color: var(--osrs-text-light);
+  padding: 12px;
+  font-family: 'Cinzel', serif;
+  width: 100%;
+  max-width: 400px;
+  margin-right: 10px;
+}
+
+.api-key-setup input:focus {
+  outline: none;
+  border-color: var(--osrs-gold);
+  box-shadow: 0 0 10px rgba(255, 179, 0, 0.3);
+}
+
+.api-key-setup .warning {
+  color: var(--osrs-gold-light);
+  font-size: 0.85em;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* Sections - Medieval Panels with Better Spacing */
+section {
+  background: linear-gradient(135deg, var(--osrs-panel) 0%, var(--osrs-bg) 100%);
+  border: 3px solid var(--osrs-border);
+  border-radius: 12px;
+  margin-bottom: 30px;
+  padding: 30px;
+  box-shadow: 
+    0 8px 25px var(--osrs-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--osrs-gold) 20%, 
+    var(--osrs-gold-light) 50%, 
+    var(--osrs-gold) 80%, 
+    transparent 100%);
+}
+
+/* Section Headers */
+h2, h3, h4 {
+  font-family: 'MedievalSharp', cursive;
+  color: var(--osrs-gold);
+  margin-top: 0;
+  text-shadow: 1px 1px 2px var(--osrs-shadow);
+  position: relative;
+}
+
+h2 {
+  font-size: 1.8em;
+  border-bottom: 2px solid var(--osrs-border);
+  padding-bottom: 15px;
+  margin-bottom: 25px;
+}
+
+h2::before {
+  content: '🏰';
+  margin-right: 10px;
+}
+
+/* Content Spacing */
+.filter-controls,
+.action-buttons,
+.control-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+
+.filter-controls input,
+.filter-controls select {
+  background: var(--osrs-bg);
+  border: 2px solid var(--osrs-border);
+  border-radius: 6px;
+  color: var(--osrs-text-light);
+  padding: 10px 15px;
+  font-family: 'Cinzel', serif;
+  min-width: 200px;
+}
+
+.filter-controls input:focus,
+.filter-controls select:focus {
+  outline: none;
+  border-color: var(--osrs-gold);
+  box-shadow: 0 0 8px rgba(255, 179, 0, 0.3);
+}
+
+/* Buttons - OSRS Interface Style */
+button {
+  background: linear-gradient(180deg, var(--osrs-brown-light) 0%, var(--osrs-brown-medium) 100%);
+  border: 2px solid var(--osrs-border);
+  border-radius: 6px;
+  color: var(--osrs-text-light);
+  padding: 12px 20px;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 5px;
+  transition: all 0.3s ease;
+  text-shadow: 1px 1px 2px var(--osrs-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+button:hover {
+  background: linear-gradient(180deg, var(--osrs-gold-light) 0%, var(--osrs-gold) 100%);
+  border-color: var(--osrs-gold);
+  color: var(--osrs-brown-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 179, 0, 0.3);
+}
+
+button:hover::before {
+  left: 100%;
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(255, 179, 0, 0.2);
+}
+
+button.view-clients { 
+  background: linear-gradient(180deg, var(--osrs-blue) 0%, #1565c0 100%);
+  border-color: #1976d2;
+}
+
+button.view-clients:hover { 
+  background: linear-gradient(180deg, #42a5f5 0%, var(--osrs-blue) 100%);
+}
+
+button.start-client-setup { 
+  background: linear-gradient(180deg, var(--osrs-green) 0%, #2e7d32 100%);
+  border-color: #388e3c;
+}
+
+button.start-client-setup:hover { 
+  background: linear-gradient(180deg, #66bb6a 0%, var(--osrs-green) 100%);
+}
+
+button.stop-client { 
+  background: linear-gradient(180deg, var(--osrs-red) 0%, #c62828 100%);
+  border-color: #d32f2f;
+}
+
+button.stop-client:hover { 
+  background: linear-gradient(180deg, #ef5350 0%, var(--osrs-red) 100%);
+}
+
+button.refresh-client-status { 
+  background: linear-gradient(180deg, var(--osrs-purple) 0%, #6a1b9a 100%);
+  border-color: #7b1fa2;
+}
+
+button.refresh-client-status:hover { 
+  background: linear-gradient(180deg, #ab47bc 0%, var(--osrs-purple) 100%);
+}
+
+/* Lists and Items */
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+li {
+  background: linear-gradient(135deg, var(--osrs-bg) 0%, var(--osrs-panel) 100%);
+  border: 2px solid var(--osrs-border);
+  border-radius: 8px;
+  margin-bottom: 15px;
+  padding: 20px;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, 
+    var(--osrs-gold) 0%, 
+    var(--osrs-gold-light) 50%, 
+    var(--osrs-gold) 100%);
+  border-radius: 0 4px 4px 0;
+}
+
+li:hover {
+  border-color: var(--osrs-gold);
+  transform: translateX(5px);
+  box-shadow: 0 6px 20px rgba(255, 179, 0, 0.2);
+}
+
+/* Client Items */
+.client-item {
+  background: linear-gradient(135deg, var(--osrs-bg) 0%, var(--osrs-panel) 100%);
+  border: 2px solid var(--osrs-border);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  padding: 25px;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.client-item::before {
+  content: '⚙️';
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 1.2em;
+  opacity: 0.6;
+}
+
+.client-item span {
+  display: inline-block;
+  margin-right: 20px;
+  margin-bottom: 10px;
+  color: var(--osrs-text-light);
+}
+
+.client-item .actions {
+  margin-top: 15px;
+}
+
+.client-item .actions button {
+  margin-right: 10px;
+  margin-bottom: 5px;
+}
+
+/* Status Indicators */
+.status-running { 
+  color: var(--osrs-green);
+  font-weight: bold;
+  text-shadow: 0 0 8px var(--osrs-green);
+}
+
+.status-stopped { 
+  color: var(--osrs-red);
+  font-weight: bold;
+  text-shadow: 0 0 8px var(--osrs-red);
+}
+
+.status-unknown { 
+  color: var(--osrs-gold);
+  font-weight: bold;
+  text-shadow: 0 0 8px var(--osrs-gold);
+}
+
+/* Forms */
+#start-form {
+  background: linear-gradient(135deg, var(--osrs-brown-dark) 0%, var(--osrs-bg) 100%);
+  border: 2px solid var(--osrs-border);
+  border-radius: 10px;
+  padding: 25px;
+  margin-top: 20px;
+}
+
+#start-form h4 {
+  color: var(--osrs-gold);
+  margin-bottom: 20px;
+  font-size: 1.3em;
+}
+
+#start-form h4::before {
+  content: '🚀';
+  margin-right: 10px;
+}
+
+#start-form label {
+  display: block;
+  color: var(--osrs-text-gold);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+#start-form input[type="text"],
+#start-form input[type="number"],
+#start-form select {
+  background: var(--osrs-bg);
+  border: 2px solid var(--osrs-border);
+  border-radius: 6px;
+  color: var(--osrs-text-light);
+  padding: 12px;
+  font-family: 'Cinzel', serif;
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 15px;
+}
+
+#start-form input:focus,
+#start-form select:focus {
+  outline: none;
+  border-color: var(--osrs-gold);
+  box-shadow: 0 0 10px rgba(255, 179, 0, 0.3);
+}
+
+#start-form button {
+  margin-top: 15px;
+  padding: 15px 25px;
+  font-size: 1.1em;
+}
+
+/* Footer */
+footer {
+  background: linear-gradient(180deg, var(--osrs-brown-dark) 0%, #1a1a1a 100%);
+  border-top: 3px solid var(--osrs-border);
+  padding: 25px 30px;
+  text-align: center;
+  margin-top: 50px;
+  box-shadow: 0 -4px 20px var(--osrs-shadow);
+}
+
+footer p {
+  color: var(--osrs-text-gold);
+  margin: 0;
+  font-size: 0.9em;
+}
+
+/* Scheduled Tasks */
+#scheduled-tasks {
+  margin-top: 30px;
+}
+
+#scheduled-tasks h2::before {
+  content: '⏰';
+}
+
+#scheduled-stops-list li {
+  background: linear-gradient(135deg, var(--osrs-brown-dark) 0%, var(--osrs-bg) 100%);
+  border-left: 4px solid var(--osrs-gold);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 2em;
+    padding: 15px 20px;
+  }
+
+  .main-container {
+    padding: 20px 15px;
+  }
+
+  section {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .client-item {
+    padding: 20px;
+  }
+
+  .client-item .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .api-key-setup input[type="password"],
+  .api-key-setup input[type="text"] {
+    max-width: 100%;
+    margin-bottom: 10px;
+  }
+
+  #nav-menu {
+    padding: 15px 20px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #nav-menu button {
+    margin: 5px 0;
+    min-width: auto;
+  }
+
+  .filter-controls,
+  .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-controls input,
+  .filter-controls select {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* Animations */
+@keyframes runeGlow {
+  0%, 100% { 
+    text-shadow: 0 0 5px var(--osrs-gold), 0 0 10px var(--osrs-gold); 
+  }
+  50% { 
+    text-shadow: 0 0 10px var(--osrs-gold-light), 0 0 20px var(--osrs-gold-light); 
+  }
+}
+
+.loading {
+  animation: runeGlow 2s infinite;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--osrs-bg);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--osrs-brown-light) 0%, var(--osrs-brown-medium) 100%);
+  border-radius: 6px;
+  border: 1px solid var(--osrs-border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--osrs-gold-light) 0%, var(--osrs-gold) 100%);
+}
+
+/* Notifications */
+.notification {
+  animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification-success {
+  background-color: var(--osrs-green);
+}
+
+.notification-error {
+  background-color: var(--osrs-red);
+}
+
+.notification-warning {
+  background-color: #ff9800;
+}
+
+.notification-info {
+  background-color: var(--osrs-blue);
+}
+
+/* Server Status */
+#server-status {
+  font-family: 'Courier New', monospace;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid var(--osrs-border);
+  border-radius: 6px;
+}
+
+/* Task Status */
+.task-status {
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.85em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-running {
+  background: rgba(56, 142, 60, 0.2);
+  color: var(--osrs-green);
+  border: 1px solid var(--osrs-green);
+}
+
+.status-stopped {
+  background: rgba(211, 47, 47, 0.2);
+  color: var(--osrs-red);
+  border: 1px solid var(--osrs-red);
+}
+
+.status-pending {
+  background: rgba(255, 179, 0, 0.2);
+  color: var(--osrs-gold);
+  border: 1px solid var(--osrs-gold);
+}
+
+.status-completed {
+  background: rgba(25, 118, 210, 0.2);
+  color: var(--osrs-blue);
+  border: 1px solid var(--osrs-blue);
+}
+
+/* Live Indicator */
+.live-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: var(--osrs-green);
+  border-radius: 50%;
+  margin-right: 8px;
+  display: inline-block;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(56, 142, 60, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(56, 142, 60, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(56, 142, 60, 0);
+  }
+}
+
+/* WebSocket Status */
+.ws-status {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.ws-connected {
+  background: var(--osrs-green);
+  color: white;
+}
+
+.ws-disconnected {
+  background: var(--osrs-red);
+  color: white;
+}
+
+.ws-connecting {
+  background: var(--osrs-gold);
+  color: var(--osrs-brown-dark);
+}
+
+/* Agent controls styling */
+.agent-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.agent-controls button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+#loadAgents {
+    background-color: #4CAF50;
+    color: white;
+}
+
+#loadAgents:hover {
+    background-color: #45a049;
+}
+
+#syncAgents {
+    background-color: #2196F3;
+    color: white;
+}
+
+#syncAgents:hover {
+    background-color: #1976D2;
+}
+
+#syncAgents:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

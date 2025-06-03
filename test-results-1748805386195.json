@@ -1,0 +1,339 @@
+{
+  "timestamp": "2025-06-01T19:16:25.480Z",
+  "tests": [
+    {
+      "name": "Basic Agents List",
+      "success": true,
+      "result": {
+        "data": [
+          {
+            "id": 4,
+            "name": "Farmboy Established P2P",
+            "status": "offline",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T19:15:40.535Z",
+            "updated_at": "2025-06-01T19:15:45.376Z",
+            "accounts": [],
+            "bots": [],
+            "tasks": []
+          },
+          {
+            "id": 3,
+            "name": "Scott",
+            "status": "offline",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T19:15:40.462Z",
+            "updated_at": "2025-06-01T19:15:45.333Z",
+            "accounts": [],
+            "bots": [],
+            "tasks": []
+          },
+          {
+            "id": 5,
+            "name": "test",
+            "status": "offline",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T19:15:40.584Z",
+            "updated_at": "2025-06-01T19:15:45.427Z",
+            "accounts": [],
+            "bots": [],
+            "tasks": []
+          },
+          {
+            "id": 1,
+            "name": "TestAgent001",
+            "status": "Active",
+            "last_seen": null,
+            "ip_address": "127.0.0.1",
+            "created_at": "2025-06-01T01:08:59.770Z",
+            "updated_at": "2025-06-01T01:23:25.494Z",
+            "accounts": [
+              {
+                "id": 1,
+                "username": "test_p2p_user_01",
+                "password": "password123",
+                "email": "testp2p@example.com",
+                "type": "P2P",
+                "status": "idle",
+                "category_id": 1,
+                "proxy_id": 1,
+                "agent_id": 1,
+                "created_at": "2025-06-01T01:08:59.826Z",
+                "updated_at": "2025-06-01T01:23:25.722Z"
+              },
+              {
+                "id": 2,
+                "username": "test_main_user_01",
+                "password": "password123",
+                "email": "test_main_user_01@example.com",
+                "type": "p2p",
+                "status": "idle",
+                "category_id": 4,
+                "proxy_id": 1,
+                "agent_id": 1,
+                "created_at": "2025-06-01T01:23:25.781Z",
+                "updated_at": "2025-06-01T01:23:25.781Z"
+              },
+              {
+                "id": 4,
+                "username": "test_botfarm_user_01",
+                "password": "password123",
+                "email": "test_botfarm_user_01@example.com",
+                "type": "p2p",
+                "status": "idle",
+                "category_id": 6,
+                "proxy_id": 1,
+                "agent_id": 1,
+                "created_at": "2025-06-01T01:23:25.870Z",
+                "updated_at": "2025-06-01T01:23:25.870Z"
+              },
+              {
+                "id": 6,
+                "username": "test_verified_user_01",
+                "password": "password123",
+                "email": "test_verified_user_01@example.com",
+                "type": "p2p",
+                "status": "idle",
+                "category_id": 8,
+                "proxy_id": 1,
+                "agent_id": 1,
+                "created_at": "2025-06-01T01:23:25.957Z",
+                "updated_at": "2025-06-01T01:23:25.957Z"
+              },
+              {
+                "id": 8,
+                "username": "test_banned_user_01",
+                "password": "password123",
+                "email": "test_banned_user_01@example.com",
+                "type": "p2p",
+                "status": "Banned",
+                "category_id": 10,
+                "proxy_id": 1,
+                "agent_id": 1,
+                "created_at": "2025-06-01T01:23:26.027Z",
+                "updated_at": "2025-06-01T01:23:26.027Z"
+              },
+              {
+                "id": 10,
+                "username": "test_unknown_user_01",
+                "password": "password123",
+                "email": "test_unknown_user_01@example.com",
+                "type": "p2p",
+                "status": "Unknown",
+                "category_id": 12,
+                "proxy_id": 1,
+                "agent_id": 1,
+                "created_at": "2025-06-01T01:23:26.095Z",
+                "updated_at": "2025-06-01T01:23:26.095Z"
+              }
+            ],
+            "bots": [],
+            "tasks": []
+          },
+          {
+            "id": 2,
+            "name": "TestAgent002",
+            "status": "Idle",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T01:19:58.604Z",
+            "updated_at": "2025-06-01T01:23:25.556Z",
+            "accounts": [
+              {
+                "id": 3,
+                "username": "test_mule_user_01",
+                "password": "password123",
+                "email": "test_mule_user_01@example.com",
+                "type": "p2p",
+                "status": "idle",
+                "category_id": 5,
+                "proxy_id": 1,
+                "agent_id": 2,
+                "created_at": "2025-06-01T01:23:25.831Z",
+                "updated_at": "2025-06-01T01:23:25.831Z"
+              },
+              {
+                "id": 5,
+                "username": "test_trial_user_01",
+                "password": "password123",
+                "email": "test_trial_user_01@example.com",
+                "type": "p2p",
+                "status": "idle",
+                "category_id": 7,
+                "proxy_id": 1,
+                "agent_id": 2,
+                "created_at": "2025-06-01T01:23:25.919Z",
+                "updated_at": "2025-06-01T01:23:25.919Z"
+              },
+              {
+                "id": 7,
+                "username": "test_unverified_user_01",
+                "password": "password123",
+                "email": "test_unverified_user_01@example.com",
+                "type": "p2p",
+                "status": "idle",
+                "category_id": 9,
+                "proxy_id": 1,
+                "agent_id": 2,
+                "created_at": "2025-06-01T01:23:25.996Z",
+                "updated_at": "2025-06-01T01:23:25.996Z"
+              },
+              {
+                "id": 9,
+                "username": "test_locked_user_01",
+                "password": "password123",
+                "email": "test_locked_user_01@example.com",
+                "type": "p2p",
+                "status": "Locked",
+                "category_id": 11,
+                "proxy_id": 1,
+                "agent_id": 2,
+                "created_at": "2025-06-01T01:23:26.060Z",
+                "updated_at": "2025-06-01T01:23:26.060Z"
+              }
+            ],
+            "bots": [],
+            "tasks": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "System Statistics",
+      "success": true,
+      "result": {
+        "message": "System statistics collected successfully",
+        "data": null
+      }
+    },
+    {
+      "name": "Manual Agent Sync",
+      "success": true,
+      "result": {
+        "message": "Agent sync completed successfully",
+        "agents_count": 5,
+        "data": [
+          {
+            "id": 4,
+            "name": "Farmboy Established P2P",
+            "status": "offline",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T19:15:40.535Z",
+            "updated_at": "2025-06-01T19:16:25.770Z"
+          },
+          {
+            "id": 3,
+            "name": "Scott",
+            "status": "offline",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T19:15:40.462Z",
+            "updated_at": "2025-06-01T19:16:25.730Z"
+          },
+          {
+            "id": 5,
+            "name": "test",
+            "status": "offline",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T19:15:40.584Z",
+            "updated_at": "2025-06-01T19:16:25.813Z"
+          },
+          {
+            "id": 1,
+            "name": "TestAgent001",
+            "status": "Active",
+            "last_seen": null,
+            "ip_address": "127.0.0.1",
+            "created_at": "2025-06-01T01:08:59.770Z",
+            "updated_at": "2025-06-01T01:23:25.494Z"
+          },
+          {
+            "id": 2,
+            "name": "TestAgent002",
+            "status": "Idle",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T01:19:58.604Z",
+            "updated_at": "2025-06-01T01:23:25.556Z"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Agent Update",
+      "success": false,
+      "result": {
+        "error": "\nInvalid `prisma.agent.update()` invocation:\n\n{\n  where: {\n    id: 4\n  },\n  data: {\n    status: \"online\",\n    cpu_usage: 87,\n    ~~~~~~~~~\n    memory_usage: 29,\n    disk_usage: 69,\n    needs_sync: true,\n    updated_at: new Date(\"2025-06-01T19:16:25.910Z\"),\n?   name?: String | StringFieldUpdateOperationsInput,\n?   last_seen?: DateTime | NullableDateTimeFieldUpdateOperationsInput | Null,\n?   ip_address?: String | NullableStringFieldUpdateOperationsInput | Null,\n?   created_at?: DateTime | DateTimeFieldUpdateOperationsInput,\n?   accounts?: AccountUpdateManyWithoutAgentNestedInput,\n?   bots?: BotUpdateManyWithoutAgentNestedInput,\n?   tasks?: TaskUpdateManyWithoutAgentNestedInput\n  }\n}\n\nUnknown argument `cpu_usage`. Available options are marked with ?."
+      }
+    },
+    {
+      "name": "Push Pending Changes",
+      "success": false,
+      "result": {
+        "error": "Push sync failed",
+        "message": "\nInvalid `prisma.agent.findMany()` invocation:\n\n{\n  where: {\n    needs_sync: true,\n    ~~~~~~~~~~\n?   AND?: AgentWhereInput | AgentWhereInput[],\n?   OR?: AgentWhereInput[],\n?   NOT?: AgentWhereInput | AgentWhereInput[],\n?   id?: IntFilter | Int,\n?   name?: StringFilter | String,\n?   status?: StringFilter | String,\n?   last_seen?: DateTimeNullableFilter | DateTime | Null,\n?   ip_address?: StringNullableFilter | String | Null,\n?   created_at?: DateTimeFilter | DateTime,\n?   updated_at?: DateTimeFilter | DateTime,\n?   accounts?: AccountListRelationFilter,\n?   bots?: BotListRelationFilter,\n?   tasks?: TaskListRelationFilter\n  },\n  orderBy: {\n    name: \"asc\"\n  }\n}\n\nUnknown argument `needs_sync`. Available options are marked with ?."
+      }
+    },
+    {
+      "name": "Bi-directional Sync",
+      "success": true,
+      "result": {
+        "message": "Bi-directional sync completed successfully",
+        "agents_count": 5,
+        "data": [
+          {
+            "id": 4,
+            "name": "Farmboy Established P2P",
+            "status": "offline",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T19:15:40.535Z",
+            "updated_at": "2025-06-01T19:16:26.103Z"
+          },
+          {
+            "id": 3,
+            "name": "Scott",
+            "status": "offline",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T19:15:40.462Z",
+            "updated_at": "2025-06-01T19:16:26.073Z"
+          },
+          {
+            "id": 5,
+            "name": "test",
+            "status": "offline",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T19:15:40.584Z",
+            "updated_at": "2025-06-01T19:16:26.131Z"
+          },
+          {
+            "id": 1,
+            "name": "TestAgent001",
+            "status": "Active",
+            "last_seen": null,
+            "ip_address": "127.0.0.1",
+            "created_at": "2025-06-01T01:08:59.770Z",
+            "updated_at": "2025-06-01T01:23:25.494Z"
+          },
+          {
+            "id": 2,
+            "name": "TestAgent002",
+            "status": "Idle",
+            "last_seen": null,
+            "ip_address": null,
+            "created_at": "2025-06-01T01:19:58.604Z",
+            "updated_at": "2025-06-01T01:23:25.556Z"
+          }
+        ],
+        "timestamp": "2025-06-01T19:16:26.192Z"
+      }
+    }
+  ]
+}

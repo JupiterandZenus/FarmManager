@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id              Int              @id @default(autoincrement())
+  username        String           @unique
+  password        String?
+  email           String?
+  type            String           @default("p2p")
+  status          String           @default("idle")
+  category_id     Int?
+  proxy_id        Int?
+  agent_id        Int?
+  tutorial_status Int?             @default(0)
+  otp_key         String?
+  last_checked_at DateTime?
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+  agent           Agent?           @relation(fields: [agent_id], references: [id])
+  category        AccountCategory? @relation(fields: [category_id], references: [id])
+  proxy           Proxy?           @relation(fields: [proxy_id], references: [id])
+  tasks           Task[]
+
+  @@index([agent_id], map: "accounts_agent_id_fkey")
+  @@index([category_id], map: "accounts_category_id_fkey")
+  @@index([proxy_id], map: "accounts_proxy_id_fkey")
+  @@map("accounts")
+}
+
+model AccountCategory {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  accounts    Account[]
+
+  @@map("account_categories")
+}
+
+model Proxy {
+  id          Int            @id @default(autoincrement())
+  host        String
+  port        Int
+  username    String?
+  password    String?
+  type        String         @default("http")
+  category_id Int?
+  is_active   Boolean        @default(true)
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+  accounts    Account[]
+  category    ProxyCategory? @relation(fields: [category_id], references: [id])
+
+  @@unique([host, port])
+  @@index([category_id], map: "proxies_category_id_fkey")
+  @@map("proxies")
+}
+
+model ProxyCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  proxies     Proxy[]
+
+  @@map("proxy_categories")
+}
+
+model Agent {
+  id              Int       @id @default(autoincrement())
+  name            String    @unique
+  status          String    @default("offline")
+  last_seen       DateTime?
+  ip_address      String?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  
+  // Sync-related fields for API collector and updater
+  eternal_farm_id String?   @unique
+  needs_sync      Boolean   @default(false)
+  last_synced     DateTime?
+  
+  // Performance monitoring fields
+  cpu_usage       Float?
+  memory_usage    Float?
+  disk_usage      Float?
+  
+  // Authentication field
+  auth_key        String?
+  
+  accounts        Account[]
+  bots            Bot[]
+  tasks           Task[]
+
+  @@map("agents")
+}
+
+model Bot {
+  id         Int      @id @default(autoincrement())
+  name       String
+  type       String
+  version    String?
+  agent_id   Int
+  status     String   @default("idle")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  agent      Agent    @relation(fields: [agent_id], references: [id], onDelete: Cascade)
+  tasks      Task[]
+
+  @@index([agent_id], map: "bots_agent_id_fkey")
+  @@map("bots")
+}
+
+model Task {
+  id            Int       @id @default(autoincrement())
+  name          String
+  script        String
+  account_id    Int?
+  agent_id      Int?
+  bot_id        Int?
+  status        String    @default("pending")
+  priority      Int       @default(0)
+  scheduled_at  DateTime?
+  started_at    DateTime?
+  completed_at  DateTime?
+  error_message String?   @db.Text
+  result_data   String?   @db.LongText
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  account       Account?  @relation(fields: [account_id], references: [id])
+  agent         Agent?    @relation(fields: [agent_id], references: [id])
+  bot           Bot?      @relation(fields: [bot_id], references: [id])
+
+  @@index([account_id], map: "tasks_account_id_fkey")
+  @@index([agent_id], map: "tasks_agent_id_fkey")
+  @@index([bot_id], map: "tasks_bot_id_fkey")
+  @@map("tasks")
+}
+
+model PrimeLinkRequest {
+  id           Int       @id @default(autoincrement())
+  account_id   Int
+  status       String    @default("pending")
+  requested_at DateTime  @default(now())
+  processed_at DateTime?
+  notes        String?   @db.Text
+
+  @@map("prime_link_requests")
+}
