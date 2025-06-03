@@ -18,7 +18,7 @@ services:
       - NOVNC_PORT=8080
       - JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64
       # Discord Integration
-      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1358933950210379816/Pdfyxcilip-xI3-q5ILOl9eRCl0nhEICZHZuvbyQm9aARgzI7GuHQExqBj1NNfkScPvV
       # DreamBot Configuration
       - DREAMBOT_USERNAME=${DREAMBOT_USERNAME:-}
       - DREAMBOT_PASSWORD=${DREAMBOT_PASSWORD:-}
@@ -28,9 +28,10 @@ services:
       - DREAMBOT_DIR=/root/DreamBot/BotData
       - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
       # EternalFarm Configuration
-      - ETERNALFARM_AGENT_KEY=your_actual_api_key_here
-      - ETERNAL_API_URL=${ETERNAL_API_URL:-https://api.eternalfarm.net}
-      - AUTH_AGENT_KEY=${ETERNALFARM_AGENT_KEY:-YOUR_API_KEY_HERE}
+      - ETERNALFARM_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
+      - ETERNAL_API_URL=https://api.eternalfarm.net
+      - AUTH_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
+      - API_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
