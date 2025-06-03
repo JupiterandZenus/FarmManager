@@ -35,12 +35,14 @@ services:
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
+      - ./fix-permissions.sh:/app/fix-permissions.sh
     restart: unless-stopped
     depends_on:
       mariadb:
         condition: service_healthy
     networks:
       - farm-network
+    entrypoint: ["/bin/bash", "-c", "chmod +x /app/fix-permissions.sh && /app/fix-permissions.sh && /docker-entrypoint.sh"]
 
   mariadb:
     container_name: farm-admin-mariadb-fresh
