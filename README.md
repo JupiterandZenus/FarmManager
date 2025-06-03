@@ -356,4 +356,8 @@ For issues and questions:
 
 ---
 
-**Farm Manager** - Complete production system for automated farm management with hybrid container support, VNC access, and comprehensive monitoring. 
+**Farm Manager** - Complete production system for automated farm management with hybrid container support, VNC access, and comprehensive monitoring.
+
+## 🧪 Testing Workflow
+
+Testing GitHub Actions CI/CD pipeline - Docker Hub integration! 🚀 
