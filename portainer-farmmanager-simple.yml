@@ -12,6 +12,7 @@ services:
       - MYSQL_PASSWORD=farmpass123
       - MARIADB_AUTO_UPGRADE=1
       - MARIADB_INITDB_SKIP_TZINFO=1
+      - MYSQL_ROOT_HOST=%
     volumes:
       - mariadb_data:/var/lib/mysql
     ports:
@@ -25,6 +26,7 @@ services:
       - --skip-innodb-doublewrite
       - --max_connections=1000
       - --wait_timeout=28800
+      - --skip-name-resolve
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       timeout: 10s
@@ -44,7 +46,7 @@ services:
     environment:
       NODE_ENV: "production"
       PORT: "3000"
-      DATABASE_URL: "mysql://root:farmrootpass123@mariadb:3306/farmmanager?connection_limit=5"
+      DATABASE_URL: "mysql://root:farmrootpass123@mariadb:3306/farmmanager?connection_limit=5&connect_timeout=60&pool_timeout=60"
       ETERNALFARM_AGENT_KEY: "P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3"
       ETERNAL_API_URL: "https://api.eternalfarm.net"
       DISPLAY: ":1"
@@ -72,6 +74,9 @@ services:
           sleep 10
         done &&
         echo '[OK] Database is ready!' &&
+        echo '[INFO] Testing Prisma database connection...' &&
+        mysql -h mariadb -u root -pfarmrootpass123 -e 'SELECT 1' farmmanager &&
+        echo '[OK] Prisma connection test passed!' &&
         cd /app &&
         echo '[INFO] Setting up Prisma...' &&
         mkdir -p prisma &&
