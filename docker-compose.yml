@@ -17,6 +17,16 @@ services:
       - VNC_PORT=5900
       - NOVNC_PORT=8080
       - JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64
+      # Discord Integration
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      # DreamBot Configuration
+      - DREAMBOT_USERNAME=${DREAMBOT_USERNAME:-}
+      - DREAMBOT_PASSWORD=${DREAMBOT_PASSWORD:-}
+      - DREAMBOT_SCRIPT=${DREAMBOT_SCRIPT:-}
+      - DREAMBOT_WORLD=${DREAMBOT_WORLD:-301}
+      - DREAMBOT_ARGS=${DREAMBOT_ARGS:---no-splash --developer-mode}
+      - DREAMBOT_DIR=/root/DreamBot/BotData
+      - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot

@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "settings": {
+    "username": "${DREAMBOT_USERNAME}",
+    "password": "${DREAMBOT_PASSWORD}",
+    "world": "${DREAMBOT_WORLD}",
+    "script": "${DREAMBOT_SCRIPT}",
+    "args": "${DREAMBOT_ARGS}",
+    "clientSettings": {
+      "enableLowCpu": true,
+      "enableLowMemory": false,
+      "enableDebugMode": false,
+      "disableModelRendering": false,
+      "disableSceneRendering": false,
+      "disableInterfaceRendering": false,
+      "superLowCpu": false
+    },
+    "proxySettings": {
+      "enabled": false,
+      "host": "",
+      "port": 0,
+      "username": "",
+      "password": "",
+      "type": "HTTP"
+    },
+    "advancedSettings": {
+      "enableAntiDetection": true,
+      "randomizeUserAgent": true,
+      "customUserAgent": "",
+      "enableMouseSmoothing": true,
+      "enableKeyboardSmoothing": true,
+      "enableRandomDelays": true,
+      "minDelay": 50,
+      "maxDelay": 200
+    },
+    "scriptSettings": {
+      "enableAutoRestart": true,
+      "restartOnDisconnect": true,
+      "restartOnError": true,
+      "maxRestarts": 10,
+      "restartDelay": 30000
+    }
+  },
+  "lastModified": "auto-generated",
+  "description": "Auto-generated DreamBot settings from Farm Manager environment variables"
+} 
