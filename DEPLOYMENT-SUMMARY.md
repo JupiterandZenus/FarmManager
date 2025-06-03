@@ -44,7 +44,7 @@ Use the XML templates provided in `README-Docker.md` to create containers throug
 NODE_ENV=production
 DATABASE_URL=mysql://farmboy:farmboy_password@farmboy-db:3306/farmboy_db
 API_KEY=rBoolrmakSG77Ol5CidsnWvmdyvjpzXfppuR0J4e-LYtn2zZLABzIyJVn5TeHpuv
-PORT=3000
+PORT=3333
 ```
 
 ### Database Configuration
@@ -58,7 +58,7 @@ MYSQL_PASSWORD=farmboy_password
 ## 🌐 Network Configuration
 
 ### Ports
-- **3000**: Farmboy Web Interface
+- **3333**: Farmboy Web Interface
 - **3306**: MariaDB Database (internal)
 
 ### Volumes
@@ -130,7 +130,7 @@ docker-compose ps
 
 ### Health Checks
 - Built-in Docker health checks
-- Application responds on port 3000
+- Application responds on port 3333
 - Database connectivity verification
 
 ### Backup Strategy
@@ -154,11 +154,11 @@ git pull  # if using git
 
 ### Common Issues
 
-1. **Port 3000 already in use**
+1. **Port 3333 already in use**
    ```bash
    # Change port in docker-compose.yml
    ports:
-     - "3001:3000"  # Use port 3001 instead
+     - "3334:3333"  # Use port 3334 instead
    ```
 
 2. **Database connection failed**
@@ -212,7 +212,7 @@ docker network inspect farmboy_farmboy-network
 - [ ] Docker and Docker Compose installed
 - [ ] Project files transferred to deployment location
 - [ ] Environment variables configured
-- [ ] Ports available (3000, 3306)
+- [ ] Ports available (3333, 3306)
 - [ ] Storage volumes configured
 - [ ] Security settings reviewed
 - [ ] Backup strategy planned
@@ -222,7 +222,7 @@ docker network inspect farmboy_farmboy-network
 
 After successful deployment, you should see:
 - ✅ Containers running: `docker-compose ps`
-- ✅ Application accessible: `http://YOUR_SERVER_IP:3000`
+- ✅ Application accessible: `http://YOUR_SERVER_IP:3333`
 - ✅ Database connected: Check application logs
 - ✅ All features working: Test account creation, etc.
 

@@ -17,7 +17,7 @@ A comprehensive farm management system with hybrid Docker container support, VNC
 - **VNC Server** (Port 5900) - Remote desktop access
 - **noVNC Web Interface** (Port 8080) - Browser-based VNC access
 - **SSH Access** (Port 22) - Terminal access
-- **Web Dashboard** (Port 3001) - Farm management interface
+- **Web Dashboard** (Port 3333) - Farm management interface
 
 ### 🌾 **Farm Management**
 - **EternalFarm Integration** - Automated farming operations
@@ -126,7 +126,7 @@ docker-compose -f portainer-farmmanager-simple.yml up -d
 - Enable SSL/TLS for production deployments
 
 ### 🌐 **Network Configuration**
-- **Port 3001**: Web Dashboard (HTTP)
+- **Port 3333**: Web Dashboard (HTTP)
 - **Port 5900**: VNC Server (TCP)
 - **Port 8080**: noVNC Web Interface (HTTP)
 - **Port 22**: SSH Access (TCP)
@@ -142,13 +142,13 @@ MYSQL_PASSWORD: "Sntioi004!"
 
 ## 🛠️ Services
 
-### **Farm Manager Web Interface** (Port 3001)
+### **Farm Manager Web Interface** (Port 3333)
 - Real-time dashboard
 - Agent management
 - System monitoring
 - Configuration management
 
-Access: `http://your-server:3001`
+Access: `http://your-server:3333`
 
 ### **VNC Remote Desktop** (Port 5900)
 - Full desktop environment
@@ -174,9 +174,9 @@ Connect: `ssh root@your-server`
 ## 🔍 Health Checks & Monitoring
 
 ### **Service Status Endpoints:**
-- **Health Check**: `http://your-server:3001/health`
-- **API Status**: `http://your-server:3001/api/status`
-- **Database Status**: `http://your-server:3001/api/db/status`
+- **Health Check**: `http://your-server:3333/health`
+- **API Status**: `http://your-server:3333/api/status`
+- **Database Status**: `http://your-server:3333/api/db/status`
 
 ### **Log Monitoring:**
 ```bash
@@ -205,10 +205,10 @@ docker build -t farmmanager -f Dockerfile.hybrid .
 ```
 
 #### **Web Interface Not Loading**
-- Verify port 3001 is accessible
+- Verify port 3333 is accessible
 - Check firewall settings
 - Ensure container is running: `docker ps`
-- Check service status: `curl http://localhost:3001/health`
+- Check service status: `curl http://localhost:3333/health`
 
 #### **VNC Connection Failed**
 - Verify port 5900 is open
@@ -271,7 +271,7 @@ docker build -t farmmanager:latest -f Dockerfile.hybrid .
 
 # Run locally
 docker run -d \
-  -p 3001:3001 \
+  -p 3333:3333 \
   -p 5900:5900 \
   -p 8080:8080 \
   -e DATABASE_URL="your-database-url" \
@@ -282,7 +282,7 @@ docker run -d \
 ```bash
 # Application
 NODE_ENV=production
-PORT=3001
+PORT=3333
 API_KEY=your-secure-api-key
 
 # Database
