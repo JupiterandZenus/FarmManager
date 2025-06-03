@@ -237,7 +237,7 @@ services:
           @@map(\"prime_link_requests\")
         }' > prisma/schema.prisma &&
         echo '[INFO] Running Prisma migrations...' &&
-        npx prisma migrate deploy &&
+        npx prisma db push &&
         echo '[INFO] Generating Prisma client...' &&
         npx prisma generate &&
         echo '[INFO] Starting application...' &&
