@@ -143,6 +143,7 @@ model Task {
   @@index([account_id], map: "tasks_account_id_fkey")
   @@index([agent_id], map: "tasks_agent_id_fkey")
   @@index([bot_id], map: "tasks_bot_id_fkey")
+    process_id      Int?      // DreamBot process ID
   @@map("tasks")
 }
 

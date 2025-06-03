@@ -9,15 +9,8 @@ const WebSocket = require('ws');
 const fetch = require('node-fetch');
 const os = require('os');
 
-// Enhanced task handlers with bot launching
-const { createTaskStartHandler, createTaskStopHandler } = require('./enhanced-task-handler');
-
 // Initialize Prisma Client
 const prisma = new PrismaClient();
-
-// Initialize enhanced task handlers
-const handleTaskStart = createTaskStartHandler(prisma, broadcastToClients, sendDiscordNotification, DISCORD_WEBHOOK_URL);
-const handleTaskStop = createTaskStopHandler(prisma, broadcastToClients, sendDiscordNotification, DISCORD_WEBHOOK_URL);
 
 // Load environment variables from config.env
 require('dotenv').config({ path: './config.env' });
@@ -1650,7 +1643,41 @@ const server = http.createServer(async (req, res) => {
                 const taskId = parseInt(taskStartMatch[1]);
                 let body = '';
                 req.on('data', chunk => body += chunk.toString());
-                req.on('end', () => handleTaskStart(taskId, body, res));
+                req.on('end', async () => {
+                    try {
+                        const { agent_id, account_id } = JSON.parse(body);
+                        const task = await prisma.task.update({
+                            where: { id: taskId },
+                            data: {
+                                status: 'running',
+                                agent_id: agent_id,
+                                account_id: account_id,
+                                started_at: new Date()
+                            },
+                            include: {
+                                account: true,
+                                agent: true,
+                                bot: true
+                            }
+                        });
+
+                        // Broadcast task start to all connected clients
+                        broadcastToClients('task_started', {
+                            task: task,
+                            message: `Task ${task.id} started on agent ${task.agent?.name || agent_id}`
+                        });
+
+                        res.writeHead(200);
+                        res.end(JSON.stringify({ 
+                            message: "Task started successfully",
+                            data: task 
+                        }));
+                    } catch (error) {
+                        console.error('Error starting task:', error);
+                        res.writeHead(400);
+                        res.end(JSON.stringify({ error: error.message }));
+                    }
+                });
                 return;
             }
 
@@ -1659,7 +1686,39 @@ const server = http.createServer(async (req, res) => {
                 const taskId = parseInt(taskStopMatch[1]);
                 let body = '';
                 req.on('data', chunk => body += chunk.toString());
-                req.on('end', () => handleTaskStop(taskId, body, res));
+                req.on('end', async () => {
+                    try {
+                        const { agent_id, account_id } = JSON.parse(body);
+                        const task = await prisma.task.update({
+                            where: { id: taskId },
+                            data: {
+                                status: 'stopped',
+                                completed_at: new Date()
+                            },
+                            include: {
+                                account: true,
+                                agent: true,
+                                bot: true
+                            }
+                        });
+
+                        // Broadcast task stop to all connected clients
+                        broadcastToClients('task_stopped', {
+                            task: task,
+                            message: `Task ${task.id} stopped`
+                        });
+
+                        res.writeHead(200);
+                        res.end(JSON.stringify({ 
+                            message: "Task stopped successfully",
+                            data: task 
+                        }));
+                    } catch (error) {
+                        console.error('Error stopping task:', error);
+                        res.writeHead(400);
+                        res.end(JSON.stringify({ error: error.message }));
+                    }
+                });
                 return;
             }
 
