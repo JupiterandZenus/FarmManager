@@ -15,6 +15,7 @@ services:
       - MYSQL_ROOT_HOST=%
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     ports:
       - "3307:3306"
     networks:

@@ -1,3 +1,23 @@
+-- Database initialization script for Farm Manager
+-- This ensures proper user permissions for container connections
+
+-- Create farmboy user with access from any host
+CREATE USER IF NOT EXISTS 'farmboy'@'%' IDENTIFIED BY 'farmpass123';
+
+-- Grant all privileges on farmmanager database
+GRANT ALL PRIVILEGES ON farmmanager.* TO 'farmboy'@'%';
+
+-- Ensure root can connect from any host
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'farmrootpass123';
+CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY 'farmrootpass123';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+
+-- Flush privileges to ensure changes take effect
+FLUSH PRIVILEGES;
+
+-- Create farmmanager database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS farmmanager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS Agent (
     id VARCHAR(255) PRIMARY KEY,
     eternal_farm_id VARCHAR(255) NULL,
