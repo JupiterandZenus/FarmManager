@@ -537,16 +537,177 @@ async function performBidirectionalSync() {
 // Function to get local IP address
 function getLocalIPAddress() {
     const interfaces = os.networkInterfaces();
-    for (const name of Object.keys(interfaces)) {
-        for (const interface of interfaces[name]) {
-            // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
-            if (interface.family === 'IPv4' && !interface.internal) {
-                return interface.address;
+    for (const interfaceName in interfaces) {
+        const interfaceInfo = interfaces[interfaceName];
+        for (const alias of interfaceInfo) {
+            if (alias.family === 'IPv4' && !alias.internal && alias.address !== '127.0.0.1') {
+                return alias.address;
             }
         }
     }
     return 'localhost';
 }
+
+// =============================================================================
+// CONFIGURATION MANAGEMENT HELPER FUNCTIONS
+// =============================================================================
+
+// Function to write configuration to environment file
+async function writeConfigToFile(config) {
+    return new Promise((resolve, reject) => {
+        try {
+            const envPath = path.join(__dirname, 'config.env');
+            let envContent = '';
+
+            // Read existing environment file
+            if (fs.existsSync(envPath)) {
+                envContent = fs.readFileSync(envPath, 'utf8');
+            }
+
+            // Update or add configuration values
+            const updateEnvVar = (key, value) => {
+                if (value !== undefined && value !== '') {
+                    const regex = new RegExp(`^${key}=.*$`, 'm');
+                    const line = `${key}=${value}`;
+                    if (regex.test(envContent)) {
+                        envContent = envContent.replace(regex, line);
+                    } else {
+                        envContent += `\n${line}`;
+                    }
+                }
+            };
+
+            // Update EternalFarm configuration
+            if (config.eternalfarm) {
+                updateEnvVar('ETERNALFARM_AGENT_KEY', config.eternalfarm.apiKey);
+                updateEnvVar('ETERNAL_API_URL', config.eternalfarm.apiUrl);
+                updateEnvVar('AUTH_AGENT_KEY', config.eternalfarm.apiKey);
+            }
+
+            // Update DreamBot configuration
+            if (config.dreambot) {
+                updateEnvVar('DREAMBOT_USERNAME', config.dreambot.username);
+                updateEnvVar('DREAMBOT_PASSWORD', config.dreambot.password);
+                updateEnvVar('DREAMBOT_SCRIPT', config.dreambot.script);
+                updateEnvVar('DREAMBOT_WORLD', config.dreambot.world);
+            }
+
+            // Update Discord configuration
+            if (config.discord) {
+                updateEnvVar('DISCORD_WEBHOOK_URL', config.discord.webhookUrl);
+            }
+
+            // Write the updated content back to file
+            fs.writeFileSync(envPath, envContent.trim() + '\n');
+            console.log('✅ Configuration written to config.env file');
+            resolve();
+        } catch (error) {
+            console.error('❌ Error writing configuration to file:', error);
+            reject(error);
+        }
+    });
+}
+
+// Function to generate DreamBot settings.json
+async function generateDreamBotSettings(dreambotConfig) {
+    return new Promise((resolve, reject) => {
+        try {
+            const settingsPath = path.join(__dirname, 'dreambot-settings.json');
+            
+            const settings = {
+                "username": dreambotConfig.username,
+                "password": dreambotConfig.password,
+                "world": dreambotConfig.world || 301,
+                "script": dreambotConfig.script || "",
+                "enableAntiDetection": true,
+                "enableRandomization": true,
+                "humanMouseMovement": true,
+                "variableDelays": true,
+                "randomBreaks": true,
+                "proxyRotation": true,
+                "clientTitle": `FarmBot-${dreambotConfig.username}`,
+                "lowCpuMode": false,
+                "enableLogging": true,
+                "autoRestart": true,
+                "maxRuntime": 21600000, // 6 hours in milliseconds
+                "breakSettings": {
+                    "enabled": true,
+                    "minBreakTime": 300000, // 5 minutes
+                    "maxBreakTime": 1800000, // 30 minutes
+                    "breakFrequency": 7200000 // 2 hours
+                },
+                "mouseSettings": {
+                    "humanLike": true,
+                    "mouseSpeed": "MEDIUM",
+                    "randomMovement": true
+                },
+                "keyboardSettings": {
+                    "humanTyping": true,
+                    "typingSpeed": "MEDIUM",
+                    "typos": true
+                }
+            };
+
+            fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+            console.log('✅ DreamBot settings.json generated successfully');
+            resolve();
+        } catch (error) {
+            console.error('❌ Error generating DreamBot settings:', error);
+            reject(error);
+        }
+    });
+}
+
+// Function to restart services via supervisord
+async function restartServices() {
+    return new Promise((resolve, reject) => {
+        try {
+            console.log('🔄 Restarting services...');
+            
+            // Use supervisorctl to restart specific services
+            const servicesToRestart = [
+                'eternalfarm-agent',
+                'eternalfarm-checker', 
+                'eternalfarm-browser-automator'
+            ];
+
+            let restartCount = 0;
+            const totalServices = servicesToRestart.length;
+
+            servicesToRestart.forEach(service => {
+                exec(`supervisorctl restart ${service}`, (error, stdout, stderr) => {
+                    restartCount++;
+                    
+                    if (error) {
+                        console.log(`⚠️ Service ${service} restart: ${error.message}`);
+                    } else {
+                        console.log(`✅ Service ${service} restarted: ${stdout.trim()}`);
+                    }
+                    
+                    // Resolve when all services have been processed
+                    if (restartCount === totalServices) {
+                        console.log('🚀 All services restart commands completed');
+                        resolve();
+                    }
+                });
+            });
+
+            // If no services to restart, resolve immediately
+            if (totalServices === 0) {
+                console.log('⚠️ No services configured for restart');
+                resolve();
+            }
+
+        } catch (error) {
+            console.error('❌ Error restarting services:', error);
+            reject(error);
+        }
+    });
+}
+
+// =============================================================================
+// END CONFIGURATION MANAGEMENT HELPER FUNCTIONS
+// =============================================================================
 
 const server = http.createServer(async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
@@ -1560,6 +1721,285 @@ const server = http.createServer(async (req, res) => {
                 });
                 return;
             }
+
+            // =============================================================================
+            // LIVE CONFIGURATION MANAGEMENT ENDPOINTS
+            // =============================================================================
+
+            // Handle configuration endpoints
+            if (pathname.startsWith('/api/config')) {
+                // Get current configuration
+                if (pathname === '/api/config' && req.method === 'GET') {
+                    try {
+                        const config = {
+                            eternalfarm: {
+                                apiKey: process.env.ETERNALFARM_AGENT_KEY || '',
+                                apiUrl: process.env.ETERNAL_API_URL || 'https://api.eternalfarm.net'
+                            },
+                            dreambot: {
+                                username: process.env.DREAMBOT_USERNAME || '',
+                                password: process.env.DREAMBOT_PASSWORD || '',
+                                script: process.env.DREAMBOT_SCRIPT || '',
+                                world: parseInt(process.env.DREAMBOT_WORLD) || 301
+                            },
+                            discord: {
+                                webhookUrl: process.env.DISCORD_WEBHOOK_URL || ''
+                            }
+                        };
+
+                        res.writeHead(200);
+                        res.end(JSON.stringify({ 
+                            success: true,
+                            config: config 
+                        }));
+                    } catch (error) {
+                        console.error('Error getting configuration:', error);
+                        res.writeHead(500);
+                        res.end(JSON.stringify({ 
+                            success: false,
+                            error: error.message 
+                        }));
+                    }
+                    return;
+                }
+
+                // Save configuration (updates environment variables in memory)
+                if (pathname === '/api/config' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const config = JSON.parse(body);
+                            
+                            // Update environment variables in memory
+                            if (config.eternalfarm) {
+                                if (config.eternalfarm.apiKey) process.env.ETERNALFARM_AGENT_KEY = config.eternalfarm.apiKey;
+                                if (config.eternalfarm.apiUrl) process.env.ETERNAL_API_URL = config.eternalfarm.apiUrl;
+                                if (config.eternalfarm.apiKey) process.env.AUTH_AGENT_KEY = config.eternalfarm.apiKey;
+                            }
+                            
+                            if (config.dreambot) {
+                                if (config.dreambot.username) process.env.DREAMBOT_USERNAME = config.dreambot.username;
+                                if (config.dreambot.password) process.env.DREAMBOT_PASSWORD = config.dreambot.password;
+                                if (config.dreambot.script) process.env.DREAMBOT_SCRIPT = config.dreambot.script;
+                                if (config.dreambot.world) process.env.DREAMBOT_WORLD = config.dreambot.world.toString();
+                            }
+                            
+                            if (config.discord) {
+                                if (config.discord.webhookUrl) process.env.DISCORD_WEBHOOK_URL = config.discord.webhookUrl;
+                            }
+
+                            // Write configuration to environment file for persistence
+                            await writeConfigToFile(config);
+
+                            res.writeHead(200);
+                            res.end(JSON.stringify({ 
+                                success: true,
+                                message: 'Configuration saved successfully'
+                            }));
+                        } catch (error) {
+                            console.error('Error saving configuration:', error);
+                            res.writeHead(400);
+                            res.end(JSON.stringify({ 
+                                success: false,
+                                error: error.message 
+                            }));
+                        }
+                    });
+                    return;
+                }
+
+                // Apply configuration and restart services
+                if (pathname === '/api/config/apply' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const config = JSON.parse(body);
+                            
+                            // Update environment variables
+                            if (config.eternalfarm) {
+                                if (config.eternalfarm.apiKey) {
+                                    process.env.ETERNALFARM_AGENT_KEY = config.eternalfarm.apiKey;
+                                    process.env.AUTH_AGENT_KEY = config.eternalfarm.apiKey;
+                                }
+                                if (config.eternalfarm.apiUrl) process.env.ETERNAL_API_URL = config.eternalfarm.apiUrl;
+                            }
+                            
+                            if (config.dreambot) {
+                                if (config.dreambot.username) process.env.DREAMBOT_USERNAME = config.dreambot.username;
+                                if (config.dreambot.password) process.env.DREAMBOT_PASSWORD = config.dreambot.password;
+                                if (config.dreambot.script) process.env.DREAMBOT_SCRIPT = config.dreambot.script;
+                                if (config.dreambot.world) process.env.DREAMBOT_WORLD = config.dreambot.world.toString();
+                            }
+                            
+                            if (config.discord) {
+                                if (config.discord.webhookUrl) process.env.DISCORD_WEBHOOK_URL = config.discord.webhookUrl;
+                            }
+
+                            // Write to environment file
+                            await writeConfigToFile(config);
+
+                            // Generate new DreamBot settings if credentials provided
+                            if (config.dreambot && config.dreambot.username && config.dreambot.password) {
+                                await generateDreamBotSettings(config.dreambot);
+                            }
+
+                            // Restart services via supervisord
+                            await restartServices();
+
+                            res.writeHead(200);
+                            res.end(JSON.stringify({ 
+                                success: true,
+                                message: 'Configuration applied and services restarted'
+                            }));
+                        } catch (error) {
+                            console.error('Error applying configuration:', error);
+                            res.writeHead(500);
+                            res.end(JSON.stringify({ 
+                                success: false,
+                                error: error.message 
+                            }));
+                        }
+                    });
+                    return;
+                }
+
+                // Test EternalFarm API connection
+                if (pathname === '/api/config/test/eternalfarm' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const { apiKey, apiUrl } = JSON.parse(body);
+                            
+                            if (!apiKey) {
+                                throw new Error('API key is required');
+                            }
+
+                            // Test the API connection
+                            const testUrl = `${apiUrl}/v1/agents`;
+                            const response = await fetch(testUrl, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${apiKey}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+
+                            if (response.ok) {
+                                const data = await response.json();
+                                res.writeHead(200);
+                                res.end(JSON.stringify({ 
+                                    success: true,
+                                    message: `Connection successful - Found ${data.data?.length || 0} agents`
+                                }));
+                            } else {
+                                throw new Error(`API returned ${response.status}: ${response.statusText}`);
+                            }
+                        } catch (error) {
+                            console.error('EternalFarm API test failed:', error);
+                            res.writeHead(400);
+                            res.end(JSON.stringify({ 
+                                success: false,
+                                error: error.message 
+                            }));
+                        }
+                    });
+                    return;
+                }
+
+                // Test Discord webhook
+                if (pathname === '/api/config/test/discord' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const { webhookUrl } = JSON.parse(body);
+                            
+                            if (!webhookUrl) {
+                                throw new Error('Discord webhook URL is required');
+                            }
+
+                            // Test Discord webhook with a simple message
+                            const testPayload = {
+                                username: "Farm Manager",
+                                content: "🧪 **Configuration Test** - Discord webhook is working correctly!",
+                                embeds: [{
+                                    title: "Configuration Test",
+                                    description: "This is a test message from the Farm Manager live configuration panel.",
+                                    color: 0x00ff00,
+                                    timestamp: new Date().toISOString(),
+                                    footer: {
+                                        text: "Farm Manager v0.1"
+                                    }
+                                }]
+                            };
+
+                            const webhookUrlObj = new URL(webhookUrl);
+                            const postData = JSON.stringify(testPayload);
+
+                            const options = {
+                                hostname: webhookUrlObj.hostname,
+                                port: 443,
+                                path: webhookUrlObj.pathname,
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Content-Length': Buffer.byteLength(postData)
+                                }
+                            };
+
+                            const discordReq = https.request(options, (discordRes) => {
+                                if (discordRes.statusCode === 204) {
+                                    res.writeHead(200);
+                                    res.end(JSON.stringify({ 
+                                        success: true,
+                                        message: 'Discord webhook test successful'
+                                    }));
+                                } else {
+                                    res.writeHead(400);
+                                    res.end(JSON.stringify({ 
+                                        success: false,
+                                        error: `Discord API returned ${discordRes.statusCode}`
+                                    }));
+                                }
+                            });
+
+                            discordReq.on('error', (error) => {
+                                res.writeHead(400);
+                                res.end(JSON.stringify({ 
+                                    success: false,
+                                    error: error.message 
+                                }));
+                            });
+
+                            discordReq.write(postData);
+                            discordReq.end();
+                        } catch (error) {
+                            console.error('Discord webhook test failed:', error);
+                            res.writeHead(400);
+                            res.end(JSON.stringify({ 
+                                success: false,
+                                error: error.message 
+                            }));
+                        }
+                    });
+                    return;
+                }
+
+                // If no config route matches
+                res.writeHead(404);
+                res.end(JSON.stringify({ 
+                    success: false,
+                    error: "Configuration endpoint not found" 
+                }));
+                return;
+            }
+
+            // =============================================================================
+            // END CONFIGURATION MANAGEMENT ENDPOINTS
+            // =============================================================================
 
         } catch (error) {
             console.error('Database error:', error);

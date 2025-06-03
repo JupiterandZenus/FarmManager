@@ -10,11 +10,65 @@
 <body>
     <header>
         <h1>FarmBoy v0.1 - EternalFarm Command Center</h1>
-        <div class="api-key-setup">
-            <label for="apiKey">🗝️ API Key:</label>
-            <input type="password" id="apiKey" placeholder="Enter your EternalFarm API Key..." style="min-width: 400px;">
-            <button id="saveApiKey">💾 Save Key</button>
-            <p class="warning">⚠️ Warning: API key is stored in browser local storage. For development/personal use only.</p>
+        
+        <!-- Live Configuration Panel -->
+        <div class="config-panel">
+            <button id="toggleConfig" class="config-toggle">⚙️ Live Configuration</button>
+            <div id="configSection" class="config-section" style="display:none;">
+                
+                <!-- EternalFarm Configuration -->
+                <div class="config-group">
+                    <h3>🔥 EternalFarm Settings</h3>
+                    <div class="config-row">
+                        <label for="eternalfarmApiKey">🗝️ API Key:</label>
+                        <input type="password" id="eternalfarmApiKey" placeholder="Enter your EternalFarm API Key..." style="min-width: 400px;">
+                        <button id="testApiKey">🧪 Test</button>
+                    </div>
+                    <div class="config-row">
+                        <label for="eternalfarmApiUrl">🌐 API URL:</label>
+                        <input type="text" id="eternalfarmApiUrl" value="https://api.eternalfarm.net" style="min-width: 300px;">
+                    </div>
+                    <div class="config-status" id="eternalfarmStatus">⚫ Not configured</div>
+                </div>
+
+                <!-- DreamBot Configuration -->
+                <div class="config-group">
+                    <h3>🤖 DreamBot Settings</h3>
+                    <div class="config-row">
+                        <label for="dreambotUsername">👤 Username:</label>
+                        <input type="text" id="dreambotUsername" placeholder="RuneScape username">
+                        <label for="dreambotPassword">🔐 Password:</label>
+                        <input type="password" id="dreambotPassword" placeholder="RuneScape password">
+                    </div>
+                    <div class="config-row">
+                        <label for="dreambotScript">📜 Default Script:</label>
+                        <input type="text" id="dreambotScript" placeholder="Script name">
+                        <label for="dreambotWorld">🌍 World:</label>
+                        <input type="number" id="dreambotWorld" value="301" style="width: 80px;">
+                    </div>
+                    <div class="config-status" id="dreambotStatus">⚫ Not configured</div>
+                </div>
+
+                <!-- Discord Configuration -->
+                <div class="config-group">
+                    <h3>🔔 Discord Notifications</h3>
+                    <div class="config-row">
+                        <label for="discordWebhook">📢 Webhook URL:</label>
+                        <input type="text" id="discordWebhook" placeholder="https://discord.com/api/webhooks/..." style="min-width: 400px;">
+                        <button id="testDiscord">🧪 Test</button>
+                    </div>
+                    <div class="config-status" id="discordStatus">⚫ Not configured</div>
+                </div>
+
+                <!-- Save/Load Configuration -->
+                <div class="config-actions">
+                    <button id="saveConfig" class="primary-btn">💾 Save All Settings</button>
+                    <button id="loadConfig" class="secondary-btn">📥 Load Current</button>
+                    <button id="applyConfig" class="success-btn">🚀 Apply & Restart Services</button>
+                </div>
+                
+                <p class="config-warning">⚠️ Settings are applied live and persist in the container environment</p>
+            </div>
         </div>
     </header>
 

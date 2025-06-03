@@ -28,7 +28,7 @@ services:
       - DREAMBOT_DIR=/root/DreamBot/BotData
       - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
       # EternalFarm Configuration
-      - ETERNALFARM_AGENT_KEY=${ETERNALFARM_AGENT_KEY:-YOUR_API_KEY_HERE}
+      - ETERNALFARM_AGENT_KEY=your_actual_api_key_here
       - ETERNAL_API_URL=${ETERNAL_API_URL:-https://api.eternalfarm.net}
       - AUTH_AGENT_KEY=${ETERNALFARM_AGENT_KEY:-YOUR_API_KEY_HERE}
     volumes:

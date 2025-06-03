@@ -2359,4 +2359,352 @@ document.addEventListener('DOMContentLoaded', () => {
             return `${secs}s`;
         }
     }
+
+    // =============================================================================
+    // LIVE CONFIGURATION MANAGEMENT
+    // =============================================================================
+
+    // Configuration Management
+    const ConfigManager = {
+        // Current configuration state
+        currentConfig: {
+            eternalfarm: {
+                apiKey: '',
+                apiUrl: 'https://api.eternalfarm.net'
+            },
+            dreambot: {
+                username: '',
+                password: '',
+                script: '',
+                world: 301
+            },
+            discord: {
+                webhookUrl: ''
+            }
+        },
+
+        // Initialize configuration panel
+        init() {
+            this.attachEventListeners();
+            this.loadCurrentConfig();
+        },
+
+        // Attach event listeners
+        attachEventListeners() {
+            // Toggle configuration panel
+            const toggleBtn = document.getElementById('toggleConfig');
+            const configSection = document.getElementById('configSection');
+            
+            if (toggleBtn && configSection) {
+                toggleBtn.addEventListener('click', () => {
+                    const isVisible = configSection.style.display !== 'none';
+                    configSection.style.display = isVisible ? 'none' : 'block';
+                    toggleBtn.textContent = isVisible ? '⚙️ Live Configuration' : '⚙️ Hide Configuration';
+                });
+            }
+
+            // Test buttons
+            const testApiBtn = document.getElementById('testApiKey');
+            const testDiscordBtn = document.getElementById('testDiscord');
+            
+            if (testApiBtn) {
+                testApiBtn.addEventListener('click', () => this.testEternalFarmConnection());
+            }
+            
+            if (testDiscordBtn) {
+                testDiscordBtn.addEventListener('click', () => this.testDiscordWebhook());
+            }
+
+            // Action buttons
+            const saveBtn = document.getElementById('saveConfig');
+            const loadBtn = document.getElementById('loadConfig');
+            const applyBtn = document.getElementById('applyConfig');
+            
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => this.saveConfiguration());
+            }
+            
+            if (loadBtn) {
+                loadBtn.addEventListener('click', () => this.loadCurrentConfig());
+            }
+            
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => this.applyConfiguration());
+            }
+        },
+
+        // Load current configuration from server
+        async loadCurrentConfig() {
+            try {
+                this.updateStatus('loadConfig', 'loading', '📥 Loading current configuration...');
+                
+                const response = await apiRequest('/api/config', 'GET');
+                
+                if (response.success) {
+                    this.currentConfig = response.config;
+                    this.populateConfigForm();
+                    this.updateStatus('loadConfig', 'success', '✅ Configuration loaded successfully');
+                    this.updateConnectionStatuses();
+                } else {
+                    throw new Error(response.error || 'Failed to load configuration');
+                }
+            } catch (error) {
+                console.error('❌ Failed to load configuration:', error);
+                this.updateStatus('loadConfig', 'error', `❌ Failed to load: ${error.message}`);
+                showNotification('Failed to load configuration', 'error');
+            }
+        },
+
+        // Populate form with current configuration
+        populateConfigForm() {
+            // EternalFarm settings
+            const eternalfarmApiKey = document.getElementById('eternalfarmApiKey');
+            const eternalfarmApiUrl = document.getElementById('eternalfarmApiUrl');
+            
+            if (eternalfarmApiKey) eternalfarmApiKey.value = this.currentConfig.eternalfarm.apiKey || '';
+            if (eternalfarmApiUrl) eternalfarmApiUrl.value = this.currentConfig.eternalfarm.apiUrl || 'https://api.eternalfarm.net';
+
+            // DreamBot settings
+            const dreambotUsername = document.getElementById('dreambotUsername');
+            const dreambotPassword = document.getElementById('dreambotPassword');
+            const dreambotScript = document.getElementById('dreambotScript');
+            const dreambotWorld = document.getElementById('dreambotWorld');
+            
+            if (dreambotUsername) dreambotUsername.value = this.currentConfig.dreambot.username || '';
+            if (dreambotPassword) dreambotPassword.value = this.currentConfig.dreambot.password || '';
+            if (dreambotScript) dreambotScript.value = this.currentConfig.dreambot.script || '';
+            if (dreambotWorld) dreambotWorld.value = this.currentConfig.dreambot.world || 301;
+
+            // Discord settings
+            const discordWebhook = document.getElementById('discordWebhook');
+            if (discordWebhook) discordWebhook.value = this.currentConfig.discord.webhookUrl || '';
+        },
+
+        // Collect configuration from form
+        collectConfigFromForm() {
+            const config = {
+                eternalfarm: {
+                    apiKey: document.getElementById('eternalfarmApiKey')?.value || '',
+                    apiUrl: document.getElementById('eternalfarmApiUrl')?.value || 'https://api.eternalfarm.net'
+                },
+                dreambot: {
+                    username: document.getElementById('dreambotUsername')?.value || '',
+                    password: document.getElementById('dreambotPassword')?.value || '',
+                    script: document.getElementById('dreambotScript')?.value || '',
+                    world: parseInt(document.getElementById('dreambotWorld')?.value) || 301
+                },
+                discord: {
+                    webhookUrl: document.getElementById('discordWebhook')?.value || ''
+                }
+            };
+            return config;
+        },
+
+        // Save configuration to server
+        async saveConfiguration() {
+            try {
+                this.updateStatus('saveConfig', 'loading', '💾 Saving configuration...');
+                
+                const config = this.collectConfigFromForm();
+                
+                const response = await apiRequest('/api/config', 'POST', config);
+                
+                if (response.success) {
+                    this.currentConfig = config;
+                    this.updateStatus('saveConfig', 'success', '✅ Configuration saved successfully');
+                    this.updateConnectionStatuses();
+                    showNotification('Configuration saved successfully', 'success');
+                } else {
+                    throw new Error(response.error || 'Failed to save configuration');
+                }
+            } catch (error) {
+                console.error('❌ Failed to save configuration:', error);
+                this.updateStatus('saveConfig', 'error', `❌ Save failed: ${error.message}`);
+                showNotification('Failed to save configuration', 'error');
+            }
+        },
+
+        // Apply configuration and restart services
+        async applyConfiguration() {
+            try {
+                this.updateStatus('applyConfig', 'loading', '🚀 Applying configuration and restarting services...');
+                
+                const config = this.collectConfigFromForm();
+                
+                const response = await apiRequest('/api/config/apply', 'POST', config);
+                
+                if (response.success) {
+                    this.currentConfig = config;
+                    this.updateStatus('applyConfig', 'success', '✅ Configuration applied and services restarted');
+                    this.updateConnectionStatuses();
+                    showNotification('Configuration applied successfully - services restarting', 'success');
+                    
+                    // Refresh the page after a delay to reconnect to updated services
+                    setTimeout(() => {
+                        showNotification('Refreshing page to connect to updated services...', 'info');
+                        setTimeout(() => window.location.reload(), 2000);
+                    }, 3000);
+                } else {
+                    throw new Error(response.error || 'Failed to apply configuration');
+                }
+            } catch (error) {
+                console.error('❌ Failed to apply configuration:', error);
+                this.updateStatus('applyConfig', 'error', `❌ Apply failed: ${error.message}`);
+                showNotification('Failed to apply configuration', 'error');
+            }
+        },
+
+        // Test EternalFarm API connection
+        async testEternalFarmConnection() {
+            try {
+                this.updateConfigStatus('eternalfarmStatus', 'testing', '🧪 Testing API connection...');
+                
+                const apiKey = document.getElementById('eternalfarmApiKey')?.value;
+                const apiUrl = document.getElementById('eternalfarmApiUrl')?.value;
+                
+                if (!apiKey) {
+                    throw new Error('API key is required');
+                }
+                
+                const response = await apiRequest('/api/config/test/eternalfarm', 'POST', {
+                    apiKey,
+                    apiUrl
+                });
+                
+                if (response.success) {
+                    this.updateConfigStatus('eternalfarmStatus', 'connected', '✅ API connection successful');
+                    showNotification('EternalFarm API connection successful', 'success');
+                } else {
+                    throw new Error(response.error || 'API test failed');
+                }
+            } catch (error) {
+                console.error('❌ EternalFarm API test failed:', error);
+                this.updateConfigStatus('eternalfarmStatus', 'error', `❌ Connection failed: ${error.message}`);
+                showNotification('EternalFarm API test failed', 'error');
+            }
+        },
+
+        // Test Discord webhook
+        async testDiscordWebhook() {
+            try {
+                this.updateConfigStatus('discordStatus', 'testing', '🧪 Testing Discord webhook...');
+                
+                const webhookUrl = document.getElementById('discordWebhook')?.value;
+                
+                if (!webhookUrl) {
+                    throw new Error('Discord webhook URL is required');
+                }
+                
+                const response = await apiRequest('/api/config/test/discord', 'POST', {
+                    webhookUrl
+                });
+                
+                if (response.success) {
+                    this.updateConfigStatus('discordStatus', 'connected', '✅ Discord webhook working');
+                    showNotification('Discord webhook test successful', 'success');
+                } else {
+                    throw new Error(response.error || 'Discord test failed');
+                }
+            } catch (error) {
+                console.error('❌ Discord webhook test failed:', error);
+                this.updateConfigStatus('discordStatus', 'error', `❌ Webhook failed: ${error.message}`);
+                showNotification('Discord webhook test failed', 'error');
+            }
+        },
+
+        // Update configuration status indicators
+        updateConfigStatus(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            element.textContent = message;
+            element.className = `config-status ${status}`;
+        },
+
+        // Update connection status for all services
+        updateConnectionStatuses() {
+            // EternalFarm status
+            const eternalfarmStatus = this.currentConfig.eternalfarm.apiKey ? 
+                '🟢 Configured' : '⚫ Not configured';
+            this.updateConfigStatus('eternalfarmStatus', 
+                this.currentConfig.eternalfarm.apiKey ? 'connected' : '', 
+                eternalfarmStatus);
+
+            // DreamBot status
+            const dreambotStatus = this.currentConfig.dreambot.username && this.currentConfig.dreambot.password ? 
+                '🟢 Configured' : '⚫ Not configured';
+            this.updateConfigStatus('dreambotStatus', 
+                this.currentConfig.dreambot.username && this.currentConfig.dreambot.password ? 'connected' : '', 
+                dreambotStatus);
+
+            // Discord status
+            const discordStatus = this.currentConfig.discord.webhookUrl ? 
+                '🟢 Configured' : '⚫ Not configured';
+            this.updateConfigStatus('discordStatus', 
+                this.currentConfig.discord.webhookUrl ? 'connected' : '', 
+                discordStatus);
+        },
+
+        // Update button status during operations
+        updateStatus(buttonId, status, message) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            
+            const originalText = button.textContent;
+            
+            switch (status) {
+                case 'loading':
+                    button.disabled = true;
+                    button.textContent = message;
+                    break;
+                case 'success':
+                    button.disabled = false;
+                    button.textContent = message;
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 3000);
+                    break;
+                case 'error':
+                    button.disabled = false;
+                    button.textContent = message;
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 5000);
+                    break;
+                default:
+                    button.disabled = false;
+                    button.textContent = originalText;
+            }
+        }
+    };
+
+    // =============================================================================
+    // END CONFIGURATION MANAGEMENT
+    // =============================================================================
+
+    // Initialize configuration manager
+    ConfigManager.init();
+
+    // Initialize WebSocket connection
+    connectWebSocket();
+
+    // Perform initial health check
+    performHealthCheck();
+
+    // Set up periodic health checks
+    setInterval(performHealthCheck, 30000); // Every 30 seconds
+
+    // Initialize date/time display
+    function updateDateTime() {
+        const now = new Date();
+        const dateTimeElement = document.getElementById('currentDateTime');
+        if (dateTimeElement) {
+            dateTimeElement.textContent = now.toLocaleString();
+        }
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    // Rehydrate scheduled tasks from localStorage
+    rehydrateScheduledTasks();
 });
