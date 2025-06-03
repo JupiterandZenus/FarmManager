@@ -53,17 +53,17 @@ services:
       - farm-network
     command: >
       sh -c "
-        echo '⏳ Waiting for database...' &&
+        echo '[INFO] Waiting for database...' &&
         while ! mysqladmin ping -h mariadb -u root -p'qQgc^pS0yqZ6SrJm$fKU' --silent; do
           sleep 1
         done &&
-        echo '✅ Database is ready!' &&
+        echo '[OK] Database is ready!' &&
         cd /app &&
-        echo '🔄 Running Prisma migrations...' &&
+        echo '[INFO] Running Prisma migrations...' &&
         npx prisma migrate deploy &&
-        echo '🔧 Generating Prisma client...' &&
+        echo '[INFO] Generating Prisma client...' &&
         npx prisma generate &&
-        echo '🚀 Starting application...' &&
+        echo '[INFO] Starting application...' &&
         node server.js
       "
 
