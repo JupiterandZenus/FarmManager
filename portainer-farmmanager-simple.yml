@@ -2,9 +2,14 @@ version: '3.8'
 
 services:
   farm-admin-hybrid:
-    build:
-      context: https://github.com/JupiterandZenus/FarmManager.git
-      dockerfile: Dockerfile.hybrid
+    # Use pre-built image from Docker Hub (faster deployment)
+    image: jupiterandzenus/farmmanager:latest
+    
+    # Alternative: Build from GitHub source (slower but always latest code)
+    # build:
+    #   context: https://github.com/JupiterandZenus/FarmManager.git
+    #   dockerfile: Dockerfile.hybrid
+    
     container_name: farm-admin-hybrid
     restart: unless-stopped
     
