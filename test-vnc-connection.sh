@@ -1,79 +1,77 @@
 #!/bin/bash
 
-echo "🔍 VNC Connection Test Script"
-echo "=============================="
+echo "🔍 VNC Connection Diagnostics"
+echo "============================"
 
-# Check if Xvfb is running
-echo "📺 Checking Xvfb (Virtual Display)..."
-if pgrep -f "Xvfb :1" > /dev/null; then
-    echo "✅ Xvfb is running on display :1"
+echo "📡 Checking VNC Server Status:"
+if netstat -ln | grep :5900; then
+    echo "✅ VNC server is listening on port 5900"
 else
-    echo "❌ Xvfb is not running"
+    echo "❌ VNC server not listening on port 5900"
 fi
 
-# Check if x11vnc is running
-echo "🖥️ Checking x11vnc (VNC Server)..."
-if pgrep -f "x11vnc" > /dev/null; then
-    echo "✅ x11vnc is running"
-    echo "📊 VNC Server Details:"
-    ps aux | grep x11vnc | grep -v grep
+echo ""
+echo "🌐 Checking noVNC Status:"
+if netstat -ln | grep :8080; then
+    echo "✅ noVNC server is listening on port 8080"
 else
-    echo "❌ x11vnc is not running"
+    echo "❌ noVNC server not listening on port 8080"
 fi
 
-# Check if noVNC websockify is running
-echo "🌐 Checking noVNC (Web Interface)..."
-if pgrep -f "websockify" > /dev/null; then
-    echo "✅ noVNC websockify is running"
-    echo "📊 noVNC Details:"
-    ps aux | grep websockify | grep -v grep
+echo ""
+echo "🖥️ Checking Display Status:"
+export DISPLAY=:1
+if xdpyinfo >/dev/null 2>&1; then
+    echo "✅ X display :1 is active"
+    echo "Screen info:"
+    xdpyinfo | grep dimensions
 else
-    echo "❌ noVNC websockify is not running"
+    echo "❌ X display :1 is not accessible"
 fi
 
-# Check port availability
-echo "🔌 Checking Port Status..."
-echo "Port 5900 (VNC): $(netstat -ln | grep :5900 && echo "LISTENING" || echo "NOT LISTENING")"
-echo "Port 8080 (noVNC): $(netstat -ln | grep :8080 && echo "LISTENING" || echo "NOT LISTENING")"
+echo ""
+echo "📊 Process Status:"
+echo "VNC processes:"
+ps aux | grep vnc | grep -v grep
 
-# Test VNC connection
-echo "🧪 Testing VNC Connection..."
-if command -v vncviewer > /dev/null; then
-    echo "VNC viewer available, testing connection..."
-    timeout 5 vncviewer -passwd /root/.vnc/passwd localhost:5900 2>&1 | head -5
-else
-    echo "VNC viewer not available, skipping connection test"
-fi
+echo ""
+echo "noVNC/websockify processes:"
+ps aux | grep websockify | grep -v grep
 
-# Check noVNC files
-echo "📁 Checking noVNC Installation..."
-if [ -d "/usr/share/novnc" ]; then
-    echo "✅ noVNC directory exists"
-    echo "📄 noVNC files:"
-    ls -la /usr/share/novnc/ | head -10
-    
-    if [ -f "/usr/share/novnc/app/custom.js" ]; then
-        echo "✅ Custom JavaScript file exists"
-        echo "📝 Custom JS file size: $(wc -l < /usr/share/novnc/app/custom.js) lines"
+echo ""
+echo "📝 Recent VNC Logs:"
+echo "x11vnc logs (last 5 lines):"
+tail -5 /var/log/x11vnc.log 2>/dev/null || echo "No x11vnc log found"
+
+echo ""
+echo "x11vnc error logs (last 5 lines):"
+tail -5 /var/log/x11vnc.err 2>/dev/null || echo "No x11vnc error log found"
+
+echo ""
+echo "noVNC logs (last 5 lines):"
+tail -5 /var/log/novnc.log 2>/dev/null || echo "No noVNC log found"
+
+echo ""
+echo "noVNC error logs (last 5 lines):"
+tail -5 /var/log/novnc.err 2>/dev/null || echo "No noVNC error log found"
+
+echo ""
+echo "🧪 Testing Local VNC Connection:"
+if command -v vncviewer >/dev/null 2>&1; then
+    echo "Testing local VNC connection..."
+    timeout 5 vncviewer localhost:5900 -SecurityTypes None -passwd /dev/null >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "✅ Local VNC connection successful"
     else
-        echo "❌ Custom JavaScript file missing"
+        echo "❌ Local VNC connection failed"
     fi
 else
-    echo "❌ noVNC directory not found"
+    echo "vncviewer not available for testing"
 fi
 
-# Check display environment
-echo "🖼️ Display Environment:"
-echo "DISPLAY: $DISPLAY"
-echo "X11 socket: $(ls -la /tmp/.X11-unix/ 2>/dev/null || echo "Not found")"
-
-# Test X11 connection
-echo "🔗 Testing X11 Connection..."
-if command -v xdpyinfo > /dev/null; then
-    xdpyinfo -display :1 2>&1 | head -5
-else
-    echo "xdpyinfo not available"
-fi
-
-echo "=============================="
-echo "�� VNC Test Complete" 
+echo ""
+echo "🔧 Suggested Actions:"
+echo "1. Try: http://your-server-ip:8080 for noVNC"
+echo "2. Try: your-server-ip:5900 with VNC client"
+echo "3. Check firewall settings on server"
+echo "4. Verify network connectivity to server" 
