@@ -3,7 +3,7 @@ version: '3.8'
 services:
   farm-admin-hybrid:
     # Use pre-built image from Docker Hub (faster deployment)
-    image: jupiterandzenus/farmmanager:latest
+    image: supscotty/farmboy:latest
     
     # Alternative: Build from GitHub source (slower but always latest code)
     # build:

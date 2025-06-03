@@ -16,7 +16,7 @@ GitHub (Code Push) → GitHub Actions → Docker Hub → Portainer (Auto Deploy)
 2. **Sign in** to your account
 3. **Click "Create Repository"**
 4. **Repository Details:**
-   - **Name**: `farmmanager`
+   - **Name**: `farmboy`
    - **Description**: `Farm Manager - Complete production system with hybrid Docker container support, VNC access, and EternalFarm integration`
    - **Visibility**: Public (or Private if you prefer)
 5. **Click "Create"**
@@ -38,7 +38,7 @@ GitHub (Code Push) → GitHub Actions → Docker Hub → Portainer (Auto Deploy)
 
 | Secret Name | Value | Description |
 |-------------|-------|-------------|
-| `DOCKERHUB_USERNAME` | `your-dockerhub-username` | Your Docker Hub username |
+| `DOCKERHUB_USERNAME` | `supscotty` | Your Docker Hub username |
 | `DOCKERHUB_TOKEN` | `your-access-token` | The token from Step 2 |
 
 ### **Step 4: Test the Pipeline**
@@ -47,7 +47,7 @@ The GitHub Actions workflow is already set up in `.github/workflows/docker-build
 
 - **Trigger on**: Push to `main` branch, Pull Requests, Releases
 - **Build**: Multi-platform images (AMD64 + ARM64)
-- **Push**: To `your-username/farmmanager:latest`
+- **Push**: To `supscotty/farmboy:latest`
 - **Update**: Docker Hub description with README content
 
 To test:
