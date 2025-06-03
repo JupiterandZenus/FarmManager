@@ -36,6 +36,7 @@ services:
     image: supscotty/farmboy:latest
     container_name: farm-admin
     restart: unless-stopped
+    entrypoint: ["sh", "-c"]
     ports:
       - "3000:3000"
       - "5900:5900"
@@ -48,6 +49,8 @@ services:
       ETERNAL_API_URL: "https://api.eternalfarm.net"
       DISPLAY: ":1"
       DISCORD_WEBHOOK_URL: "${DISCORD_WEBHOOK_URL}"
+      LC_ALL: "C"
+      LANG: "C"
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
@@ -57,7 +60,10 @@ services:
     networks:
       - farm-network
     command: >
-      sh -c "
+      "
+        echo '[INFO] Starting Farm Manager with clean environment...' &&
+        export LC_ALL=C &&
+        export LANG=C &&
         echo '[INFO] Waiting for database to be fully ready...' &&
         sleep 30 &&
         while ! mysqladmin ping -h mariadb -u root -pfarmrootpass123 --silent; do
