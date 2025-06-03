@@ -18,9 +18,20 @@ services:
       - ETERNAL_FARM_KEY=${ETERNAL_FARM_KEY:-}
       - ETERNAL_AUTH_KEY=${ETERNAL_AUTH_KEY:-}
       - DISPLAY=:1
+      - JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      # DreamBot Configuration for Bot Launching
+      - DREAMBOT_USERNAME=${DREAMBOT_USERNAME:-}
+      - DREAMBOT_PASSWORD=${DREAMBOT_PASSWORD:-}
+      - DREAMBOT_SCRIPT=${DREAMBOT_SCRIPT:-}
+      - DREAMBOT_WORLD=${DREAMBOT_WORLD:-301}
+      - DREAMBOT_ARGS=${DREAMBOT_ARGS:---no-splash --developer-mode}
+      - DREAMBOT_DIR=/root/DreamBot/BotData
+      - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
+      # Legacy DreamBot variables (for backward compatibility)
       - DREAMBOT_USER=${DREAMBOT_USER:-}
       - DREAMBOT_PASS=${DREAMBOT_PASS:-}
+      # Proxy Configuration
       - PROXY_HOST=${PROXY_HOST:-}
       - PROXY_PORT=${PROXY_PORT:-}
       - PROXY_USER=${PROXY_USER:-}
@@ -43,6 +54,14 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.farm-admin.rule=Host(`farm-admin.local`)"
       - "traefik.http.services.farm-admin.loadbalancer.server.port=3333"
+      # Farm Manager Labels
+      - "farm.manager.version=v0.1"
+      - "farm.manager.features=bot-launching,vnc,discord,eternalfarm"
+      - "farm.manager.description=Farm Manager with DreamBot Launching"
+      - "farm.manager.ports.web=3333"
+      - "farm.manager.ports.vnc=5900"
+      - "farm.manager.ports.novnc=8080"
+      - "farm.manager.ports.ssh=2222"
 
   mariadb:
     image: lscr.io/linuxserver/mariadb:latest
