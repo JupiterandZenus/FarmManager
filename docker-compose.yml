@@ -3,33 +3,32 @@ version: '3.8'
 services:
   farm-admin-hybrid:
     container_name: farm-admin-hybrid
-    build:
-      context: .
-      dockerfile: Dockerfile.hybrid
+    image: supscotty/farmboy:latest
     ports:
-      - "5900:5900"
-      - "8080:80"
-      - "3333:3001"
-      - "2222:22"
+      - "5900:5900"   # VNC Server
+      - "8080:8080"   # noVNC Web Client
+      - "3333:3333"   # Farm Manager Web Interface
+      - "2222:22"     # SSH Access
     environment:
       - NODE_ENV=production
-      - PORT=3001
-      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
+      - PORT=3333
+      - DATABASE_URL=mysql://root:Sntioi004!@mariadb:3306/farmboy_db
       - DISPLAY=:1
       - VNC_PORT=5900
-      - NOVNC_PORT=80
+      - NOVNC_PORT=8080
       - JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
     restart: unless-stopped
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
     networks:
       - farm-network
 
   mariadb:
-    container_name: farm-admin-mariadb
+    container_name: farm-admin-mariadb-fresh
     image: lscr.io/linuxserver/mariadb:latest
     environment:
       - PUID=1000
@@ -40,10 +39,16 @@ services:
       - MYSQL_USER=farmboy
       - MYSQL_PASSWORD=Sntioi004!
     volumes:
-      - mariadb_data:/config
+      - /mnt/user/appdata/mariadb-fresh:/config
     ports:
-      - "3307:3306"
+      - "3308:3306"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-pSntioi004!"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+      start_period: 60s
     networks:
       - farm-network
 
@@ -51,8 +56,6 @@ volumes:
   farm_data:
     driver: local
   dreambot_data:
-    driver: local
-  mariadb_data:
     driver: local
 
 networks:

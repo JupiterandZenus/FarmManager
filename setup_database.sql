@@ -1,29 +1,35 @@
--- Connect to MariaDB as root and run these commands
+-- Farm Manager Database Setup Script for Docker MariaDB
 
--- Create the database (if it doesn't exist)
-CREATE DATABASE IF NOT EXISTS farmboy_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Create the database with proper character set
+CREATE DATABASE IF NOT EXISTS farm_admin CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Create a dedicated user for the application (optional, but recommended)
-CREATE USER IF NOT EXISTS 'farmboy_user'@'%' IDENTIFIED BY 'Sntioi004!';
+-- Drop existing users if they exist to recreate with proper permissions
+DROP USER IF EXISTS 'farmboy'@'%';
+DROP USER IF EXISTS 'farmboy'@'localhost';
 
--- Grant all privileges on the farmboy_db database to the user
-GRANT ALL PRIVILEGES ON farmboy_db.* TO 'farmboy_user'@'%';
+-- Create the user with permissions for any host
+CREATE USER 'farmboy'@'%' IDENTIFIED BY 'Sntioi004!';
+CREATE USER 'farmboy'@'localhost' IDENTIFIED BY 'Sntioi004!';
 
--- Also grant to localhost
-GRANT ALL PRIVILEGES ON farmboy_db.* TO 'farmboy_user'@'localhost';
+-- Grant ALL privileges (including administrative ones) to farmboy
+GRANT ALL PRIVILEGES ON *.* TO 'farmboy'@'%' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'farmboy'@'localhost' WITH GRANT OPTION;
 
--- Grant root access (since you're using root in your connection)
-GRANT ALL PRIVILEGES ON farmboy_db.* TO 'root'@'%';
+-- Specifically grant all privileges on farm_admin database
+GRANT ALL PRIVILEGES ON farm_admin.* TO 'farmboy'@'%';
+GRANT ALL PRIVILEGES ON farm_admin.* TO 'farmboy'@'localhost';
 
--- Flush privileges to ensure changes take effect
+-- Ensure root can connect from anywhere
+UPDATE mysql.user SET Host='%' WHERE User='root' AND Host='localhost';
+
+-- Flush privileges to ensure changes take effect immediately
 FLUSH PRIVILEGES;
 
--- Show grants to verify
-SHOW GRANTS FOR 'farmboy_user'@'%';
-SHOW GRANTS FOR 'root'@'%';
-
 -- Use the database
-USE farmboy_db;
+USE farm_admin;
+
+-- Show that setup is complete
+SELECT 'Database and user setup complete' as status;
 
 -- Add sync-related fields to Agent table for API collector and updater system
 -- These columns support bi-directional synchronization with EternalFarm API
