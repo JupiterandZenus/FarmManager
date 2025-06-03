@@ -53,7 +53,7 @@ A comprehensive farm management system with hybrid Docker container support, VNC
 3. **Update Environment Variables:**
    ```yaml
    environment:
-     API_KEY: "your-actual-secure-api-key-here"
+     API_KEY: "your-actual-secure-api-key"
      ETERNALFARM_AGENT_KEY: "your-actual-eternalfarm-key"
      ETERNAL_FARM_KEY: "your-actual-eternal-farm-key"
      ETERNAL_AUTH_KEY: "your-actual-eternal-auth-key"
@@ -318,7 +318,6 @@ FarmManager/
 ├── 🎨 style.css                          # Web interface styles
 ├── 📄 index.html                         # Web dashboard
 ├── 📊 prisma/                            # Database schema & migrations
-├── ☕ api-server/                        # Java API components
 ├── 🐳 docker-compose*.yml               # Various deployment configs
 ├── 📋 portainer-farmmanager-simple.yml  # Portainer stack (recommended)
 ├── 📋 portainer-farmmanager-stack.yml   # Portainer stack (advanced)
