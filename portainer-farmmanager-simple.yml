@@ -27,6 +27,7 @@ services:
       - --max_connections=1000
       - --wait_timeout=28800
       - --skip-name-resolve
+      - --bind-address=0.0.0.0
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       timeout: 10s
@@ -46,7 +47,7 @@ services:
     environment:
       NODE_ENV: "production"
       PORT: "3000"
-      DATABASE_URL: "mysql://root:farmrootpass123@mariadb:3306/farmmanager?connection_limit=5&connect_timeout=60&pool_timeout=60"
+      DATABASE_URL: "mysql://farmboy:farmpass123@mariadb:3306/farmmanager?connection_limit=5&connect_timeout=60&pool_timeout=60"
       ETERNALFARM_AGENT_KEY: "P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3"
       ETERNAL_API_URL: "https://api.eternalfarm.net"
       DISPLAY: ":1"
@@ -69,13 +70,13 @@ services:
         echo '[INFO] Waiting for database to be fully ready...' &&
         sleep 60 &&
         echo '[INFO] Testing database connection...' &&
-        while ! mysqladmin ping -h mariadb -u root -pfarmrootpass123 --silent 2>/dev/null; do
+        while ! mysqladmin ping -h mariadb -u farmboy -pfarmpass123 --silent 2>/dev/null; do
           echo '[INFO] Database not ready, waiting 10 seconds...' &&
           sleep 10
         done &&
         echo '[OK] Database is ready!' &&
         echo '[INFO] Testing Prisma database connection...' &&
-        mysql -h mariadb -u root -pfarmrootpass123 -e 'SELECT 1' farmmanager &&
+        mysql -h mariadb -u farmboy -pfarmpass123 -e 'SELECT 1' farmmanager &&
         echo '[OK] Prisma connection test passed!' &&
         cd /app &&
         echo '[INFO] Setting up Prisma...' &&
