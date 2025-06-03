@@ -42,10 +42,13 @@ services:
       ETERNAL_API_URL: "https://api.eternalfarm.net"
       DISPLAY: ":1"
       DISCORD_WEBHOOK_URL: "${DISCORD_WEBHOOK_URL}"
+      PRISMA_SCHEMA_PATH: "/app/prisma/schema.prisma"
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
-      - ./prisma:/app/prisma
+      - type: bind
+        source: ./prisma/schema.prisma
+        target: /app/prisma/schema.prisma
     depends_on:
       - mariadb
     networks:
@@ -58,10 +61,14 @@ services:
         done &&
         echo '[OK] Database is ready!' &&
         cd /app &&
+        echo '[INFO] Ensuring Prisma directory exists...' &&
+        mkdir -p /app/prisma &&
+        echo '[INFO] Verifying Prisma schema...' &&
+        ls -la /app/prisma/schema.prisma &&
         echo '[INFO] Running Prisma migrations...' &&
-        npx prisma migrate deploy &&
+        npx prisma migrate deploy --schema=/app/prisma/schema.prisma &&
         echo '[INFO] Generating Prisma client...' &&
-        npx prisma generate &&
+        npx prisma generate --schema=/app/prisma/schema.prisma &&
         echo '[INFO] Starting application...' &&
         node server.js
       "
