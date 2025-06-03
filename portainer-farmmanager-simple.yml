@@ -26,11 +26,11 @@ services:
       - --max_connections=1000
       - --wait_timeout=28800
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pfarmrootpass123"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       timeout: 10s
       retries: 10
       interval: 30s
-      start_period: 60s
+      start_period: 90s
 
   farm-admin:
     image: supscotty/farmboy:latest
@@ -65,10 +65,11 @@ services:
         export LC_ALL=C &&
         export LANG=C &&
         echo '[INFO] Waiting for database to be fully ready...' &&
-        sleep 30 &&
-        while ! mysqladmin ping -h mariadb -u root -pfarmrootpass123 --silent; do
-          echo '[INFO] Database not ready, waiting 5 seconds...' &&
-          sleep 5
+        sleep 60 &&
+        echo '[INFO] Testing database connection...' &&
+        while ! mysqladmin ping -h mariadb -u root -pfarmrootpass123 --silent 2>/dev/null; do
+          echo '[INFO] Database not ready, waiting 10 seconds...' &&
+          sleep 10
         done &&
         echo '[OK] Database is ready!' &&
         cd /app &&
