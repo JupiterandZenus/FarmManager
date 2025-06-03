@@ -66,3 +66,19 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Java/Maven artifacts (not needed for production)
+api-server/
+*.class
+*.jar
+*.war
+*.ear
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
