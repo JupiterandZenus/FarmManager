@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 // Configuration matching your server.js
 const ETERNAL_API_URL = 'https://api.eternalfarm.net';
-const ETERNALFARM_AGENT_KEY = 'RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5';
+const ETERNALFARM_AGENT_KEY = 'P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3';
 
 async function testAgentSync() {
     console.log('🧪 Testing Agent Sync with Fixed Endpoint');
