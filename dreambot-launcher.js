@@ -8,14 +8,15 @@ async function launchDreamBot(account, task, env = {}) {
         try {
             console.log(`🚀 Launching DreamBot for account: ${account.username}`);
             
-            // DreamBot installation path
+            // DreamBot installation paths (updated to match actual installation)
             const dreambotDir = '/root/DreamBot';
-            const launcherPath = `${dreambotDir}/DBLauncher.jar`;
+            const primaryPath = '/root/DreamBot/BotData/client.jar'; // Updated to match screenshot
             
-            // Check if DreamBot launcher exists
-            if (!fs.existsSync(launcherPath)) {
+            // Check if DreamBot launcher exists at primary path
+            if (!fs.existsSync(primaryPath)) {
                 // Try alternative paths
                 const altPaths = [
+                    '/root/DreamBot/DBLauncher.jar',
                     '/root/DreamBot/client.jar',
                     '/root/DreamBot/DreamBot.jar',
                     '/root/dreambot.jar'
@@ -30,17 +31,22 @@ async function launchDreamBot(account, task, env = {}) {
                 }
                 
                 if (!foundPath) {
-                    throw new Error(`DreamBot launcher not found at ${launcherPath} or alternative paths`);
+                    throw new Error(`DreamBot launcher not found at ${primaryPath} or alternative paths`);
                 }
                 
                 console.log(`✅ Found DreamBot at alternative path: ${foundPath}`);
+            } else {
+                console.log(`✅ Found DreamBot at primary path: ${primaryPath}`);
             }
+            
+            // Use the correct launcher path
+            const launcherPath = fs.existsSync(primaryPath) ? primaryPath : foundPath;
             
             // Prepare DreamBot arguments
             const args = [
                 '-Xmx1024m', // Set max memory
                 '-Djava.awt.headless=false',
-                '-jar', fs.existsSync(launcherPath) ? launcherPath : foundPath,
+                '-jar', launcherPath,
                 '--username', account.username,
                 '--password', account.password,
                 '--world', process.env.DREAMBOT_WORLD || '301'
@@ -132,6 +138,7 @@ async function stopDreamBot(pid) {
 // Function to check if DreamBot is installed
 function checkDreamBotInstallation() {
     const possiblePaths = [
+        '/root/DreamBot/BotData/client.jar', // Updated primary path from screenshot
         '/root/DreamBot/DBLauncher.jar',
         '/root/DreamBot/client.jar',
         '/root/DreamBot/DreamBot.jar',

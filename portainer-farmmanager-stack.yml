@@ -27,6 +27,7 @@ services:
       - DREAMBOT_WORLD=${DREAMBOT_WORLD:-301}
       - DREAMBOT_ARGS=${DREAMBOT_ARGS:---no-splash --developer-mode}
       - DREAMBOT_DIR=/root/DreamBot/BotData
+      - DREAMBOT_CLIENT_PATH=/root/DreamBot/BotData/client.jar
       - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
       # Legacy DreamBot variables (for backward compatibility)
       - DREAMBOT_USER=${DREAMBOT_USER:-}
