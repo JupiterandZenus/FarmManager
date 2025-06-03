@@ -27,9 +27,7 @@ services:
       - --wait_timeout=28800
 
   farm-admin:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: supscotty/farmboy:latest
     container_name: farm-admin
     restart: unless-stopped
     ports:
@@ -47,6 +45,7 @@ services:
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
+      - ./prisma:/app/prisma
     depends_on:
       - mariadb
     networks:
