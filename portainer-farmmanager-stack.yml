@@ -1,0 +1,122 @@
+version: '3.8'
+
+services:
+  farm-admin-hybrid:
+    image: ghcr.io/jupiterandzenus/farmmanager:latest
+    container_name: farm-admin-hybrid
+    restart: unless-stopped
+    
+    # Build from the new repository if you prefer building locally
+    # build:
+    #   context: https://github.com/JupiterandZenus/FarmManager.git
+    #   dockerfile: Dockerfile.hybrid
+    
+    ports:
+      - "3001:3001"   # Farm Manager Web Interface
+      - "5900:5900"   # VNC Server
+      - "8080:8080"   # noVNC Web Interface
+      - "22:22"       # SSH Access
+    
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT}
+      API_KEY: ${API_KEY}
+      ETERNALFARM_AGENT_KEY: ${ETERNALFARM_AGENT_KEY}
+      ETERNAL_FARM_KEY: ${ETERNAL_FARM_KEY}
+      ETERNAL_AUTH_KEY: ${ETERNAL_AUTH_KEY}
+      VNC_PASSWORD: ${VNC_PASSWORD}
+      DISPLAY: ${DISPLAY}
+      TZ: ${TZ}
+    
+    volumes:
+      - farm_data:/app/data
+      - farm_logs:/var/log
+      - farm_vnc:/root/.vnc
+      - farm_dreambot:/root/DreamBot
+    
+    networks:
+      - farm-network
+    
+    depends_on:
+      - mariadb
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.farm-admin.rule=Host(`farm.yourdomain.com`)"
+      - "traefik.http.services.farm-admin.loadbalancer.server.port=3001"
+
+  mariadb:
+    image: mariadb:10.11
+    container_name: farm-mariadb
+    restart: unless-stopped
+    
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_CHARSET: ${MYSQL_CHARSET}
+      MYSQL_COLLATION: ${MYSQL_COLLATION}
+    
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql:ro
+    
+    networks:
+      - farm-network
+    
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Optional: Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: farm-redis
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    
+    volumes:
+      - redis_data:/data
+    
+    networks:
+      - farm-network
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  farm_data:
+    driver: local
+  farm_logs:
+    driver: local
+  farm_vnc:
+    driver: local
+  farm_dreambot:
+    driver: local
+  mariadb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  farm-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

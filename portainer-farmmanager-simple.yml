@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  farm-admin-hybrid:
+    build:
+      context: https://github.com/JupiterandZenus/FarmManager.git
+      dockerfile: Dockerfile.hybrid
+    container_name: farm-admin-hybrid
+    restart: unless-stopped
+    
+    ports:
+      - "3001:3001"
+      - "5900:5900"
+      - "8080:8080"
+      - "22:22"
+    
+    environment:
+      DATABASE_URL: "mysql://farmboy:Sntioi004!@mariadb:3306/farm_admin"
+      NODE_ENV: "production"
+      PORT: "3001"
+      API_KEY: "change-this-secure-api-key"
+      ETERNALFARM_AGENT_KEY: "your-eternalfarm-key-here"
+      ETERNAL_FARM_KEY: "your-eternal-farm-key-here"
+      ETERNAL_AUTH_KEY: "your-eternal-auth-key-here"
+      VNC_PASSWORD: "vncpass"
+      DISPLAY: ":1"
+      TZ: "America/New_York"
+    
+    volumes:
+      - farm_data:/app/data
+      - farm_logs:/var/log
+      - farm_vnc:/root/.vnc
+      - farm_dreambot:/root/DreamBot
+    
+    networks:
+      - farm-network
+    
+    depends_on:
+      - mariadb
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  mariadb:
+    image: mariadb:10.11
+    container_name: farm-mariadb
+    restart: unless-stopped
+    
+    environment:
+      MYSQL_ROOT_PASSWORD: "SecureRootPassword2025!"
+      MYSQL_DATABASE: "farm_admin"
+      MYSQL_USER: "farmboy"
+      MYSQL_PASSWORD: "Sntioi004!"
+      MYSQL_CHARSET: "utf8mb4"
+      MYSQL_COLLATION: "utf8mb4_unicode_ci"
+    
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    
+    networks:
+      - farm-network
+    
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "farmboy", "-pSntioi004!"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: farm-redis
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes --requirepass SecureRedisPassword2025!
+    
+    volumes:
+      - redis_data:/data
+    
+    networks:
+      - farm-network
+
+volumes:
+  farm_data:
+  farm_logs:
+  farm_vnc:
+  farm_dreambot:
+  mariadb_data:
+  redis_data:
+
+networks:
+  farm-network:
+    driver: bridge 
