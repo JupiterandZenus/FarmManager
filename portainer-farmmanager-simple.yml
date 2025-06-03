@@ -48,6 +48,7 @@ services:
       NODE_ENV: "production"
       PORT: "3000"
       DATABASE_URL: "mysql://farmboy:farmpass123@mariadb:3306/farmmanager?connection_limit=5&connect_timeout=60&pool_timeout=60"
+      API_KEY: "P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3"
       ETERNALFARM_AGENT_KEY: "P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3"
       ETERNAL_API_URL: "https://api.eternalfarm.net"
       DISPLAY: ":1"
