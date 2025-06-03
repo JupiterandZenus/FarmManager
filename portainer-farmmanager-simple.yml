@@ -15,7 +15,6 @@ services:
       - MYSQL_ROOT_HOST=%
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     ports:
       - "3307:3306"
     networks:
@@ -30,7 +29,7 @@ services:
       - --skip-name-resolve
       - --bind-address=0.0.0.0
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "farmboy", "-pfarmpass123"]
       timeout: 10s
       retries: 10
       interval: 30s
