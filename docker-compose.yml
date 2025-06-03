@@ -28,21 +28,20 @@ services:
       - DREAMBOT_DIR=/root/DreamBot/BotData
       - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
       # EternalFarm Configuration
-      - ETERNALFARM_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
-      - ETERNAL_API_URL=https://api.eternalfarm.net/v1
-      - AUTH_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
+      - ETERNALFARM_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - ETERNAL_API_URL=https://api.eternalfarm.net
+      - AUTH_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
       - API_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
-      - ./fix-permissions.sh:/app/fix-permissions.sh
     restart: unless-stopped
     depends_on:
       mariadb:
         condition: service_healthy
     networks:
       - farm-network
-    entrypoint: ["/bin/bash", "-c", "chmod +x /app/fix-permissions.sh && /app/fix-permissions.sh && /docker-entrypoint.sh"]
+    entrypoint: ["/bin/bash", "-c", "chmod +x /app/Entry.sh && chmod +x /app/fix-permissions.sh && /app/fix-permissions.sh && /app/Entry.sh"]
 
   mariadb:
     container_name: farm-admin-mariadb-fresh

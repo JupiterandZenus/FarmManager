@@ -1,12 +1,3 @@
--- Farm Manager Database Setup Script for Docker MariaDB
-
--- Create the database with proper character set
-CREATE DATABASE IF NOT EXISTS farmmanager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- Use the database
-USE farmmanager;
-
--- Create Agent table if it doesn't exist
 CREATE TABLE IF NOT EXISTS Agent (
     id VARCHAR(255) PRIMARY KEY,
     eternal_farm_id VARCHAR(255) NULL,
@@ -24,18 +15,8 @@ CREATE TABLE IF NOT EXISTS Agent (
     last_synced TIMESTAMP NULL
 );
 
--- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_agent_eternal_farm_id ON Agent(eternal_farm_id);
 CREATE INDEX IF NOT EXISTS idx_agent_needs_sync ON Agent(needs_sync);
 CREATE INDEX IF NOT EXISTS idx_agent_last_synced ON Agent(last_synced);
 CREATE INDEX IF NOT EXISTS idx_agent_status ON Agent(status);
-CREATE INDEX IF NOT EXISTS idx_agent_last_seen ON Agent(last_seen);
-
--- Grant root user access from any host
-UPDATE mysql.user SET Host='%' WHERE User='root';
-FLUSH PRIVILEGES;
-
--- Show that setup is complete
-SELECT 'Database setup complete' as status;
-SHOW TABLES;
-DESCRIBE Agent; 
+CREATE INDEX IF NOT EXISTS idx_agent_last_seen ON Agent(last_seen); 
