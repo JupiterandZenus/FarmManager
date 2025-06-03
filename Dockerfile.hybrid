@@ -67,15 +67,15 @@ RUN apt-get update && apt-get install -y \
     openjdk-11-jdk \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Java 8 (required for DreamBot) - Using Eclipse Temurin
+# Install Java 8 (required for DreamBot) - Using OpenJDK from Ubuntu repos for better multi-platform support
 RUN apt-get update && \
-    apt-get install -y wget apt-transport-https gnupg && \
-    wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | tee /etc/apt/keyrings/adoptium.asc && \
-    echo "deb [signed-by=/etc/apt/keyrings/adoptium.asc] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list && \
-    apt-get update && \
-    apt-get install -y temurin-8-jdk && \
-    update-alternatives --install /usr/bin/java java /usr/lib/jvm/temurin-8-jdk-amd64/bin/java 1 && \
-    update-alternatives --set java /usr/lib/jvm/temurin-8-jdk-amd64/bin/java
+    apt-get install -y openjdk-8-jdk && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set up Java alternatives (platform-agnostic)
+RUN JAVA_8_HOME=$(find /usr/lib/jvm -name "java-8-openjdk-*" | head -1) && \
+    update-alternatives --install /usr/bin/java java $JAVA_8_HOME/bin/java 1 && \
+    update-alternatives --set java $JAVA_8_HOME/bin/java
 
 # Install noVNC
 RUN git clone https://github.com/novnc/noVNC.git /usr/share/novnc && \
@@ -175,15 +175,17 @@ RUN echo "📥 Pre-downloading DreamBot client..." && \
     chmod +x /root/DreamBot/BotData/client.jar && \
     echo "✅ DreamBot client pre-installed"
 
+# Set up dynamic JAVA_HOME (works for both amd64 and arm64)
+RUN echo 'export JAVA_HOME=$(find /usr/lib/jvm -name "java-8-openjdk-*" | head -1)' >> /root/.bashrc && \
+    echo 'export PATH=$JAVA_HOME/bin:$PATH' >> /root/.bashrc
+
 # Set environment variables
 ENV DISPLAY=:1 \
     HOME=/root \
     SHELL=/bin/bash \
     USER=root \
     LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8 \
-    JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64 \
-    PATH=$JAVA_HOME/bin:$PATH
+    LC_ALL=en_US.UTF-8
 
 # Copy supervisord configuration
 COPY supervisord.conf /etc/supervisord.conf
