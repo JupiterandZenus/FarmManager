@@ -2462,7 +2462,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const eternalfarmApiUrl = document.getElementById('eternalfarmApiUrl');
             
             if (eternalfarmApiKey) eternalfarmApiKey.value = this.currentConfig.eternalfarm.apiKey || '';
-            if (eternalfarmApiUrl) eternalfarmApiUrl.value = this.currentConfig.eternalfarm.apiUrl || 'https://api.eternalfarm.net';
+            if (eternalfarmApiUrl) eternalfarmApiUrl.value = this.currentConfig.eternalfarm.apiUrl || 'https://api.eternalfarm.com';
 
             // DreamBot settings
             const dreambotUsername = document.getElementById('dreambotUsername');
@@ -2485,7 +2485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const config = {
                 eternalfarm: {
                     apiKey: document.getElementById('eternalfarmApiKey')?.value || '',
-                    apiUrl: document.getElementById('eternalfarmApiUrl')?.value || 'https://api.eternalfarm.net'
+                    apiUrl: document.getElementById('eternalfarmApiUrl')?.value || 'https://api.eternalfarm.com'
                 },
                 dreambot: {
                     username: document.getElementById('dreambotUsername')?.value || '',
