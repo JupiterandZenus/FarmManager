@@ -13,7 +13,7 @@ services:
       - PORT=3333
       - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
       - API_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
-      - ETERNALFARM_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
+      - ETERNALFARM_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
       - ETERNAL_API_URL=https://api.eternalfarm.net
       - ETERNAL_FARM_KEY=${ETERNAL_FARM_KEY:-}
       - ETERNAL_AUTH_KEY=${ETERNAL_AUTH_KEY:-}
