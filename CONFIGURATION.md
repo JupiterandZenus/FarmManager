@@ -79,6 +79,9 @@ After deployment, access via:
 | `DREAMBOT_SCRIPT` | Default script to run | `YourScript` |
 | `DREAMBOT_WORLD` | Preferred world number | `301` |
 | `DREAMBOT_ARGS` | DreamBot launch arguments | `--no-splash --developer-mode` |
+| `ETERNALFARM_AGENT_KEY` | EternalFarm API key | `ef_1234567890abcdef...` |
+| `ETERNAL_API_URL` | EternalFarm API endpoint | `https://api.eternalfarm.net` |
+| `AUTH_AGENT_KEY` | Authentication key for EternalFarm tools | `ef_1234567890abcdef...` |
 
 ## 🛡️ Security Notes
 
@@ -87,3 +90,42 @@ After deployment, access via:
 - ✅ No hardcoded credentials in files
 - ✅ Settings.json generated at runtime
 - ⚠️ Use strong passwords for all accounts 
+
+## 🔥 EternalFarm Integration
+
+### Required Environment Variables
+Set these in your stack.env or Portainer environment:
+
+```bash
+# EternalFarm API Configuration
+ETERNALFARM_AGENT_KEY=your_actual_eternalfarm_api_key
+ETERNAL_API_URL=https://api.eternalfarm.net
+AUTH_AGENT_KEY=your_actual_eternalfarm_api_key
+```
+
+### How to Get Your EternalFarm API Key
+1. **Visit EternalFarm.net** and log into your account
+2. **Go to Settings** → **API Keys** or **Developer Section**
+3. **Create a new API key** or copy your existing one
+4. **Copy the key** (format: `ef_1234567890abcdef...`)
+
+### EternalFarm Tools
+The container includes these EternalFarm tools:
+- **EternalFarmAgent** - Main agent for farm management
+- **EternalFarmChecker** - Account status checker
+- **EternalFarmBrowserAutomator** - Browser automation
+
+### Troubleshooting EternalFarm Issues
+
+#### Apps Not Opening
+If EternalFarm apps don't open when clicked:
+1. **Check API Key**: Ensure `ETERNALFARM_AGENT_KEY` is set correctly
+2. **Check Logs**: View container logs for error messages
+3. **VNC Connection**: Make sure you're connected via VNC (port 5900)
+4. **X11 Display**: The tools require DISPLAY=:1 to be set
+
+#### Dashboard Not Showing Agent
+If the dashboard doesn't show agent connection:
+1. **API Key Required**: Set your actual EternalFarm API key
+2. **Network Connectivity**: Ensure container can reach `api.eternalfarm.net`
+3. **Agent Registration**: Check if agent is registered in your EternalFarm account 
