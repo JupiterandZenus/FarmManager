@@ -231,4 +231,88 @@ After successful deployment, you should see:
 
 **Your Farmboy application is now ready for production deployment on Unraid! 🌱**
 
-For detailed step-by-step instructions, see `README-Docker.md`. 
+For detailed step-by-step instructions, see `README-Docker.md`.
+
+# Farm Manager Deployment Summary
+
+## Latest Updates
+
+This version includes critical fixes and improvements to the Farm Manager system:
+
+1. **Database Authentication Fix**
+   - Changed to use `farmboy` user instead of `root`
+   - Added `MYSQL_ROOT_HOST=%` to allow connections from any host
+   - Removed problematic volume mounts that could cause conflicts
+
+2. **Missing account_categories Table Fix**
+   - Added scripts to create the missing table causing Prisma seeding errors
+   - Files: `fix-account-categories-table.sql`, `fix-database-schema.sh`, `fix-database-schema.ps1`, `fix-database-schema.bat`
+
+3. **X11 Display Server Improvements**
+   - Modified `Entry.sh` to proactively start and restart X11
+   - Reduced timeout and continued execution even if X11 isn't ready
+   - Added error handling to prevent hanging
+
+4. **Environment Labels**
+   - Added comprehensive Docker labels for better container management
+   - Database-specific labels for both containers
+   - Service-specific labels for monitoring and documentation
+
+5. **Configuration Updates**
+   - Fixed database URL in `supervisord.conf`
+   - Added environment variables for database connection in `docker-compose.yml`
+   - Updated Portainer stack files with consistent configuration
+
+## Deployment Instructions
+
+### Method 1: Docker Compose
+
+```bash
+# Pull the latest changes
+git pull
+
+# Deploy using Docker Compose
+docker-compose up -d
+```
+
+### Method 2: Manual Build and Deploy
+
+```bash
+# Pull the latest changes
+git pull
+
+# Build the Docker image
+docker build -t supscotty/farmboy:latest .
+
+# Push to Docker Hub (optional)
+docker push supscotty/farmboy:latest
+
+# Deploy using Docker Compose
+docker-compose up -d
+```
+
+### Method 3: Portainer Stack
+
+1. Login to Portainer
+2. Navigate to Stacks
+3. Create a new stack or update existing
+4. Use the content from `portainer-farmmanager-stack.yml`
+5. Deploy the stack
+
+## Verification
+
+After deployment, verify the system is working properly:
+
+1. Web interface: http://your-server:3333
+2. VNC interface: http://your-server:8080/vnc.html
+3. Database connection: Test with the farmboy user
+4. EternalFarm integration: Check agent, checker, and automator services
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. Check container logs: `docker-compose logs`
+2. Verify database connection: `docker exec -it farm-admin-mariadb-fresh mysql -u farmboy -pSntioi004! farmboy_db -e "SHOW TABLES;"`
+3. Restart services: `docker-compose restart`
+4. Run the test script: `node test-launch-sequence.js` 
