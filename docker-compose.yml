@@ -9,6 +9,29 @@ services:
       - "8080:8080"   # noVNC Web Client
       - "3333:3333"   # Farm Manager Web Interface
       - "2222:22"     # SSH Access
+    labels:
+      # Core Application Labels
+      - "com.farmboy.type=hybrid"
+      - "com.farmboy.version=0.2"
+      - "com.farmboy.environment=production"
+      - "com.farmboy.maintainer=SupScotty"
+      # Service Labels
+      - "com.farmboy.service.vnc=enabled"
+      - "com.farmboy.service.novnc=enabled"
+      - "com.farmboy.service.ssh=enabled"
+      - "com.farmboy.service.web=enabled"
+      # Port Labels
+      - "com.farmboy.ports.vnc=5900"
+      - "com.farmboy.ports.novnc=8080"
+      - "com.farmboy.ports.web=3333"
+      - "com.farmboy.ports.ssh=2222"
+      # Integration Labels
+      - "com.farmboy.integration.dreambot=enabled"
+      - "com.farmboy.integration.eternalfarm=enabled"
+      - "com.farmboy.integration.discord=enabled"
+      # Resource Labels
+      - "com.farmboy.resources.memory=2g"
+      - "com.farmboy.resources.cpus=2"
     environment:
       - NODE_ENV=production
       - PORT=3333
