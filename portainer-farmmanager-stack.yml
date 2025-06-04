@@ -94,23 +94,38 @@ services:
       retries: 3
       start_period: 40s
     labels:
+      # Core Application Labels
+      - "com.farmboy.type=hybrid"
+      - "com.farmboy.version=0.2"
+      - "com.farmboy.environment=production"
+      - "com.farmboy.maintainer=SupScotty"
+      # Service Labels
+      - "com.farmboy.service.vnc=enabled"
+      - "com.farmboy.service.novnc=enabled"
+      - "com.farmboy.service.ssh=enabled"
+      - "com.farmboy.service.web=enabled"
+      # Port Labels
+      - "com.farmboy.ports.vnc=5900"
+      - "com.farmboy.ports.novnc=8080"
+      - "com.farmboy.ports.web=3333"
+      - "com.farmboy.ports.ssh=2222"
+      # Integration Labels
+      - "com.farmboy.integration.dreambot=enabled"
+      - "com.farmboy.integration.eternalfarm=enabled"
+      - "com.farmboy.integration.discord=enabled"
+      # Resource Labels
+      - "com.farmboy.resources.memory=2g"
+      - "com.farmboy.resources.cpus=2"
+      # Traefik Labels
       - "traefik.enable=true"
       - "traefik.http.routers.farm-admin.rule=Host(`farm-admin.local`)"
       - "traefik.http.services.farm-admin.loadbalancer.server.port=3333"
-      # Farm Manager Labels
-      - "farm.manager.version=v0.2"
-      - "farm.manager.features=bot-launching,vnc,discord,eternalfarm-individual-keys"
-      - "farm.manager.description=Farm Manager with DreamBot Launching and Individual EternalFarm Service Keys"
-      - "farm.manager.ports.web=3333"
-      - "farm.manager.ports.vnc=5900"
-      - "farm.manager.ports.novnc=8080"
-      - "farm.manager.ports.ssh=2222"
       # EternalFarm Service Labels
-      - "farm.eternalfarm.agent.enabled=true"
-      - "farm.eternalfarm.checker.enabled=true"
-      - "farm.eternalfarm.automator.enabled=true"
-      - "farm.eternalfarm.keys.type=individual"
-      - "farm.eternalfarm.services=agent,checker,automator"
+      - "com.farmboy.eternalfarm.agent.enabled=true"
+      - "com.farmboy.eternalfarm.checker.enabled=true"
+      - "com.farmboy.eternalfarm.automator.enabled=true"
+      - "com.farmboy.eternalfarm.keys.type=individual"
+      - "com.farmboy.eternalfarm.services=agent,checker,automator"
 
   mariadb:
     image: lscr.io/linuxserver/mariadb:latest
