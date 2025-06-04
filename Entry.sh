@@ -1,6 +1,20 @@
 #!/bin/bash
 set -e
 
+# Set up supervisord configuration
+if [ ! -f "/etc/supervisord.conf" ]; then
+    echo "🔧 Setting up supervisord configuration..."
+    cp /app/supervisord.conf /etc/supervisord.conf
+    chmod 644 /etc/supervisord.conf
+fi
+
+# Start supervisord if not running
+if ! pgrep supervisord > /dev/null; then
+    echo "▶️ Starting supervisord..."
+    /usr/bin/supervisord -n -c /etc/supervisord.conf &
+    sleep 5
+fi
+
 echo "🚀 Entry.sh - EternalFarm & DreamBot Setup Script"
 echo "================================================="
 echo "🔄 STARTUP SEQUENCE: Database First → X11 → Environment"

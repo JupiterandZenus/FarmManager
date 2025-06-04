@@ -75,7 +75,7 @@ RUN chmod -R 755 /root/DreamBot \
     && chmod 755 /appdata/EternalFarm
 
 # Copy configuration files to their locations
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisord.conf
 COPY Entry.sh /root/Entry.sh
 COPY cpu_manager.sh /root/cpu_manager.sh
 
@@ -123,4 +123,4 @@ LABEL maintainer="Farm Admin Team" \
       description="Farm Manager with DreamBot Launching and Individual EternalFarm Service Keys"
 
 # Set the default command to run supervisord
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisord.conf"] 
