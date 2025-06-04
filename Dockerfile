@@ -33,13 +33,16 @@ COPY prisma ./prisma/
 # Copy rest of application code
 COPY . .
 
+# Copy DreamBot settings.json
+COPY settings.json /app/settings.json
+
 # Generate Prisma client
 RUN npx prisma generate
 
 # Create necessary directories with correct permissions
-RUN mkdir -p /root/DreamBot /root/Desktop /root/.vnc /root/.eternalfarm /app/data \
-    && chmod -R 755 /root/DreamBot /root/Desktop /root/.vnc /app/data \
-    && chmod 700 /root/.eternalfarm
+RUN mkdir -p /root/DreamBot /root/Desktop /root/.vnc /root/.eternalfarm /app/data /appdata/EternalFarm /appdata/DreamBot/BotData \
+    && chmod -R 755 /root/DreamBot /root/Desktop /root/.vnc /app/data /appdata \
+    && chmod 700 /root/.eternalfarm /appdata/EternalFarm
 
 # Create EternalFarm config
 RUN echo '{\n\
