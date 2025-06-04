@@ -33,8 +33,9 @@ COPY prisma ./prisma/
 # Copy rest of application code
 COPY . .
 
-# Copy DreamBot settings.json
+# Copy DreamBot settings.json and dynamic generator
 COPY settings.json /app/settings.json
+COPY generate-dreambot-settings.js /app/generate-dreambot-settings.js
 
 # Generate Prisma client
 RUN npx prisma generate

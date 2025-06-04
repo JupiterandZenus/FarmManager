@@ -18,6 +18,12 @@
     "mariadb": "^3.0.0",
     "node-fetch": "^2.7.0",
     "prisma": "^5.0.0",
-    "ws": "^8.18.2"
+    "ws": "^8.18.2",
+    "puppeteer": "^21.0.0",
+    "sharp": "^0.33.0",
+    "axios": "^1.6.0",
+    "socks-proxy-agent": "^8.0.0",
+    "https-proxy-agent": "^7.0.0",
+    "http-proxy-agent": "^7.0.0"
   }
 }

@@ -132,8 +132,8 @@ model Task {
   scheduled_at  DateTime?
   started_at    DateTime?
   completed_at  DateTime?
-  error_message String?   @db.Text
-  result_data   String?   @db.LongText
+  error_message String?
+  result_data   String?
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
   account       Account?  @relation(fields: [account_id], references: [id])
@@ -153,7 +153,7 @@ model PrimeLinkRequest {
   status       String    @default("pending")
   requested_at DateTime  @default(now())
   processed_at DateTime?
-  notes        String?   @db.Text
+  notes        String?
 
   @@map("prime_link_requests")
 }

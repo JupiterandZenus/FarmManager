@@ -3,13 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚔️ FarmBoy v0.1 - EternalFarm Command Center ⚔️</title>
+    <title>⚔️ FarmBoy v0.2 - EternalFarm Command Center ⚔️</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
 </head>
 <body>
     <header>
-        <h1>FarmBoy v0.1 - EternalFarm Command Center</h1>
+        <div class="header-content">
+            <h1>⚔️ FarmBoy v0.2 - EternalFarm Command Center ⚔️</h1>
+            <div class="header-controls">
+                <div class="theme-toggle-container">
+                    <span class="theme-label">🌙</span>
+                    <label class="theme-toggle">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="theme-slider"></span>
+                    </label>
+                    <span class="theme-label">☀️</span>
+                </div>
+                <div class="connection-status">
+                    <span id="live-indicator">🔴 OFFLINE</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Menu -->
+        <nav class="main-nav">
+            <div class="nav-container">
+                <button class="nav-btn active" data-section="overview">🏠 Overview</button>
+                <button class="nav-btn" data-section="agents">🤖 Agents</button>
+                <button class="nav-btn" data-section="discord-hooks">🔗 Discord</button>
+                <button class="nav-btn" data-section="proxy-checker">🔍 Proxies</button>
+                <button class="nav-btn" data-section="config">⚙️ Config</button>
+                <div class="nav-indicator"></div>
+            </div>
+        </nav>
         
         <!-- Live Configuration Panel -->
         <div class="config-panel">
@@ -73,7 +100,128 @@
     </header>
 
     <main>
-        <section id="agents-section">
+        <!-- Overview Dashboard -->
+        <section id="overview-section" class="main-section active">
+            <h2>📊 Command Center Overview</h2>
+            <div class="overview-grid">
+                
+                <!-- Status Cards -->
+                <div class="status-cards">
+                    <div class="status-card eternalfarm-status">
+                        <div class="card-icon">🔥</div>
+                        <div class="card-content">
+                            <h3>EternalFarm API</h3>
+                            <div class="status-indicator" id="overviewEternalfarmStatus">⚫ Not Connected</div>
+                            <div class="status-details">Last sync: <span id="lastEternalfarmSync">Never</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card discord-status">
+                        <div class="card-icon">🔗</div>
+                        <div class="card-content">
+                            <h3>Discord Integration</h3>
+                            <div class="status-indicator" id="overviewDiscordStatus">⚫ Not Configured</div>
+                            <div class="status-details">Last message: <span id="lastDiscordMessage">Never</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card agents-status">
+                        <div class="card-icon">🤖</div>
+                        <div class="card-content">
+                            <h3>Active Agents</h3>
+                            <div class="status-indicator" id="overviewAgentsCount">0 / 0</div>
+                            <div class="status-details">Running bots: <span id="runningBotsCount">0</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card system-status">
+                        <div class="card-icon">💻</div>
+                        <div class="card-content">
+                            <h3>System Health</h3>
+                            <div class="status-indicator" id="overviewSystemStatus">🟢 Healthy</div>
+                            <div class="status-details">Uptime: <span id="systemUptime">0h 0m</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Panel -->
+                <div class="overview-actions">
+                    <h3>⚡ Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="action-button" onclick="switchToSection('agents')">
+                            <span class="action-icon">🤖</span>
+                            <span class="action-text">Manage Agents</span>
+                        </button>
+                        <button class="action-button action-btn" data-action="Send Alert">
+                            <span class="action-icon">📢</span>
+                            <span class="action-text">Send Discord Alert</span>
+                        </button>
+                        <button class="action-button" onclick="testDiscordConnection()">
+                            <span class="action-icon">🧪</span>
+                            <span class="action-text">Test Discord</span>
+                        </button>
+                        <button class="action-button action-btn" data-action="Screenshot + Stats">
+                            <span class="action-icon">📸</span>
+                            <span class="action-text">Quick Screenshot</span>
+                        </button>
+                        <button class="action-button" onclick="syncEternalfarmAgents()">
+                            <span class="action-icon">🔄</span>
+                            <span class="action-text">Sync Agents</span>
+                        </button>
+                        <button class="action-button" onclick="switchToSection('config')">
+                            <span class="action-icon">⚙️</span>
+                            <span class="action-text">Configuration</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Feed -->
+                <div class="activity-feed">
+                    <h3>📜 Recent Activity</h3>
+                    <div id="activityLog" class="activity-list">
+                        <div class="activity-item">
+                            <span class="activity-time">⏰ Just now</span>
+                            <span class="activity-text">🚀 FarmBoy v0.2 initialized</span>
+                        </div>
+                        <div class="activity-item">
+                            <span class="activity-time">⏰ System start</span>
+                            <span class="activity-text">💾 Loading configuration...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="performance-metrics">
+                    <h3>📈 Performance Metrics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <div class="metric-label">Memory Usage</div>
+                            <div class="metric-value" id="memoryUsage">--</div>
+                            <div class="metric-bar">
+                                <div class="metric-fill" id="memoryBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">CPU Usage</div>
+                            <div class="metric-value" id="cpuUsage">--</div>
+                            <div class="metric-bar">
+                                <div class="metric-fill" id="cpuBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">API Requests</div>
+                            <div class="metric-value" id="apiRequests">0</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Discord Messages</div>
+                            <div class="metric-value" id="discordMessageCount">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="agents-section" class="main-section">
             <h2>🤖 Agents</h2>
             <div class="agent-controls">
                 <button id="loadAgents">🔍 Load Agents</button>
@@ -82,43 +230,446 @@
             <ul id="agents-list"></ul>
         </section>
 
-        <section id="clients-section" style="display:none;">
+        <section id="clients-section" class="main-section" style="display:none;">
             <h2 id="clients-header">👥 Clients for Agent: <span id="current-agent-id"></span></h2>
-            <button id="refreshClients">🔄 Refresh Clients</button>
-            <div id="clients-list"></div>
+            <div class="section-controls">
+                <button id="refreshClients" class="btn-primary">🔄 Refresh Clients</button>
+            </div>
+            <div id="clients-list" class="clients-grid"></div>
         </section>
 
-        <section id="client-controls-section" style="display:none;">
-            <h3>⚙️ Manage Client: <span id="current-client-id-manage"></span></h3>
-            <div id="start-form">
-                <h4>🚀 Start New Dreambot Client</h4>
-                <label for="scriptName">📜 Script Name (e.g., P2P AI Master):</label>
-                <input type="text" id="scriptName" value="P2P AI Master">
-
-                <label for="scriptParams">⚙️ Script Parameters (e.g., -param1 value1 -param2 value2):</label>
-                <input type="text" id="scriptParams" placeholder="Enter script-specific parameters">
-
-                <label for="runDuration">⏰ Run Duration:</label>
-                <select id="runDuration">
-                    <option value="0">♾️ Manual Stop</option>
-                    <option value="3">⏳ 3 Hours</option>
-                    <option value="6">⏳ 6 Hours</option>
-                    <option value="9">⏳ 9 Hours</option>
-                </select>
-                <button id="startDreambotClient">🚀 Start Dreambot</button>
+        <section id="client-controls-section" class="main-section" style="display:none;">
+            <h2>⚙️ Manage Client: <span id="current-client-id-manage"></span></h2>
+            <div id="start-form" class="client-management-form">
+                <div class="form-section">
+                    <h3>🚀 Start New Dreambot Client</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="scriptName">📜 Script Name:</label>
+                            <input type="text" id="scriptName" value="P2P AI Master" placeholder="e.g., P2P AI Master">
+                        </div>
+                        <div class="form-group">
+                            <label for="scriptParams">⚙️ Script Parameters:</label>
+                            <input type="text" id="scriptParams" placeholder="e.g., -param1 value1 -param2 value2">
+                        </div>
+                        <div class="form-group">
+                            <label for="runDuration">⏰ Run Duration:</label>
+                            <select id="runDuration">
+                                <option value="0">♾️ Manual Stop</option>
+                                <option value="3">⏳ 3 Hours</option>
+                                <option value="6">⏳ 6 Hours</option>
+                                <option value="9">⏳ 9 Hours</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="startDreambotClient" class="btn-success">🚀 Start Dreambot</button>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <section id="scheduled-tasks">
-            <h2>📜 Scheduled Stops</h2>
-            <ul id="scheduled-stops-list">
-                <li>🛡️ No tasks currently scheduled for auto-stop.</li>
-            </ul>
+        <section id="discord-hooks-section" class="main-section">
+            <h2>🔗 Discord Hooks Management</h2>
+            <div class="discord-hooks-container">
+                
+                <!-- Discord Webhook Configuration -->
+                <div class="discord-panel">
+                    <h3>⚙️ Webhook Configuration</h3>
+                    <div class="webhook-config">
+                        <div class="form-group">
+                            <label for="hookWebhookUrl">📢 Primary Webhook URL:</label>
+                            <input type="text" id="hookWebhookUrl" value="https://discord.com/api/webhooks/1379651760661991475/lcgRwEj3Y0Hl4bW7DLjm7lfvQ3VnMJzGbstNVYWoDa--xUmzsSCl-NMlNAkC3fJTCqBE" placeholder="https://discord.com/api/webhooks/..." class="webhook-input">
+                            <div class="flex gap-3 mt-3">
+                                <button id="saveWebhookUrl" class="btn-primary" onclick="DirectDiscord.saveConfig()">💾 Save</button>
+                                <button class="btn-success" onclick="DirectDiscord.testWebhook()">🧪 Test</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="hookChannelName">📺 Channel Name:</label>
+                            <input type="text" id="hookChannelName" placeholder="farm-alerts">
+                        </div>
+                        <div class="form-group">
+                            <label for="hookBotName">🤖 Bot Name:</label>
+                            <input type="text" id="hookBotName" value="Farm Manager">
+                        </div>
+                        <div class="webhook-status" id="webhookStatus">⚫ Not configured</div>
+                    </div>
+                </div>
+
+                <!-- Live Screenshot Controls -->
+                <div class="discord-panel">
+                    <h3>📸 Live Screenshots</h3>
+                    <div class="screenshot-controls mb-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="takeScreenshot" class="btn-primary" onclick="DirectDiscord.takeScreenshot('desktop')">📸 Take Screenshot</button>
+                            <button id="takeFullScreenshot" class="btn-secondary" onclick="DirectDiscord.takeScreenshot('full')">🖥️ Full Desktop</button>
+                            <button id="takeVncScreenshot" class="btn-secondary" onclick="DirectDiscord.takeScreenshot('vnc')">📺 VNC View</button>
+                            <button id="takeWebScreenshot" class="btn-secondary" onclick="DirectDiscord.takeScreenshot('web')">🌐 Web Interface</button>
+                        </div>
+                    </div>
+                    <div class="screenshot-options mb-4">
+                        <div class="flex gap-4 flex-wrap">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="autoSendScreenshot" checked>
+                                📤 Auto-send to Discord
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="includeStats">
+                                📊 Include system stats
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" id="includeTimestamp" checked>
+                                ⏰ Include timestamp
+                            </label>
+                        </div>
+                    </div>
+                    <div class="screenshot-preview" id="screenshotPreview" style="display:none;">
+                        <h4 class="mb-3">📋 Preview</h4>
+                        <img id="previewImage" alt="Screenshot preview" class="w-full rounded-lg mb-3" style="max-height: 300px; object-fit: contain;">
+                        <div class="flex gap-3">
+                            <button id="sendPreviewToDiscord" class="btn-success">📤 Send to Discord</button>
+                            <button id="downloadPreview" class="btn-secondary">💾 Download</button>
+                            <button id="clearPreview" class="btn-danger">🗑️ Clear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="discord-panel">
+                    <h3>⚡ Quick Actions</h3>
+                    <div class="quick-actions-grid">
+                        <button class="action-btn btn-primary" onclick="DirectDiscord.sendStatus()">📊 Send Status Update</button>
+                        <button class="action-btn btn-secondary" onclick="DirectDiscord.sendSystemStats()">💻 Send System Stats</button>
+                        <button class="action-btn btn-success" onclick="DirectDiscord.sendAgents()">🤖 Send Agent Summary</button>
+                        <button class="action-btn btn-primary" onclick="DirectDiscord.takeScreenshot('full')">📸 Screenshot + Stats</button>
+                        <button class="action-btn btn-secondary" onclick="DirectDiscord.sendTaskUpdate()">📋 Send Task Update</button>
+                        <button class="action-btn btn-danger" onclick="DirectDiscord.sendAlert()">🚨 Send Alert</button>
+                    </div>
+                </div>
+
+                <!-- Custom Message Composer -->
+                <div class="discord-panel">
+                    <h3>✍️ Custom Message</h3>
+                    <div class="composer-controls">
+                        <div class="form-group">
+                            <label for="customMessage">Message Content:</label>
+                            <textarea id="customMessage" placeholder="Type your custom message here..." rows="4"></textarea>
+                        </div>
+                        <div class="composer-options">
+                            <div class="form-group">
+                                <label for="messageColor">Message Color:</label>
+                                <select id="messageColor">
+                                    <option value="0x00ff00">🟢 Green (Success)</option>
+                                    <option value="0xffff00">🟡 Yellow (Warning)</option>
+                                    <option value="0xff0000">🔴 Red (Error)</option>
+                                    <option value="0x0099ff">🔵 Blue (Info)</option>
+                                    <option value="0xff6600">🟠 Orange (Notice)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="messageTitle">Message Title:</label>
+                                <input type="text" id="messageTitle" placeholder="Message title...">
+                            </div>
+                        </div>
+                        <div class="composer-actions">
+                            <button id="sendCustomMessage" class="btn-primary" onclick="DirectDiscord.sendCustomMessage()">📤 Send Message</button>
+                            <button id="previewCustomMessage" class="btn-secondary" onclick="DirectDiscord.previewMessage()">👁️ Preview</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Messages Log -->
+                <div class="messages-log">
+                    <h3>📜 Recent Messages</h3>
+                    <div class="log-controls">
+                        <button id="clearLog" class="btn-secondary">🧹 Clear Log</button>
+                        <button id="exportLog" class="btn-secondary">📤 Export</button>
+                        <label>
+                            <input type="checkbox" id="autoRefreshLog" checked>
+                            🔄 Auto-refresh
+                        </label>
+                    </div>
+                    <div id="messagesLog" class="messages-list">
+                        <div class="log-entry">
+                            <span class="log-time">📅 Waiting for messages...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Discord Proxy Checker -->
+                <div class="discord-proxy-checker">
+                    <h3>🔍 Discord Proxy Checker</h3>
+                    <div class="discord-proxy-panel">
+                        <div class="proxy-test-section">
+                            <div class="form-group">
+                                <label for="discordSingleProxy">🌐 Single Proxy Test:</label>
+                                <input type="text" id="discordSingleProxy" placeholder="192.168.1.1:8080 or user:pass@host:port" class="proxy-input">
+                                <div class="proxy-test-actions">
+                                    <button class="btn-primary" onclick="DiscordProxyChecker.testSingleProxy()">🧪 Test Proxy</button>
+                                    <button class="btn-success" onclick="DiscordProxyChecker.testAllProxies()">🔄 Test All Database</button>
+                                    <button class="btn-secondary" onclick="DiscordProxyChecker.getProxyStats()">📊 Get Statistics</button>
+                                </div>
+                            </div>
+                            <div class="proxy-options">
+                                <label>
+                                    <input type="checkbox" id="sendProxyResultsToDiscord" checked>
+                                    📤 Auto-send results to Discord
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="includeProxyLocation" checked>
+                                    🌍 Include location info
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="discordProxyResults" class="proxy-results-display" style="display: none;">
+                            <h4>🔍 Test Results:</h4>
+                            <div id="discordProxyResultsContent"></div>
+                        </div>
+                        
+                        <div class="proxy-stats-display">
+                            <h4>📊 Proxy Statistics</h4>
+                            <div id="discordProxyStatsContent">
+                                <div style="text-align: center; color: #bdc3c7;">
+                                    Click "Get Statistics" to load proxy data
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="proxy-checker-section" class="main-section">
+            <h2>🔍 Proxy Checker</h2>
+            <div class="proxy-checker-container">
+                
+                <!-- Proxy Test Controls -->
+                <div class="proxy-test-panel">
+                    <h3>🧪 Single Proxy Test</h3>
+                    <div class="proxy-input-form">
+                        <div class="input-row">
+                            <label for="proxyHost">🌐 Host:</label>
+                            <input type="text" id="proxyHost" placeholder="127.0.0.1">
+                            <label for="proxyPort">🔌 Port:</label>
+                            <input type="number" id="proxyPort" placeholder="8080" style="width: 100px;">
+                        </div>
+                        <div class="input-row">
+                            <label for="proxyUsername">👤 Username:</label>
+                            <input type="text" id="proxyUsername" placeholder="Optional">
+                            <label for="proxyPassword">🔐 Password:</label>
+                            <input type="password" id="proxyPassword" placeholder="Optional">
+                        </div>
+                        <div class="input-row">
+                            <label for="proxyType">📡 Type:</label>
+                            <select id="proxyType">
+                                <option value="http">HTTP</option>
+                                <option value="https">HTTPS</option>
+                                <option value="socks4">SOCKS4</option>
+                                <option value="socks5">SOCKS5</option>
+                            </select>
+                            <button id="testSingleProxy" class="btn-primary">🧪 Test Proxy</button>
+                        </div>
+                    </div>
+                    <div id="singleProxyResult" class="test-result"></div>
+                </div>
+
+                <!-- Batch Testing -->
+                <div class="batch-test-panel">
+                    <h3>📋 Batch Testing</h3>
+                    <div class="batch-controls">
+                        <textarea id="proxyListInput" placeholder="Enter proxies (one per line):&#10;host:port&#10;host:port:username:password&#10;type://host:port&#10;type://username:password@host:port" rows="6"></textarea>
+                        <div class="batch-options">
+                            <label>
+                                <input type="checkbox" id="checkLocation" checked>
+                                🌍 Check location
+                            </label>
+                            <label>
+                                <input type="checkbox" id="checkSpeed" checked>
+                                ⚡ Speed test
+                            </label>
+                            <label for="batchTimeout">⏱️ Timeout (ms):</label>
+                            <input type="number" id="batchTimeout" value="10000" style="width: 100px;">
+                            <label for="batchConcurrent">🔄 Concurrent:</label>
+                            <input type="number" id="batchConcurrent" value="5" min="1" max="20" style="width: 80px;">
+                        </div>
+                        <div class="batch-actions">
+                            <button id="testBatchProxies" class="btn-primary">🧪 Test All</button>
+                            <button id="testDbProxies" class="btn-success">📊 Test DB Proxies</button>
+                            <button id="exportResults" class="btn-secondary">📤 Export Results</button>
+                        </div>
+                    </div>
+                    <div id="batchProgress" class="progress-indicator" style="display:none;">
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill"></div>
+                        </div>
+                        <span id="progressText">Testing proxies...</span>
+                    </div>
+                </div>
+
+                <!-- Results Summary -->
+                <div class="results-summary-panel">
+                    <h3>📈 Test Results Summary</h3>
+                    <div class="summary-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalTested">0</div>
+                            <div class="stat-label">Total Tested</div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-number" id="workingProxies">0</div>
+                            <div class="stat-label">Working</div>
+                        </div>
+                        <div class="stat-card error">
+                            <div class="stat-number" id="failedProxies">0</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="avgResponseTime">0ms</div>
+                            <div class="stat-label">Avg Response</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Results -->
+                <div class="results-detail-panel">
+                    <h3>📋 Detailed Results</h3>
+                    <div class="results-controls">
+                        <button id="showWorkingOnly" class="btn-success">✅ Working Only</button>
+                        <button id="showFailedOnly" class="btn-danger">❌ Failed Only</button>
+                        <button id="showAllResults" class="btn-secondary">📋 Show All</button>
+                        <button id="clearResults" class="btn-secondary">🧹 Clear</button>
+                    </div>
+                    <div id="proxyResults" class="proxy-results-list">
+                        <div class="result-entry">
+                            <span class="result-status">ℹ️</span>
+                            <span class="result-text">Run a proxy test to see results here...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Integration -->
+                <div class="db-integration-panel">
+                    <h3>💾 Database Integration</h3>
+                    <div class="db-stats">
+                        <div class="db-stat">
+                            <span class="db-label">Total Proxies:</span>
+                            <span id="dbTotalProxies" class="db-value">0</span>
+                        </div>
+                        <div class="db-stat">
+                            <span class="db-label">Active:</span>
+                            <span id="dbActiveProxies" class="db-value">0</span>
+                        </div>
+                        <div class="db-stat">
+                            <span class="db-label">Last Check:</span>
+                            <span id="dbLastCheck" class="db-value">Never</span>
+                        </div>
+                    </div>
+                    <div class="db-actions">
+                        <button id="updateDbFromResults" class="btn-success">💾 Update DB from Results</button>
+                        <button id="refreshDbStats" class="btn-secondary">🔄 Refresh Stats</button>
+                        <button id="scheduleAutoCheck" class="btn-primary">⏰ Schedule Auto-Check</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Configuration Section -->
+        <section id="config-section" class="main-section">
+            <h2>⚙️ System Configuration</h2>
+            <div class="config-container">
+                <!-- Move the existing config panel content here -->
+                <div class="config-panel-expanded">
+                    <!-- EternalFarm Configuration -->
+                    <div class="config-group">
+                        <h3>🔥 EternalFarm Settings</h3>
+                        <div class="config-row">
+                            <label for="eternalfarmApiKeyConfig">🗝️ API Key:</label>
+                            <input type="password" id="eternalfarmApiKeyConfig" placeholder="Enter your EternalFarm API Key..." style="min-width: 400px;">
+                            <button id="testApiKeyConfig" class="btn-primary">🧪 Test</button>
+                        </div>
+                        <div class="config-row">
+                            <label for="eternalfarmApiUrlConfig">🌐 API URL:</label>
+                            <input type="text" id="eternalfarmApiUrlConfig" value="https://api.eternalfarm.net" style="min-width: 300px;">
+                        </div>
+                        <div class="config-status" id="eternalfarmStatusConfig">⚫ Not configured</div>
+                    </div>
+
+                    <!-- DreamBot Configuration -->
+                    <div class="config-group">
+                        <h3>🤖 DreamBot Settings</h3>
+                        <div class="config-row">
+                            <label for="dreambotUsernameConfig">👤 Username:</label>
+                            <input type="text" id="dreambotUsernameConfig" placeholder="RuneScape username">
+                            <label for="dreambotPasswordConfig">🔐 Password:</label>
+                            <input type="password" id="dreambotPasswordConfig" placeholder="RuneScape password">
+                        </div>
+                        <div class="config-row">
+                            <label for="dreambotScriptConfig">📜 Default Script:</label>
+                            <input type="text" id="dreambotScriptConfig" placeholder="Script name">
+                            <label for="dreambotWorldConfig">🌍 World:</label>
+                            <input type="number" id="dreambotWorldConfig" value="301" style="width: 80px;">
+                        </div>
+                        <div class="config-status" id="dreambotStatusConfig">⚫ Not configured</div>
+                    </div>
+
+                    <!-- Discord Configuration -->
+                    <div class="config-group">
+                        <h3>🔔 Discord Notifications</h3>
+                        <div class="config-row">
+                            <label for="discordWebhookConfig">📢 Webhook URL:</label>
+                            <input type="text" id="discordWebhookConfig" placeholder="https://discord.com/api/webhooks/..." style="min-width: 400px;">
+                            <button id="testDiscordConfig" class="btn-primary">🧪 Test</button>
+                        </div>
+                        <div class="config-status" id="discordStatusConfig">⚫ Not configured</div>
+                    </div>
+
+                    <!-- Save/Load Configuration -->
+                    <div class="config-actions">
+                        <button id="saveConfigMain" class="btn-primary">💾 Save All Settings</button>
+                        <button id="loadConfigMain" class="btn-secondary">📥 Load Current</button>
+                        <button id="applyConfigMain" class="btn-success">🚀 Apply & Restart Services</button>
+                    </div>
+                    
+                    <p class="config-warning">⚠️ Settings are applied live and persist in the container environment</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="scheduled-tasks" class="main-section">
+            <h2>📜 Scheduled Tasks & Automation</h2>
+            <div class="tasks-container">
+                <div class="scheduled-stops-panel">
+                    <h3>⏰ Scheduled Stops</h3>
+                    <ul id="scheduled-stops-list" class="tasks-list">
+                        <li class="task-item">🛡️ No tasks currently scheduled for auto-stop.</li>
+                    </ul>
+                </div>
+                
+                <div class="automation-panel">
+                    <h3>🤖 Automation Rules</h3>
+                    <div class="automation-controls">
+                        <button class="btn-primary">➕ Add Rule</button>
+                        <button class="btn-secondary">📋 View All</button>
+                        <button class="btn-secondary">⚙️ Configure</button>
+                    </div>
+                    <div class="automation-list">
+                        <div class="automation-item">
+                            <span class="rule-status">🟢</span>
+                            <span class="rule-name">Auto-restart on disconnect</span>
+                            <span class="rule-actions">
+                                <button class="btn-sm">✏️</button>
+                                <button class="btn-sm">🗑️</button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
 
     <footer>
-        <p>⚔️ FarmBoy v0.1 - For Dreambot Management via EternalFarm ⚔️</p>
+        <p>⚔️ FarmBoy v0.2 - Enhanced Discord Integration & Advanced Management ⚔️</p>
         <p>🕐 Current Date/Time: <span id="currentDateTime"></span></p>
     </footer>
 

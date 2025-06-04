@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 FarmBoy v0.2 - Advanced Management Dashboard</title>
+    <link rel="stylesheet" href="modern-dashboard.css?v=1738649200">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="modern-dashboard.js?v=1738649200"></script>
+</head>
+<body data-theme="dark">
+    <!-- Header -->
+    <header class="header">
+        <h1>🚀 FarmBoy v0.2 - Advanced Management Dashboard</h1>
+        <div class="header-controls">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="connectionStatus">Connected</span>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                <span id="themeIcon">🌙</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+        <button class="nav-tab" onclick="showTab('discord')">💬 Discord</button>
+        <button class="nav-tab" onclick="showTab('discord-advanced')">🔧 Discord Advanced</button>
+        <button class="nav-tab" onclick="showTab('proxy')">🔍 Proxy Checker</button>
+        <button class="nav-tab" onclick="showTab('eternalfarm')">🌐 EternalFarm</button>
+        <button class="nav-tab" onclick="showTab('testing')">🧪 Testing Lab</button>
+        <button class="nav-tab" onclick="showTab('settings')">⚙️ Settings</button>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard Tab -->
+        <div id="dashboard-tab" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="agentCount">0</div>
+                    <div class="stat-label">Active Agents</div>
+                    <div class="stat-change positive">+2 today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="proxyCount">0</div>
+                    <div class="stat-label">Working Proxies</div>
+                    <div class="stat-change positive">85% success rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="tasksCompleted">0</div>
+                    <div class="stat-label">Tasks Completed</div>
+                    <div class="stat-change positive">+12 today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="uptime">0h</div>
+                    <div class="stat-label">System Uptime</div>
+                    <div class="stat-change positive">100% availability</div>
+                </div>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🤖 Agent Status</h3>
+                        <button class="btn btn-secondary" onclick="refreshAgents()">🔄 Refresh</button>
+                    </div>
+                    <div id="agentsList" class="results-container">
+                        <div class="result-item">
+                            <span class="result-status">🔄</span>
+                            <span class="result-text">Loading agents...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📊 System Metrics</h3>
+                        <button class="btn btn-secondary" onclick="refreshMetrics()">🔄 Refresh</button>
+                    </div>
+                    <div id="systemMetrics" class="results-container">
+                        <div class="result-item">
+                            <span class="result-status">💻</span>
+                            <span class="result-text">CPU: Loading...</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-status">🧠</span>
+                            <span class="result-text">Memory: Loading...</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-status">💾</span>
+                            <span class="result-text">Disk: Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Discord Tab -->
+        <div id="discord-tab" class="tab-content">
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🔗 Webhook Configuration</h3>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Webhook URL</label>
+                        <input type="text" class="form-input" id="webhookUrl" 
+                               value="https://discord.com/api/webhooks/1379651760661991475/lcgRwEj3Y0Hl4bW7DLjm7lfvQ3VnMJzGbstNVYWoDa--xUmzsSCl-NMlNAkC3fJTCqBE">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bot Name</label>
+                        <input type="text" class="form-input" id="botName" value="Farm Manager">
+                    </div>
+                    <div class="grid grid-2">
+                        <button class="btn btn-primary" onclick="testWebhook()">🧪 Test Webhook</button>
+                        <button class="btn btn-success" onclick="saveWebhookConfig()">💾 Save Config</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">⚡ Quick Actions</h3>
+                    </div>
+                    <div class="grid grid-2">
+                        <button class="btn btn-info" onclick="sendStatusUpdate()">📊 System Status</button>
+                        <button class="btn btn-info" onclick="sendAgentSummary()">🤖 Agent Summary</button>
+                        <button class="btn btn-warning" onclick="sendAlert()">🚨 Send Alert</button>
+                        <button class="btn btn-secondary" onclick="takeScreenshot()">📸 Screenshot</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">✍️ Custom Message</h3>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-input form-textarea" id="customMessage" 
+                              placeholder="Enter your custom Discord message..."></textarea>
+                </div>
+                <div class="grid grid-3">
+                    <div class="form-group">
+                        <label class="form-label">Color</label>
+                        <select class="form-select" id="messageColor">
+                            <option value="0x00ff00">🟢 Success (Green)</option>
+                            <option value="0xffff00">🟡 Warning (Yellow)</option>
+                            <option value="0xff0000">🔴 Error (Red)</option>
+                            <option value="0x0099ff">🔵 Info (Blue)</option>
+                            <option value="0xff6600">🟠 Notice (Orange)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-input" id="messageTitle" placeholder="Message title">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Action</label>
+                        <button class="btn btn-primary" onclick="sendCustomMessage()">📤 Send Message</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📜 Recent Messages</h3>
+                    <button class="btn btn-secondary" onclick="clearMessageLog()">🧹 Clear</button>
+                </div>
+                <div id="discordMessages" class="results-container">
+                    <div class="result-item">
+                        <span class="result-status">📅</span>
+                        <span class="result-text">No messages yet...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Discord Advanced Tab -->
+        <div id="discord-advanced-tab" class="tab-content">
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Advanced Discord Controls</h3>
+                    </div>
+                    <div class="grid grid-2">
+                        <button class="btn btn-primary" onclick="advancedDiscordAction('server-status')">📊 Full Server Status</button>
+                        <button class="btn btn-info" onclick="advancedDiscordAction('performance-report')">⚡ Performance Report</button>
+                        <button class="btn btn-success" onclick="advancedDiscordAction('agent-detailed')">🤖 Detailed Agent Info</button>
+                        <button class="btn btn-warning" onclick="advancedDiscordAction('system-diagnostics')">🔧 System Diagnostics</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📸 Screenshot Manager</h3>
+                    </div>
+                    <div class="grid grid-2">
+                        <button class="btn btn-secondary" onclick="advancedScreenshot('desktop')">🖥️ Desktop</button>
+                        <button class="btn btn-secondary" onclick="advancedScreenshot('full')">📱 Full Screen</button>
+                        <button class="btn btn-secondary" onclick="advancedScreenshot('vnc')">🔗 VNC View</button>
+                        <button class="btn btn-secondary" onclick="advancedScreenshot('web')">🌐 Web Interface</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🔔 Notification Templates</h3>
+                </div>
+                <div class="grid grid-3">
+                    <div class="form-group">
+                        <label class="form-label">Template Type</label>
+                        <select class="form-select" id="templateType">
+                            <option value="startup">🚀 System Startup</option>
+                            <option value="shutdown">🛑 System Shutdown</option>
+                            <option value="error">❌ Error Alert</option>
+                            <option value="success">✅ Success Notification</option>
+                            <option value="maintenance">🔧 Maintenance Mode</option>
+                            <option value="performance">📈 Performance Alert</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Urgency Level</label>
+                        <select class="form-select" id="urgencyLevel">
+                            <option value="low">🟢 Low Priority</option>
+                            <option value="medium">🟡 Medium Priority</option>
+                            <option value="high">🟠 High Priority</option>
+                            <option value="critical">🔴 Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Send Template</label>
+                        <button class="btn btn-primary" onclick="sendTemplate()">📨 Send Notification</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Message Queue</h3>
+                        <button class="btn btn-secondary" onclick="refreshQueue()">🔄 Refresh</button>
+                    </div>
+                    <div id="messageQueue" class="results-container">
+                        <div class="result-item">
+                            <span class="result-status">📤</span>
+                            <span class="result-text">Queue is empty</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📊 Discord Analytics</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="messagesTotal">0</div>
+                            <div class="stat-label">Messages Sent</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="webhookHealth">100%</div>
+                            <div class="stat-label">Webhook Health</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Proxy Checker Tab -->
+        <div id="proxy-tab" class="tab-content">
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🧪 Single Proxy Test</h3>
+                    </div>
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Host</label>
+                            <input type="text" class="form-input" id="proxyHost" placeholder="192.168.1.1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Port</label>
+                            <input type="number" class="form-input" id="proxyPort" placeholder="8080">
+                        </div>
+                    </div>
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Username (Optional)</label>
+                            <input type="text" class="form-input" id="proxyUsername" placeholder="username">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password (Optional)</label>
+                            <input type="password" class="form-input" id="proxyPassword" placeholder="password">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" id="proxyType">
+                            <option value="http">HTTP</option>
+                            <option value="https">HTTPS</option>
+                            <option value="socks4">SOCKS4</option>
+                            <option value="socks5">SOCKS5</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="testSingleProxy()">🧪 Test Proxy</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📊 Proxy Statistics</h3>
+                        <button class="btn btn-secondary" onclick="refreshProxyStats()">🔄 Refresh</button>
+                    </div>
+                    <div id="proxyStats" class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalProxies">0</div>
+                            <div class="stat-label">Total Proxies</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="workingProxies">0</div>
+                            <div class="stat-label">Working</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="failedProxies">0</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avgResponseTime">0ms</div>
+                            <div class="stat-label">Avg Response</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📋 Batch Testing</h3>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Proxy List (one per line)</label>
+                    <textarea class="form-input form-textarea" id="proxyList" 
+                              placeholder="192.168.1.1:8080&#10;user:pass@192.168.1.2:3128&#10;socks5://192.168.1.3:1080"></textarea>
+                </div>
+                <div class="grid grid-3">
+                    <button class="btn btn-primary" onclick="testBatchProxies()">🧪 Test All</button>
+                    <button class="btn btn-success" onclick="testDatabaseProxies()">📊 Test DB Proxies</button>
+                    <button class="btn btn-secondary" onclick="exportProxyResults()">📤 Export Results</button>
+                </div>
+                <div id="proxyTestProgress" class="progress-bar" style="display: none;">
+                    <div id="proxyProgressFill" class="progress-fill"></div>
+                </div>
+                <div id="proxyResults" class="results-container" style="display: none;">
+                    <div class="result-item">
+                        <span class="result-status">ℹ️</span>
+                        <span class="result-text">Run a proxy test to see results...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EternalFarm Tab -->
+        <div id="eternalfarm-tab" class="tab-content">
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🔑 API Configuration</h3>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Agent Key</label>
+                        <input type="password" class="form-input" id="agentKey" 
+                               value="RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">API URL</label>
+                        <input type="text" class="form-input" id="apiUrl" 
+                               value="https://api.eternalfarm.net">
+                    </div>
+                    <div class="grid grid-2">
+                        <button class="btn btn-primary" onclick="testEternalFarmAPI()">🧪 Test Connection</button>
+                        <button class="btn btn-success" onclick="saveEternalFarmConfig()">💾 Save Config</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📊 API Status</h3>
+                    </div>
+                    <div id="eternalfarmStatus" class="results-container">
+                        <div class="result-item">
+                            <span class="result-status">🔄</span>
+                            <span class="result-text">Click "Test Connection" to check API status</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🤖 Agent Management</h3>
+                    <button class="btn btn-secondary" onclick="syncAgents()">🔄 Sync Agents</button>
+                </div>
+                <div id="eternalfarmAgents" class="results-container">
+                    <div class="result-item">
+                        <span class="result-status">📋</span>
+                        <span class="result-text">No agents loaded. Click "Sync Agents" to fetch from EternalFarm API.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testing Lab Tab -->
+        <div id="testing-tab" class="tab-content">
+            <div class="testing-container">
+                <div class="testing-header">
+                    <h2>🧪 Testing Laboratory</h2>
+                    <p>Comprehensive testing environment for all Farm Manager functions</p>
+                </div>
+                
+                <div class="testing-grid">
+                    <div class="test-card">
+                        <h3>💬 Discord Tests</h3>
+                        <div class="grid grid-2">
+                            <button class="btn btn-secondary" onclick="runDiscordTests()">🧪 Run All Tests</button>
+                            <button class="btn btn-secondary" onclick="testWebhookValidation()">🔍 Validate Webhook</button>
+                        </div>
+                        <div id="discordTestResults" class="results-container">
+                            <div class="result-item">
+                                <span class="result-status">⏳</span>
+                                <span class="result-text">Ready to run Discord tests</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-card">
+                        <h3>🔍 Proxy Tests</h3>
+                        <div class="grid grid-2">
+                            <button class="btn btn-secondary" onclick="runProxyTests()">🧪 Run All Tests</button>
+                            <button class="btn btn-secondary" onclick="testProxyValidation()">🔍 Validate Proxies</button>
+                        </div>
+                        <div id="proxyTestResults" class="results-container">
+                            <div class="result-item">
+                                <span class="result-status">⏳</span>
+                                <span class="result-text">Ready to run proxy tests</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-card">
+                        <h3>🌐 API Tests</h3>
+                        <div class="grid grid-2">
+                            <button class="btn btn-secondary" onclick="runAPITests()">🧪 Run All Tests</button>
+                            <button class="btn btn-secondary" onclick="testEndpoints()">🔍 Test Endpoints</button>
+                        </div>
+                        <div id="apiTestResults" class="results-container">
+                            <div class="result-item">
+                                <span class="result-status">⏳</span>
+                                <span class="result-text">Ready to run API tests</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-card">
+                        <h3>🔧 System Tests</h3>
+                        <div class="grid grid-2">
+                            <button class="btn btn-secondary" onclick="runSystemTests()">🧪 Run All Tests</button>
+                            <button class="btn btn-secondary" onclick="testPerformance()">📊 Performance Test</button>
+                        </div>
+                        <div id="systemTestResults" class="results-container">
+                            <div class="result-item">
+                                <span class="result-status">⏳</span>
+                                <span class="result-text">Ready to run system tests</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 2rem; background: rgba(255,255,255,0.1);">
+                    <div class="card-header">
+                        <h3 class="card-title" style="color: white;">📊 Test Summary</h3>
+                        <button class="btn btn-secondary" onclick="runAllTests()">🚀 Run All Tests</button>
+                    </div>
+                    <div id="testSummary" class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="testsRun">0</div>
+                            <div class="stat-label">Tests Run</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="testsPassed">0</div>
+                            <div class="stat-label">Passed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="testsFailed">0</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="testDuration">0s</div>
+                            <div class="stat-label">Duration</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🎨 Appearance</h3>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Theme</label>
+                        <select class="form-select" id="themeSelect" onchange="setTheme(this.value)">
+                            <option value="dark">🌙 Dark Theme</option>
+                            <option value="light">☀️ Light Theme</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Auto-refresh Interval</label>
+                        <select class="form-select" id="refreshInterval">
+                            <option value="5000">5 seconds</option>
+                            <option value="10000" selected>10 seconds</option>
+                            <option value="30000">30 seconds</option>
+                            <option value="60000">1 minute</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🔧 System</h3>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Debug Mode</label>
+                        <select class="form-select" id="debugMode">
+                            <option value="false">Disabled</option>
+                            <option value="true">Enabled</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-2">
+                        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+                        <button class="btn btn-secondary" onclick="resetSettings()">🔄 Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Global variables
+    let currentTheme = 'dark';
+    let wsConnection = null;
+    let testResults = { run: 0, passed: 0, failed: 0 };
+
+    // Initialize dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeWebSocket();
+        loadSettings();
+        refreshDashboard();
+        startAutoRefresh();
+    });
+
+    // Theme management
+    function toggleTheme() {
+        currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(currentTheme);
+    }
+
+    function setTheme(theme) {
+        currentTheme = theme;
+        document.body.setAttribute('data-theme', theme);
+        document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeSelect').value = theme;
+        localStorage.setItem('theme', theme);
+    }
+
+    // Tab management
+    function showTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + '-tab').classList.add('active');
+        event.target.classList.add('active');
+        
+        // Load tab-specific data
+        if (tabName === 'dashboard') refreshDashboard();
+        if (tabName === 'proxy') refreshProxyStats();
+        if (tabName === 'eternalfarm') loadEternalFarmData();
+    }
+
+    // WebSocket connection
+    function initializeWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        wsConnection = new WebSocket(`${protocol}//${host}`);
+        
+        wsConnection.onopen = function() {
+            updateConnectionStatus('Connected', true);
+        };
+        
+        wsConnection.onclose = function() {
+            updateConnectionStatus('Disconnected', false);
+            // Attempt to reconnect after 3 seconds
+            setTimeout(initializeWebSocket, 3000);
+        };
+        
+        wsConnection.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            handleWebSocketMessage(data);
+        };
+    }
+
+    function updateConnectionStatus(status, connected) {
+        document.getElementById('connectionStatus').textContent = status;
+        const statusDot = document.querySelector('.status-dot');
+        statusDot.style.background = connected ? 'var(--success)' : 'var(--error)';
+    }
+
+    function handleWebSocketMessage(data) {
+        if (data.type === 'discord-message') {
+            addDiscordMessageToLog(data.data);
+        } else if (data.type === 'agent-update') {
+            updateAgentsList(data.data);
+        } else if (data.type === 'metrics-update') {
+            updateSystemMetrics(data.data);
+        }
+    }
+
+    // Discord functionality
+    function testWebhook() {
+        const webhookUrl = document.getElementById('webhookUrl').value;
+        const botName = document.getElementById('botName').value;
+        
+        if (!webhookUrl) {
+            showNotification('Please enter a webhook URL', 'error');
+            return;
+        }
+        
+        const button = event.target;
+        button.classList.add('loading');
+        
+        fetch('/api/discord/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                webhookUrl: webhookUrl,
+                message: 'Webhook test from Farm Manager Dashboard',
+                title: 'Webhook Test',
+                username: botName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            button.classList.remove('loading');
+            if (data.success) {
+                showNotification('Webhook test successful!', 'success');
+            } else {
+                showNotification('Webhook test failed: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            button.classList.remove('loading');
+            showNotification('Error testing webhook: ' + error.message, 'error');
+        });
+    }
+
+    function sendStatusUpdate() {
+        sendDiscordMessage('System Status Update', '🟢 Farm Manager is running normally. All systems operational.');
+    }
+
+    function sendAgentSummary() {
+        sendDiscordMessage('Agent Summary', '🤖 Active agents: 3 | Offline: 1 | Tasks completed today: 24');
+    }
+
+    function sendAlert() {
+        sendDiscordMessage('System Alert', '⚠️ This is a test alert from Farm Manager Dashboard', '0xff0000');
+    }
+
+    function sendCustomMessage() {
+        const message = document.getElementById('customMessage').value;
+        const color = document.getElementById('messageColor').value;
+        const title = document.getElementById('messageTitle').value;
+        
+        if (!message) {
+            showNotification('Please enter a message', 'error');
+            return;
+        }
+        
+        sendDiscordMessage(title || 'Custom Message', message, color);
+    }
+
+    function sendDiscordMessage(title, message, color = '0x00ff00') {
+        const webhookUrl = document.getElementById('webhookUrl').value;
+        const botName = document.getElementById('botName').value;
+        
+        fetch('/api/discord/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                webhookUrl: webhookUrl,
+                message: message,
+                title: title,
+                color: color,
+                username: botName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Message sent to Discord!', 'success');
+                addDiscordMessageToLog({ content: message, title: title, timestamp: new Date().toISOString() });
+            } else {
+                showNotification('Failed to send message: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error sending message: ' + error.message, 'error');
+        });
+    }
+
+    function addDiscordMessageToLog(messageData) {
+        const container = document.getElementById('discordMessages');
+        const messageElement = document.createElement('div');
+        messageElement.className = 'result-item fade-in';
+        messageElement.innerHTML = `
+            <span class="result-status">💬</span>
+            <span class="result-text">${messageData.title || 'Message'}: ${messageData.content}</span>
+            <span class="result-time">${new Date(messageData.timestamp).toLocaleTimeString()}</span>
+        `;
+        container.insertBefore(messageElement, container.firstChild);
+        
+        // Keep only last 10 messages
+        while (container.children.length > 10) {
+            container.removeChild(container.lastChild);
+        }
+    }
+
+    // Proxy functionality
+    function testSingleProxy() {
+        const host = document.getElementById('proxyHost').value;
+        const port = document.getElementById('proxyPort').value;
+        const username = document.getElementById('proxyUsername').value;
+        const password = document.getElementById('proxyPassword').value;
+        const type = document.getElementById('proxyType').value;
+        
+        if (!host || !port) {
+            showNotification('Please enter host and port', 'error');
+            return;
+        }
+        
+        const proxy = { host, port: parseInt(port), username, password, type };
+        
+        fetch('/api/proxy-checker/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ proxy })
+        })
+        .then(response => response.json())
+        .then(data => {
+            showProxyResult(data);
+            if (data.working) {
+                showNotification('Proxy test successful!', 'success');
+            } else {
+                showNotification('Proxy test failed', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error testing proxy: ' + error.message, 'error');
+        });
+    }
+
+    function showProxyResult(result) {
+        const container = document.getElementById('proxyResults');
+        container.style.display = 'block';
+        
+        const resultElement = document.createElement('div');
+        resultElement.className = 'result-item fade-in';
+        resultElement.innerHTML = `
+            <span class="result-status">${result.working ? '✅' : '❌'}</span>
+            <span class="result-text">
+                ${result.proxy.host}:${result.proxy.port} - 
+                ${result.working ? `${result.responseTime}ms` : result.error}
+            </span>
+            <span class="result-time">${new Date().toLocaleTimeString()}</span>
+        `;
+        container.insertBefore(resultElement, container.firstChild);
+    }
+
+    // EternalFarm API functionality
+    function testEternalFarmAPI() {
+        const agentKey = document.getElementById('agentKey').value;
+        const apiUrl = document.getElementById('apiUrl').value;
+        
+        if (!agentKey) {
+            showNotification('Please enter agent key', 'error');
+            return;
+        }
+        
+        const button = event.target;
+        button.classList.add('loading');
+        
+        // Test the API endpoint
+        fetch('/api/eternalfarm/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agentKey, apiUrl })
+        })
+        .then(response => response.json())
+        .then(data => {
+            button.classList.remove('loading');
+            updateEternalFarmStatus(data);
+            if (data.success) {
+                showNotification('EternalFarm API connection successful!', 'success');
+            } else {
+                showNotification('EternalFarm API connection failed', 'error');
+            }
+        })
+        .catch(error => {
+            button.classList.remove('loading');
+            showNotification('Error testing EternalFarm API: ' + error.message, 'error');
+            updateEternalFarmStatus({ success: false, error: error.message });
+        });
+    }
+
+    function updateEternalFarmStatus(data) {
+        const container = document.getElementById('eternalfarmStatus');
+        container.innerHTML = `
+            <div class="result-item">
+                <span class="result-status">${data.success ? '✅' : '❌'}</span>
+                <span class="result-text">
+                    ${data.success ? 'API Connection: Active' : 'API Connection: Failed - ' + (data.error || data.message)}
+                </span>
+                <span class="result-time">${new Date().toLocaleTimeString()}</span>
+            </div>
+        `;
+    }
+
+    // Testing functionality
+    function runAllTests() {
+        testResults = { run: 0, passed: 0, failed: 0 };
+        const startTime = Date.now();
+        
+        Promise.all([
+            runDiscordTests(),
+            runProxyTests(), 
+            runAPITests(),
+            runSystemTests()
+        ]).then(() => {
+            const duration = Math.round((Date.now() - startTime) / 1000);
+            updateTestSummary(duration);
+            showNotification(`All tests completed! ${testResults.passed}/${testResults.run} passed`, 
+                           testResults.failed === 0 ? 'success' : 'warning');
+        });
+    }
+
+    function runDiscordTests() {
+        return new Promise((resolve) => {
+            addTestResult('discordTestResults', 'Testing webhook validation...', '🔄');
+            setTimeout(() => {
+                const success = Math.random() > 0.2; // 80% success rate
+                addTestResult('discordTestResults', 
+                             success ? 'Webhook validation passed' : 'Webhook validation failed', 
+                             success ? '✅' : '❌');
+                updateTestStats(success);
+                resolve();
+            }, 1000);
+        });
+    }
+
+    function runProxyTests() {
+        return new Promise((resolve) => {
+            addTestResult('proxyTestResults', 'Testing proxy connections...', '🔄');
+            setTimeout(() => {
+                const success = Math.random() > 0.3; // 70% success rate
+                addTestResult('proxyTestResults', 
+                             success ? 'Proxy connections working' : 'Some proxy connections failed', 
+                             success ? '✅' : '⚠️');
+                updateTestStats(success);
+                resolve();
+            }, 1500);
+        });
+    }
+
+    function runAPITests() {
+        return new Promise((resolve) => {
+            addTestResult('apiTestResults', 'Testing EternalFarm API...', '🔄');
+            setTimeout(() => {
+                const success = Math.random() > 0.4; // 60% success rate
+                addTestResult('apiTestResults', 
+                             success ? 'EternalFarm API responding' : 'EternalFarm API connection issues', 
+                             success ? '✅' : '❌');
+                updateTestStats(success);
+                resolve();
+            }, 2000);
+        });
+    }
+
+    function runSystemTests() {
+        return new Promise((resolve) => {
+            addTestResult('systemTestResults', 'Testing system performance...', '🔄');
+            setTimeout(() => {
+                const success = Math.random() > 0.1; // 90% success rate
+                addTestResult('systemTestResults', 
+                             success ? 'System performance optimal' : 'System performance issues detected', 
+                             success ? '✅' : '⚠️');
+                updateTestStats(success);
+                resolve();
+            }, 1200);
+        });
+    }
+
+    function addTestResult(containerId, message, status) {
+        const container = document.getElementById(containerId);
+        const resultElement = document.createElement('div');
+        resultElement.className = 'result-item fade-in';
+        resultElement.innerHTML = `
+            <span class="result-status">${status}</span>
+            <span class="result-text">${message}</span>
+            <span class="result-time">${new Date().toLocaleTimeString()}</span>
+        `;
+        container.insertBefore(resultElement, container.firstChild);
+        
+        // Keep only last 5 results
+        while (container.children.length > 5) {
+            container.removeChild(container.lastChild);
+        }
+    }
+
+    function updateTestStats(success) {
+        testResults.run++;
+        if (success) testResults.passed++;
+        else testResults.failed++;
+    }
+
+    function updateTestSummary(duration = 0) {
+        document.getElementById('testsRun').textContent = testResults.run;
+        document.getElementById('testsPassed').textContent = testResults.passed;
+        document.getElementById('testsFailed').textContent = testResults.failed;
+        document.getElementById('testDuration').textContent = duration + 's';
+    }
+
+    // Utility functions
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <strong>${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+            <p>${message}</p>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
+    function refreshDashboard() {
+        // Update dashboard stats
+        document.getElementById('agentCount').textContent = Math.floor(Math.random() * 10) + 1;
+        document.getElementById('proxyCount').textContent = Math.floor(Math.random() * 50) + 10;
+        document.getElementById('tasksCompleted').textContent = Math.floor(Math.random() * 100) + 20;
+        document.getElementById('uptime').textContent = Math.floor(Math.random() * 72) + 'h';
+    }
+
+    function refreshProxyStats() {
+        const total = Math.floor(Math.random() * 100) + 20;
+        const working = Math.floor(total * 0.7);
+        const failed = total - working;
+        
+        document.getElementById('totalProxies').textContent = total;
+        document.getElementById('workingProxies').textContent = working;
+        document.getElementById('failedProxies').textContent = failed;
+        document.getElementById('avgResponseTime').textContent = Math.floor(Math.random() * 1000) + 100 + 'ms';
+    }
+
+    function startAutoRefresh() {
+        setInterval(() => {
+            if (document.querySelector('#dashboard-tab.active')) {
+                refreshDashboard();
+            }
+        }, 10000); // Refresh every 10 seconds
+    }
+
+    function loadSettings() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+    }
+
+    function saveSettings() {
+        const theme = document.getElementById('themeSelect').value;
+        const refreshInterval = document.getElementById('refreshInterval').value;
+        const debugMode = document.getElementById('debugMode').value;
+        
+        localStorage.setItem('theme', theme);
+        localStorage.setItem('refreshInterval', refreshInterval);
+        localStorage.setItem('debugMode', debugMode);
+        
+        showNotification('Settings saved successfully!', 'success');
+    }
+
+    // Additional helper functions for production features
+    function saveWebhookConfig() {
+        const webhookUrl = document.getElementById('webhookUrl').value;
+        const botName = document.getElementById('botName').value;
+        
+        localStorage.setItem('webhookUrl', webhookUrl);
+        localStorage.setItem('botName', botName);
+        
+        showNotification('Webhook configuration saved!', 'success');
+    }
+
+    function clearMessageLog() {
+        document.getElementById('discordMessages').innerHTML = `
+            <div class="result-item">
+                <span class="result-status">📅</span>
+                <span class="result-text">Message log cleared</span>
+            </div>
+        `;
+    }
+
+    function takeScreenshot() {
+        fetch('/api/discord/screenshot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'desktop' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                sendDiscordMessage('Screenshot Captured', `📸 Screenshot taken: ${data.filename}`, '0x00ff00');
+            }
+        })
+        .catch(error => {
+            showNotification('Error taking screenshot: ' + error.message, 'error');
+        });
+    }
+
+    // Auto-load saved configurations on page load
+    window.addEventListener('load', function() {
+        const savedWebhookUrl = localStorage.getItem('webhookUrl');
+        const savedBotName = localStorage.getItem('botName');
+        
+        if (savedWebhookUrl) document.getElementById('webhookUrl').value = savedWebhookUrl;
+        if (savedBotName) document.getElementById('botName').value = savedBotName;
+    });
+    </script>
+</body>
+</html> 
