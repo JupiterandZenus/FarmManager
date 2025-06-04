@@ -49,7 +49,7 @@ chmod 600 /root/.eternalfarm/browser-automator.config
 # Update desktop shortcuts to use the auto-login
 echo "🖥️ Updating desktop shortcuts..."
 
-# Update EternalFarm Agent desktop shortcut
+# Update EternalFarm Agent desktop shortcut (keep visible in terminal)
 cat > /root/Desktop/EternalFarm-Agent.desktop << EOF
 [Desktop Entry]
 Version=1.0
@@ -62,27 +62,27 @@ Terminal=false
 Categories=Utility;
 EOF
 
-# Update EternalFarm Checker desktop shortcut
+# Update EternalFarm Checker desktop shortcut (run in background)
 cat > /root/Desktop/EternalFarm-Checker.desktop << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=EternalFarm Checker
 Comment=EternalFarm Checker Application
-Exec=xfce4-terminal --hold --title='EternalFarm Checker' --command='/usr/local/bin/EternalFarmChecker --auto-login --key-file=/appdata/EternalFarm/checker.key --show-gui'
+Exec=/usr/local/bin/EternalFarmChecker --auto-login --key-file=/appdata/EternalFarm/checker.key --headless
 Icon=utilities-terminal
 Terminal=false
 Categories=Utility;
 EOF
 
-# Update EternalFarm Browser Automator desktop shortcut
+# Update EternalFarm Browser Automator desktop shortcut (run in background)
 cat > /root/Desktop/EternalFarm-Automator.desktop << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=EternalFarm Browser Automator
 Comment=EternalFarm Browser Automator Application
-Exec=xfce4-terminal --hold --title='EternalFarm Browser Automator' --command='/usr/local/bin/EternalFarmBrowserAutomator --auto-login --key-file=/appdata/EternalFarm/api.key --show-gui'
+Exec=/usr/local/bin/EternalFarmBrowserAutomator --auto-login --key-file=/appdata/EternalFarm/api.key --headless
 Icon=utilities-terminal
 Terminal=false
 Categories=Utility;
