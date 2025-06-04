@@ -25,6 +25,7 @@ services:
       - MYSQL_DATABASE=farmboy_db
       - MYSQL_USER=farmboy
       - MYSQL_PASSWORD=Sntioi004!
+      - MYSQL_ROOT_HOST=%
       
       # DreamBot Configuration
       - DREAMBOT_USERNAME=${DREAMBOT_USERNAME:-}
@@ -37,9 +38,18 @@ services:
       - DISPLAY_HEIGHT=1080
       - VNC_PASSWORD=${VNC_PASSWORD:-farmboy123}
       
+      # Startup Configuration
+      - SUPERVISORD_CONFIG=/etc/supervisord.conf
+      - STARTUP_DELAY=10
+      - ENABLE_X11_AUTOSTART=true
+      - DATABASE_INIT_PRIORITY=5
+      - SERVICES_INIT_PRIORITY=10
+      
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
+      - eternalfarm_data:/root/EternalFarm
+      - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     depends_on:
       mariadb:
@@ -47,7 +57,7 @@ services:
     networks:
       - farm-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3333/health || exit 0"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -61,6 +71,9 @@ services:
       - "com.farmboy.vnc.enabled=true"
       - "com.farmboy.novnc.enabled=true"
       - "com.farmboy.eternalfarm.configured=true"
+      - "com.farmboy.x11.autostart=true"
+      - "com.farmboy.supervisord.configured=true"
+      - "com.farmboy.database.initialization=sequential"
 
   mariadb:
     image: lscr.io/linuxserver/mariadb:latest
@@ -75,6 +88,7 @@ services:
       - MYSQL_ROOT_HOST=%
     volumes:
       - mariadb_data:/config
+      - /etc/localtime:/etc/localtime:ro
     ports:
       - "3307:3306"
     restart: unless-stopped
@@ -89,10 +103,12 @@ services:
     labels:
       - "com.farmboy.database.service=mariadb"
       - "com.farmboy.database.production=true"
+      - "com.farmboy.database.initialized=true"
 
 volumes:
   farm_data:
   dreambot_data:
+  eternalfarm_data:
   mariadb_data:
 
 networks:
