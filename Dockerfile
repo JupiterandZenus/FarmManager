@@ -79,6 +79,10 @@ COPY supervisord.conf /etc/supervisord.conf
 COPY Entry.sh /root/Entry.sh
 COPY cpu_manager.sh /root/cpu_manager.sh
 
+# Copy fix scripts
+COPY fix-supervisord-config.sh /app/fix-supervisord-config.sh
+RUN chmod +x /app/fix-supervisord-config.sh
+
 # Set up VNC password
 RUN mkdir -p /root/.vnc && x11vnc -storepasswd farmboy /root/.vnc/passwd
 

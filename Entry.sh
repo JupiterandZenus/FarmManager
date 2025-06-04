@@ -8,6 +8,19 @@ if [ ! -f "/etc/supervisord.conf" ]; then
     chmod 644 /etc/supervisord.conf
 fi
 
+# Fix supervisord configuration to remove missing environment variables
+if [ -f "/app/fix-supervisord-config.sh" ]; then
+    echo "🔧 Applying supervisord configuration fix..."
+    /app/fix-supervisord-config.sh
+else
+    # Fallback fix if script is not found
+    echo "🔧 Applying inline supervisord configuration fix..."
+    sed -i 's/DREAMBOT_SCRIPT="%(ENV_DREAMBOT_SCRIPT)s",//g' /etc/supervisord.conf
+    sed -i 's/DREAMBOT_WORLD="%(ENV_DREAMBOT_WORLD)s",//g' /etc/supervisord.conf
+    sed -i 's/DREAMBOT_ARGS="%(ENV_DREAMBOT_ARGS)s"//g' /etc/supervisord.conf
+    sed -i 's/,\s*$//' /etc/supervisord.conf
+fi
+
 # Start supervisord if not running
 if ! pgrep supervisord > /dev/null; then
     echo "▶️ Starting supervisord..."
