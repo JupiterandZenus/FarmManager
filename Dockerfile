@@ -65,7 +65,7 @@ RUN chmod -R 755 /root/DreamBot \
     /appdata \
     /app \
     && chmod +x /app/Entry.sh \
-    && chmod +x /app/cpu_manager.sh \
+    && chmod +x /app/cpu_manager_simple.sh \
     && chmod 755 /root/EternalFarm \
     && chmod 755 /root/EternalFarm/Logs \
     && chmod 755 /root/DreamBot \
@@ -77,7 +77,7 @@ RUN chmod -R 755 /root/DreamBot \
 # Copy configuration files to their locations
 COPY supervisord.conf /etc/supervisord.conf
 COPY Entry.sh /root/Entry.sh
-COPY cpu_manager.sh /root/cpu_manager.sh
+COPY cpu_manager_simple.sh /root/cpu_manager.sh
 
 # Copy fix scripts
 COPY fix-supervisord-config.sh /app/fix-supervisord-config.sh
