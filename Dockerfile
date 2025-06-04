@@ -1,77 +1,105 @@
-# Use Node.js 18 with a more compatible base image
-FROM node:18-bullseye-slim
+# Use Ubuntu 22.04 as base image for better compatibility
+FROM ubuntu:22.04
 
-# Install system dependencies including OpenSSL, locales, and MySQL client
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    openssl \
-    ca-certificates \
     curl \
-    locales \
+    wget \
+    git \
+    python3 \
+    python3-pip \
+    supervisor \
+    xvfb \
+    x11vnc \
+    xfce4 \
+    xfce4-terminal \
+    novnc \
+    websockify \
+    openjdk-8-jdk \
     default-mysql-client \
+    openssh-server \
+    wmctrl \
+    locales \
     && rm -rf /var/lib/apt/lists/* \
     && localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
-# Set locale environment
-ENV LANG en_US.utf8
-ENV LC_ALL en_US.UTF-8
+# Install Node.js 20.x
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g npm@latest
 
-# Create app directory
+# Set locale environment
+ENV LANG=en_US.utf8
+ENV LC_ALL=en_US.UTF-8
+
+# Create app directory and set as working directory
 WORKDIR /app
 
-# Create non-root user for security
-RUN groupadd -r farmboy && useradd -r -g farmboy farmboy
-
-# Copy package files
+# Copy package files first for better caching
 COPY package*.json ./
 
-# Install dependencies (including dev dependencies for Prisma)
+# Install Node.js dependencies
 RUN npm install
 
-# Copy prisma directory first
-COPY prisma ./prisma/
-
-# Copy rest of application code
+# Copy application files
 COPY . .
 
-# Copy DreamBot settings.json and dynamic generator
-COPY settings.json /app/settings.json
-COPY generate-dreambot-settings.js /app/generate-dreambot-settings.js
-
-# Generate Prisma client
-RUN npx prisma generate
-
 # Create necessary directories with correct permissions
-RUN mkdir -p /root/DreamBot /root/Desktop /root/.vnc /root/.eternalfarm /app/data /appdata/EternalFarm /appdata/DreamBot/BotData \
-    && chmod -R 755 /root/DreamBot /root/Desktop /root/.vnc /app/data /appdata \
-    && chmod 700 /root/.eternalfarm /appdata/EternalFarm
+RUN mkdir -p /root/DreamBot/BotData \
+    /root/Desktop \
+    /root/.vnc \
+    /root/.config/autostart \
+    /appdata/EternalFarm \
+    /appdata/DreamBot/BotData \
+    /var/log \
+    /var/run/sshd
 
-# Create EternalFarm config
-RUN echo '{\n\
-    "agent_key": "P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3",\n\
-    "api_url": "https://api.eternalfarm.net",\n\
-    "auto_start": true,\n\
-    "check_interval": 60,\n\
-    "notification_enabled": true\n\
-}' > /root/.eternalfarm/config.json \
-    && chmod 600 /root/.eternalfarm/config.json
+# Set proper permissions
+RUN chmod -R 755 /root/DreamBot \
+    /root/Desktop \
+    /root/.vnc \
+    /appdata \
+    /app \
+    && chmod +x /app/Entry.sh \
+    && chmod +x /app/cpu_manager.sh
 
-# Change ownership to non-root user
-RUN chown -R farmboy:farmboy /app
+# Copy configuration files to their locations
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY Entry.sh /root/Entry.sh
+COPY cpu_manager.sh /root/cpu_manager.sh
 
-# Switch to non-root user
-USER farmboy
+# Set up VNC password
+RUN mkdir -p /root/.vnc && x11vnc -storepasswd farmboy /root/.vnc/passwd
 
-# Expose port
-EXPOSE 3000
+# Copy modern dashboard files
+COPY dashboard-production.html /app/dashboard-production.html
+COPY modern-dashboard.css /app/modern-dashboard.css
+COPY modern-dashboard.js /app/modern-dashboard.js
+COPY style.css /app/style.css
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/health || exit 1
+# Set up SSH
+RUN mkdir -p /var/run/sshd && \
+    echo 'root:farmboy' | chpasswd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Expose ports
+EXPOSE 3333 5900 8080 22
+
+# Set environment variables
+ENV DISPLAY=:1 \
+    HOME=/root \
+    SHELL=/bin/bash \
+    USER=root \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
 
 # Add metadata labels
-LABEL maintainer="Farm Admin Team"
-LABEL version="0.1"
-LABEL description="Farm Manager - Client Management System with P2P Master AI Timer"
+LABEL maintainer="Farm Admin Team" \
+      version="0.2" \
+      description="Farm Manager with DreamBot Launching and Individual EternalFarm Service Keys"
 
-# Set default command (can be overridden by docker-compose)
-CMD ["node", "server.js"] 
+# Set the default command to run supervisord
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
