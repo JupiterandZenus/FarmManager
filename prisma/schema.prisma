@@ -134,6 +134,7 @@ model Task {
   completed_at  DateTime?
   error_message String?   @db.Text
   result_data   String?   @db.LongText
+  process_id    Int?      // DreamBot process ID
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
   account       Account?  @relation(fields: [account_id], references: [id])
@@ -143,7 +144,6 @@ model Task {
   @@index([account_id], map: "tasks_account_id_fkey")
   @@index([agent_id], map: "tasks_agent_id_fkey")
   @@index([bot_id], map: "tasks_bot_id_fkey")
-    process_id      Int?      // DreamBot process ID
   @@map("tasks")
 }
 
