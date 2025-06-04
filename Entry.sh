@@ -14,17 +14,35 @@ export PATH=$JAVA_HOME/bin:$PATH
 
 echo "✅ Java Home set to: $JAVA_HOME"
 
-# Wait for X11 to be ready with more robust checking
+# Wait for X11 to be ready with more robust checking and auto-start if needed
 echo "⏳ Waiting for X11 display server..."
-for i in {1..60}; do
+
+# Try to start X11 if not running
+if ! xset q &>/dev/null; then
+    echo "🔄 X11 not running, attempting to start X server..."
+    Xvfb :1 -screen 0 1920x1080x24 -ac &
+    export DISPLAY=:1
+    sleep 5
+fi
+
+# Check if X11 is now running
+for i in {1..20}; do
     if xset q &>/dev/null; then
         echo "✅ X11 display server is ready"
         break
     fi
-    echo "   Attempt $i/60 - X11 not ready yet..."
+    echo "   Attempt $i/20 - X11 not ready yet..."
     sleep 2
-    if [ $i -eq 60 ]; then
-        echo "⚠️ X11 display server not ready after 120 seconds, but continuing anyway..."
+    if [ $i -eq 10 ]; then
+        echo "🔄 Trying to restart X server..."
+        pkill Xvfb || true
+        Xvfb :1 -screen 0 1920x1080x24 -ac &
+        export DISPLAY=:1
+        sleep 5
+    fi
+    if [ $i -eq 20 ]; then
+        echo "⚠️ X11 display server not ready after 40 seconds, but continuing anyway..."
+        echo "⚠️ Some graphical features may not work properly."
     fi
 done
 
