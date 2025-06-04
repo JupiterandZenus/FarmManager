@@ -2964,6 +2964,20 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    if (pathname === '/index-discord.html') {
+        fs.readFile(path.join(__dirname, 'index-discord.html'), (err, data) => {
+            if (err) {
+                res.writeHead(404);
+                res.end('File not found');
+                return;
+            }
+            res.setHeader('Content-Type', 'text/html');
+            res.writeHead(200);
+            res.end(data);
+        });
+        return;
+    }
+
     if (pathname === '/modern-dashboard.js') {
         fs.readFile(path.join(__dirname, 'modern-dashboard.js'), (err, data) => {
             if (err) {

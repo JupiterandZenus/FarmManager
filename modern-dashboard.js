@@ -600,4 +600,11 @@ function updateAnalytics() {
         analyticsData.webhookHealth = Math.min(100, analyticsData.webhookHealth + 5);
         updateAnalyticsDisplay();
     }
+}
+
+function refreshDiscordLegacy() {
+    const iframe = document.querySelector('#discord-legacy-tab iframe');
+    if (iframe) {
+        iframe.src = iframe.src;
+    }
 } 
