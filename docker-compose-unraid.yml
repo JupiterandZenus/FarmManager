@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  farm-admin:
+    image: supscotty/farmboy:latest
+    container_name: farm-admin-hybrid
+    ports:
+      - "5900:5900"   # VNC Server
+      - "8080:8080"   # noVNC Web Client  
+      - "3333:3333"   # Farm Manager Web Interface
+      - "2222:22"     # SSH Access
+    environment:
+      - NODE_ENV=production
+      - PORT=3333
+      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
+      - AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - CHECKER_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - AUTOMATOR_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - MYSQL_HOST=mariadb
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
+      - DISPLAY=:1
+      - DISPLAY_WIDTH=1920
+      - DISPLAY_HEIGHT=1080
+      - VNC_PASSWORD=farmboy123
+    volumes:
+      - farm_data:/app/data
+      - dreambot_data:/root/DreamBot
+      - ./supervisord-unraid-fix.conf:/etc/supervisor/conf.d/supervisord.conf
+      - ./Entry-Database-First.sh:/app/Entry-Database-First.sh
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    networks:
+      - farm-network
+    entrypoint: ["/bin/bash", "-c", "chmod +x /app/Entry-Database-First.sh && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.farmboy.environment=unraid-production"
+      - "com.farmboy.type=hybrid"
+      - "com.farmboy.version=1.0-production"
+      - "com.farmboy.database.type=mariadb"
+      - "com.farmboy.database.user=farmboy"
+      - "com.farmboy.database.host=mariadb"
+      - "com.farmboy.database.port=3306"
+      - "com.farmboy.database.name=farmboy_db"
+      - "com.farmboy.database.auth.fixed=true"
+      - "com.farmboy.eternalfarm.agent.enabled=true"
+      - "com.farmboy.eternalfarm.checker.enabled=true"
+      - "com.farmboy.eternalfarm.automator.enabled=true"
+      - "com.farmboy.eternalfarm.keys.type=individual"
+
+  mariadb:
+    image: lscr.io/linuxserver/mariadb:latest
+    container_name: farm-admin-mariadb
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - TZ=Etc/UTC
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
+      - MYSQL_ROOT_HOST=%
+    volumes:
+      - mariadb_data:/config
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "farmboy", "-pSntioi004!"]
+      timeout: 10s
+      retries: 10
+      interval: 15s
+      start_period: 30s
+    networks:
+      - farm-network
+    labels:
+      - "com.farmboy.database.service=mariadb"
+      - "com.farmboy.database.root_host=%"
+      - "com.farmboy.database.version=latest"
+
+volumes:
+  farm_data:
+  dreambot_data:
+  mariadb_data:
+
+networks:
+  farm-network:
+    driver: bridge 
