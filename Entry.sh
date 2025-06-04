@@ -28,17 +28,19 @@ for i in {1..60}; do
     fi
 done
 
-# Create necessary directories with proper permissions
-echo "📁 Creating directories..."
-mkdir -p /root/DreamBot/BotData
-mkdir -p /appdata/EternalFarm
+# Create necessary directories
 mkdir -p /appdata/DreamBot/BotData
 mkdir -p /root/Desktop
+mkdir -p /root/EternalFarm/Logs
+mkdir -p /root/DreamBot/BotData
 
 # Set proper permissions for directories
 chmod 755 /root/DreamBot
 chmod -R 755 /appdata/EternalFarm
 chmod -R 755 /appdata/DreamBot
+chmod 755 /root/EternalFarm
+chmod 755 /root/EternalFarm/Logs
+chmod 755 /root/DreamBot/BotData
 
 echo "✅ Directory setup complete"
 
@@ -47,24 +49,24 @@ echo "🔑 Setting up EternalFarm keys..."
 
 # Only create key files if environment variables are set
 if [ ! -z "${AGENT_KEY}" ]; then
-    echo "${AGENT_KEY}" > /appdata/EternalFarm/agent.key
-    chmod 600 /appdata/EternalFarm/agent.key
+    echo "${AGENT_KEY}" > /root/EternalFarm/Logs/agent.key
+    chmod 600 /root/EternalFarm/Logs/agent.key
     echo "✅ Agent key file created"
 else
     echo "⚠️ AGENT_KEY environment variable not set, skipping key file creation"
 fi
 
 if [ ! -z "${CHECKER_KEY}" ]; then
-    echo "${CHECKER_KEY}" > /appdata/EternalFarm/checker.key
-    chmod 600 /appdata/EternalFarm/checker.key
+    echo "${CHECKER_KEY}" > /root/EternalFarm/Logs/checker.key
+    chmod 600 /root/EternalFarm/Logs/checker.key
     echo "✅ Checker key file created"
 else
     echo "⚠️ CHECKER_KEY environment variable not set, skipping key file creation"
 fi
 
 if [ ! -z "${AUTOMATOR_KEY}" ]; then
-    echo "${AUTOMATOR_KEY}" > /appdata/EternalFarm/api.key
-    chmod 600 /appdata/EternalFarm/api.key
+    echo "${AUTOMATOR_KEY}" > /root/EternalFarm/Logs/automator.key
+    chmod 600 /root/EternalFarm/Logs/automator.key
     echo "✅ Automator key file created"
 else
     echo "⚠️ AUTOMATOR_KEY environment variable not set, skipping key file creation"
@@ -139,25 +141,88 @@ else
     echo "✅ EternalFarm Browser Automator already exists"
 fi
 
-# Generate DreamBot settings.json
-echo "⚙️ Generating DreamBot settings..."
-cat > /root/DreamBot/BotData/settings.json << EOF
+# Copy DreamBot settings to both locations
+echo "📝 Creating DreamBot settings..."
+cat > /root/DreamBot/BotData/settings.json << 'EOF'
 {
-    "username": "${DREAMBOT_USERNAME}",
-    "password": "${DREAMBOT_PASSWORD}",
-    "script": "${DREAMBOT_SCRIPT}",
-    "world": ${DREAMBOT_WORLD:-301},
-    "args": "${DREAMBOT_ARGS}",
-    "fps": 20,
-    "lowCpuMode": true,
-    "lowMemoryMode": false,
-    "covertMode": true,
-    "developerMode": true
+  "breaks": [],
+  "cpuSaver": true,
+  "disableCPUSaverWhenNotRunning": false,
+  "enableCPUSaverWhenMinimized": false,
+  "ignoreVisualInjections": false,
+  "isAlwaysOnTop": false,
+  "clientRendering": false,
+  "drawScriptPaint": true,
+  "useRandomWorld": true,
+  "useCustomWorld": false,
+  "hasSeenAccountWarning": false,
+  "fps": 20,
+  "renderDistance": 25,
+  "customWorld": -8,
+  "disableSecurityManager": false,
+  "developerMode": false,
+  "freshStart": false,
+  "sdnIntegration": true,
+  "covertMode": true,
+  "mouseSpeed": 100,
+  "autoAddAccounts": true,
+  "lastRanScript": "Premium:1.312:P2P Master AI",
+  "favoriteScripts": [
+    "P2P Master AI",
+    "# NMZ",
+    "Dreamy AIO Skiller Elite Lifetime",
+    "Guester - Lifetime"
+  ],
+  "lastUsedUsername": "316388619",
+  "lastScriptCategories": 7,
+  "lastCanvasSize": "765:503",
+  "gameLayout": "Force resizable (modern)",
+  "roofSolverActive": true,
+  "dismissSolversActive": true,
+  "disableRegionRendering": false,
+  "disableTileRendering": false,
+  "disableTileUnderlayRendering": false,
+  "disableTileOverlayRendering": false,
+  "stopWidgetUpdates": false,
+  "stopWidgetDraw": false,
+  "noClickWalk": false,
+  "noInputLogin": false,
+  "menuInjection": false,
+  "disableAnimation": false,
+  "disableModelDrawing": false,
+  "disableSounds": true,
+  "deleteAccountOnBan": false,
+  "lowMemory": false,
+  "lowDetail": false,
+  "worldHopOnLoginError": false,
+  "settingsVersion": 3,
+  "discordWebhook": "https://discord.com/api/webhooks/1358933950210379816/Pdfyxcilip-xI3-q5ILOl9eRCl0nhEICZHZuvbyQm9aARgzI7GuHQExqBj1NNfkScPvV",
+  "notifyOnScriptStart": false,
+  "notifyOnScriptStop": false,
+  "notifyOnScriptPause": false,
+  "notifyOnScheduleStart": false,
+  "notifyOnScheduleStop": false,
+  "notifyOnBreakStart": false,
+  "notifyOnBreakStop": false,
+  "notifyOnBan": true,
+  "notifyOnDeath": true,
+  "notifyOnLevelUp": true,
+  "notifyOnLevelUpAmount": 5,
+  "notifyOnPet": true,
+  "notifyOnValuableDrop": true,
+  "notifyOnValuableDropAmount": 250000,
+  "notifyOnUntradeableDrop": true,
+  "scriptWebhookAccessAllowed": true,
+  "mentionOnBan": true,
+  "movesMouseOffscreen": true,
+  "stopsAfterUpdates": true
 }
 EOF
-
 chmod 600 /root/DreamBot/BotData/settings.json
-echo "✅ DreamBot settings.json created"
+
+# Also copy to appdata location as backup
+cp /root/DreamBot/BotData/settings.json /appdata/DreamBot/BotData/settings.json
+chmod 600 /appdata/DreamBot/BotData/settings.json
 
 # Download DreamBot client if not already present
 echo "📥 Checking DreamBot client..."
@@ -189,9 +254,9 @@ echo "   EternalFarm Checker: $([ -f "/usr/local/bin/EternalFarmChecker" ] && ec
 echo "   EternalFarm Browser Automator: $([ -f "/usr/local/bin/EternalFarmBrowserAutomator" ] && echo "✅ Present" || echo "❌ Missing")"
 echo "   DreamBot Client: $([ -f "/root/DreamBot/BotData/client.jar" ] && echo "✅ Present" || echo "❌ Missing")"
 echo "   DreamBot Settings: $([ -f "/root/DreamBot/BotData/settings.json" ] && echo "✅ Present" || echo "❌ Missing")"
-echo "   Agent Key: $([ -f "/appdata/EternalFarm/agent.key" ] && echo "✅ Present" || echo "❌ Missing")"
-echo "   Checker Key: $([ -f "/appdata/EternalFarm/checker.key" ] && echo "✅ Present" || echo "❌ Missing")"
-echo "   Automator Key: $([ -f "/appdata/EternalFarm/api.key" ] && echo "✅ Present" || echo "❌ Missing")"
+echo "   Agent Key: $([ -f "/root/EternalFarm/Logs/agent.key" ] && echo "✅ Present" || echo "❌ Missing")"
+echo "   Checker Key: $([ -f "/root/EternalFarm/Logs/checker.key" ] && echo "✅ Present" || echo "❌ Missing")"
+echo "   Automator Key: $([ -f "/root/EternalFarm/Logs/automator.key" ] && echo "✅ Present" || echo "❌ Missing")"
 
 # Set up desktop shortcuts
 echo "🖥️ Setting up desktop environment..."
@@ -203,7 +268,7 @@ Version=1.0
 Type=Application
 Name=EternalFarm Agent
 Comment=EternalFarm Agent Application
-Exec=xfce4-terminal --hold --title='EternalFarm Agent' --command='/usr/local/bin/EternalFarmAgent --key-file=/appdata/EternalFarm/agent.key --show-gui'
+Exec=xfce4-terminal --hold --title='EternalFarm Agent' --command='/usr/local/bin/EternalFarmAgent --key-file=/root/EternalFarm/Logs/agent.key --show-gui'
 Icon=utilities-terminal
 Terminal=false
 Categories=Utility;
@@ -216,7 +281,7 @@ Version=1.0
 Type=Application
 Name=EternalFarm Checker
 Comment=EternalFarm Checker Application
-Exec=xfce4-terminal --hold --title='EternalFarm Checker' --command='/usr/local/bin/EternalFarmChecker --key-file=/appdata/EternalFarm/checker.key --show-gui'
+Exec=xfce4-terminal --hold --title='EternalFarm Checker' --command='/usr/local/bin/EternalFarmChecker --key-file=/root/EternalFarm/Logs/checker.key --show-gui'
 Icon=utilities-terminal
 Terminal=false
 Categories=Utility;
@@ -229,7 +294,7 @@ Version=1.0
 Type=Application
 Name=EternalFarm Browser Automator
 Comment=EternalFarm Browser Automator Application
-Exec=xfce4-terminal --hold --title='EternalFarm Browser Automator' --command='/usr/local/bin/EternalFarmBrowserAutomator --key-file=/appdata/EternalFarm/api.key --show-gui'
+Exec=xfce4-terminal --hold --title='EternalFarm Browser Automator' --command='/usr/local/bin/EternalFarmBrowserAutomator --key-file=/root/EternalFarm/Logs/automator.key --show-gui'
 Icon=utilities-terminal
 Terminal=false
 Categories=Utility;
@@ -285,6 +350,28 @@ if [ -f "/app/fix-auto-login.sh" ]; then
     chmod +x /app/fix-auto-login.sh
     /app/fix-auto-login.sh
 fi
+
+# Set up VNC server
+if [ ! -d ~/.vnc ]; then
+  mkdir -p ~/.vnc
+fi
+
+# Setup a password for VNC
+if [ -n "$VNC_PASSWORD" ]; then
+  echo "$VNC_PASSWORD" | vncpasswd -f > ~/.vnc/passwd
+  chmod 600 ~/.vnc/passwd
+fi
+
+# Set up resolution
+if [ -z "$DISPLAY_WIDTH" ]; then
+  DISPLAY_WIDTH=1920
+fi
+if [ -z "$DISPLAY_HEIGHT" ]; then
+  DISPLAY_HEIGHT=1080
+fi
+
+# Run supervisord
+exec /usr/bin/supervisord -c /etc/supervisord.conf
 
 # This script has completed successfully
 exit 0 
