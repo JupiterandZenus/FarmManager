@@ -58,13 +58,18 @@ services:
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
+      # Don't mount these directories to allow container to use the built-in files
+      # - ./dashboard-production.html:/app/dashboard-production.html
+      # - ./modern-dashboard.css:/app/modern-dashboard.css
+      # - ./modern-dashboard.js:/app/modern-dashboard.js
+      # - ./style.css:/app/style.css
     restart: unless-stopped
     depends_on:
       mariadb:
         condition: service_healthy
     networks:
       - farm-network
-    entrypoint: ["/bin/bash", "-c", "chmod +x /app/Entry.sh && chmod +x /app/fix-permissions.sh && /app/fix-permissions.sh && /app/Entry.sh"]
+    entrypoint: ["/bin/bash", "-c", "chmod +x /app/Entry.sh && /app/Entry.sh"]
 
   mariadb:
     container_name: farm-admin-mariadb-fresh

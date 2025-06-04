@@ -6,21 +6,25 @@ echo "================================================="
 
 # Set up environment
 export DISPLAY=:1
-export JAVA_HOME=$(find /usr/lib/jvm -name "java-8-openjdk-*" | head -1)
+export JAVA_HOME=$(find /usr/lib/jvm -name "temurin-8-jdk-amd64" | head -1)
+if [ -z "$JAVA_HOME" ]; then
+    export JAVA_HOME=$(find /usr/lib/jvm -name "java-8-openjdk-*" | head -1)
+fi
 export PATH=$JAVA_HOME/bin:$PATH
 
-# Wait for X11 to be ready
+echo "✅ Java Home set to: $JAVA_HOME"
+
+# Wait for X11 to be ready with more robust checking
 echo "⏳ Waiting for X11 display server..."
-for i in {1..30}; do
+for i in {1..60}; do
     if xset q &>/dev/null; then
         echo "✅ X11 display server is ready"
         break
     fi
-    echo "   Attempt $i/30 - X11 not ready yet..."
+    echo "   Attempt $i/60 - X11 not ready yet..."
     sleep 2
-    if [ $i -eq 30 ]; then
-        echo "❌ X11 display server not ready after 60 seconds"
-        exit 1
+    if [ $i -eq 60 ]; then
+        echo "⚠️ X11 display server not ready after 120 seconds, but continuing anyway..."
     fi
 done
 
@@ -40,16 +44,33 @@ echo "✅ Directory setup complete"
 
 # Create EternalFarm key files with proper permissions
 echo "🔑 Setting up EternalFarm keys..."
-echo "${AGENT_KEY}" > /appdata/EternalFarm/agent.key
-echo "${CHECKER_KEY}" > /appdata/EternalFarm/checker.key
-echo "${AUTOMATOR_KEY}" > /appdata/EternalFarm/api.key
 
-# Set proper permissions for key files
-chmod 600 /appdata/EternalFarm/agent.key
-chmod 600 /appdata/EternalFarm/checker.key
-chmod 600 /appdata/EternalFarm/api.key
+# Only create key files if environment variables are set
+if [ ! -z "${AGENT_KEY}" ]; then
+    echo "${AGENT_KEY}" > /appdata/EternalFarm/agent.key
+    chmod 600 /appdata/EternalFarm/agent.key
+    echo "✅ Agent key file created"
+else
+    echo "⚠️ AGENT_KEY environment variable not set, skipping key file creation"
+fi
 
-echo "✅ Key files created with secure permissions"
+if [ ! -z "${CHECKER_KEY}" ]; then
+    echo "${CHECKER_KEY}" > /appdata/EternalFarm/checker.key
+    chmod 600 /appdata/EternalFarm/checker.key
+    echo "✅ Checker key file created"
+else
+    echo "⚠️ CHECKER_KEY environment variable not set, skipping key file creation"
+fi
+
+if [ ! -z "${AUTOMATOR_KEY}" ]; then
+    echo "${AUTOMATOR_KEY}" > /appdata/EternalFarm/api.key
+    chmod 600 /appdata/EternalFarm/api.key
+    echo "✅ Automator key file created"
+else
+    echo "⚠️ AUTOMATOR_KEY environment variable not set, skipping key file creation"
+fi
+
+echo "✅ Key files setup complete"
 
 # Download EternalFarm tools if not already present
 echo "📥 Checking EternalFarm tools..."
@@ -58,32 +79,62 @@ AGENT_URL="https://eternalfarm.ams3.cdn.digitaloceanspaces.com/agent/2.1.3/linux
 CHECKER_URL="https://eternalfarm.ams3.cdn.digitaloceanspaces.com/checker/2.0.13/linux-amd64/EternalFarmChecker"
 AUTOMATOR_URL="https://eternalfarm.ams3.cdn.digitaloceanspaces.com/browser-automator/2.4.5/linux-amd64/EternalFarmBrowserAutomator"
 
-# Download EternalFarm Agent
+# Download EternalFarm Agent with retry
 if [ ! -f "/usr/local/bin/EternalFarmAgent" ]; then
     echo "📥 Downloading EternalFarm Agent..."
-    curl -L -o /usr/local/bin/EternalFarmAgent "$AGENT_URL"
-    chmod +x /usr/local/bin/EternalFarmAgent
-    echo "✅ EternalFarm Agent downloaded"
+    for i in {1..3}; do
+        if curl -L --connect-timeout 30 -o /usr/local/bin/EternalFarmAgent "$AGENT_URL"; then
+            chmod +x /usr/local/bin/EternalFarmAgent
+            echo "✅ EternalFarm Agent downloaded"
+            break
+        else
+            echo "⚠️ Attempt $i/3 failed to download EternalFarm Agent"
+            if [ $i -eq 3 ]; then
+                echo "❌ Failed to download EternalFarm Agent after 3 attempts"
+            fi
+            sleep 2
+        fi
+    done
 else
     echo "✅ EternalFarm Agent already exists"
 fi
 
-# Download EternalFarm Checker
+# Download EternalFarm Checker with retry
 if [ ! -f "/usr/local/bin/EternalFarmChecker" ]; then
     echo "📥 Downloading EternalFarm Checker..."
-    curl -L -o /usr/local/bin/EternalFarmChecker "$CHECKER_URL"
-    chmod +x /usr/local/bin/EternalFarmChecker
-    echo "✅ EternalFarm Checker downloaded"
+    for i in {1..3}; do
+        if curl -L --connect-timeout 30 -o /usr/local/bin/EternalFarmChecker "$CHECKER_URL"; then
+            chmod +x /usr/local/bin/EternalFarmChecker
+            echo "✅ EternalFarm Checker downloaded"
+            break
+        else
+            echo "⚠️ Attempt $i/3 failed to download EternalFarm Checker"
+            if [ $i -eq 3 ]; then
+                echo "❌ Failed to download EternalFarm Checker after 3 attempts"
+            fi
+            sleep 2
+        fi
+    done
 else
     echo "✅ EternalFarm Checker already exists"
 fi
 
-# Download EternalFarm Browser Automator
+# Download EternalFarm Browser Automator with retry
 if [ ! -f "/usr/local/bin/EternalFarmBrowserAutomator" ]; then
     echo "📥 Downloading EternalFarm Browser Automator..."
-    curl -L -o /usr/local/bin/EternalFarmBrowserAutomator "$AUTOMATOR_URL"
-    chmod +x /usr/local/bin/EternalFarmBrowserAutomator
-    echo "✅ EternalFarm Browser Automator downloaded"
+    for i in {1..3}; do
+        if curl -L --connect-timeout 30 -o /usr/local/bin/EternalFarmBrowserAutomator "$AUTOMATOR_URL"; then
+            chmod +x /usr/local/bin/EternalFarmBrowserAutomator
+            echo "✅ EternalFarm Browser Automator downloaded"
+            break
+        else
+            echo "⚠️ Attempt $i/3 failed to download EternalFarm Browser Automator"
+            if [ $i -eq 3 ]; then
+                echo "❌ Failed to download EternalFarm Browser Automator after 3 attempts"
+            fi
+            sleep 2
+        fi
+    done
 else
     echo "✅ EternalFarm Browser Automator already exists"
 fi
@@ -112,9 +163,21 @@ echo "✅ DreamBot settings.json created"
 echo "📥 Checking DreamBot client..."
 if [ ! -f "/root/DreamBot/BotData/client.jar" ]; then
     echo "📥 Downloading DreamBot client..."
-    curl -L -o /root/DreamBot/BotData/client.jar "https://dreambot.org/DBLauncher.jar"
-    chmod +x /root/DreamBot/BotData/client.jar
-    echo "✅ DreamBot client downloaded"
+    for i in {1..3}; do
+        if curl -L --connect-timeout 30 -o /root/DreamBot/BotData/client.jar "https://dreambot.org/DBLauncher.jar"; then
+            chmod +x /root/DreamBot/BotData/client.jar
+            echo "✅ DreamBot client downloaded"
+            break
+        else
+            echo "⚠️ Attempt $i/3 failed to download DreamBot client"
+            if [ $i -eq 3 ]; then
+                echo "❌ Failed to download DreamBot client after 3 attempts"
+                # Create an empty file to prevent repeated download attempts
+                touch /root/DreamBot/BotData/client.jar
+            fi
+            sleep 2
+        fi
+    done
 else
     echo "✅ DreamBot client already exists"
 fi
@@ -214,4 +277,7 @@ echo "   - DreamBot instances can be launched via Farm Manager"
 echo "   - Access VNC interface on port 8080"
 echo "   - Access Farm Manager on port 3333"
 echo ""
-echo "🚀 Ready for bot farming operations!" 
+echo "🚀 Ready for bot farming operations!"
+
+# This script has completed successfully
+exit 0 

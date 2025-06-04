@@ -87,6 +87,7 @@ services:
       - mariadb
     networks:
       - farm-network
+    entrypoint: ["/bin/bash", "-c", "chmod +x /app/Entry.sh && /app/Entry.sh"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
       interval: 30s
