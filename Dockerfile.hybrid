@@ -127,7 +127,17 @@ RUN mkdir -p /var/run/sshd \
     /tmp/.X11-unix \
     /etc/supervisord.d \
     /app \
-    && chmod 1777 /tmp/.X11-unix
+    /root/EternalFarm/Logs \
+    /appdata/DreamBot/BotData \
+    /appdata/EternalFarm \
+    && chmod 1777 /tmp/.X11-unix \
+    && chmod 755 /root/EternalFarm \
+    && chmod 755 /root/EternalFarm/Logs \
+    && chmod 755 /root/DreamBot \
+    && chmod 755 /root/DreamBot/BotData \
+    && chmod 755 /appdata/DreamBot \
+    && chmod 755 /appdata/DreamBot/BotData \
+    && chmod 755 /appdata/EternalFarm
 
 # Set up X11 permissions
 RUN touch /root/.Xauthority && \
@@ -159,7 +169,9 @@ COPY style.css /app/style.css
 # Copy and set permissions for scripts
 COPY Entry.sh /root/Entry.sh
 COPY cpu_manager.sh /root/cpu_manager.sh
-RUN chmod +x /root/Entry.sh /root/cpu_manager.sh
+COPY fix-vnc-issue.sh /app/fix-vnc-issue.sh
+COPY fix-auto-login.sh /app/fix-auto-login.sh
+RUN chmod +x /root/Entry.sh /root/cpu_manager.sh /app/fix-vnc-issue.sh /app/fix-auto-login.sh
 
 # Pre-download EternalFarm components
 RUN echo "📥 Pre-downloading EternalFarm components..." && \
@@ -198,6 +210,14 @@ RUN chmod +x /usr/local/bin/docker-entrypoint-hybrid.sh
 RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
     echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config && \
     echo "root:farmboy" | chpasswd
+
+# Create empty log files
+RUN touch /root/EternalFarm/Logs/agent.log && \
+    touch /root/EternalFarm/Logs/checker.log && \
+    touch /root/EternalFarm/Logs/automator.log && \
+    chmod 644 /root/EternalFarm/Logs/agent.log && \
+    chmod 644 /root/EternalFarm/Logs/checker.log && \
+    chmod 644 /root/EternalFarm/Logs/automator.log
 
 # Expose ports
 EXPOSE 3333 5900 8080 22

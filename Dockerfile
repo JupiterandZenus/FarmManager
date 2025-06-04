@@ -55,7 +55,8 @@ RUN mkdir -p /root/DreamBot/BotData \
     /appdata/EternalFarm \
     /appdata/DreamBot/BotData \
     /var/log \
-    /var/run/sshd
+    /var/run/sshd \
+    /root/EternalFarm/Logs
 
 # Set proper permissions
 RUN chmod -R 755 /root/DreamBot \
@@ -64,7 +65,14 @@ RUN chmod -R 755 /root/DreamBot \
     /appdata \
     /app \
     && chmod +x /app/Entry.sh \
-    && chmod +x /app/cpu_manager.sh
+    && chmod +x /app/cpu_manager.sh \
+    && chmod 755 /root/EternalFarm \
+    && chmod 755 /root/EternalFarm/Logs \
+    && chmod 755 /root/DreamBot \
+    && chmod 755 /root/DreamBot/BotData \
+    && chmod 755 /appdata/DreamBot \
+    && chmod 755 /appdata/DreamBot/BotData \
+    && chmod 755 /appdata/EternalFarm
 
 # Copy configuration files to their locations
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -84,6 +92,19 @@ COPY style.css /app/style.css
 RUN mkdir -p /var/run/sshd && \
     echo 'root:farmboy' | chpasswd && \
     sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Create empty log files
+RUN touch /root/EternalFarm/Logs/agent.log && \
+    touch /root/EternalFarm/Logs/checker.log && \
+    touch /root/EternalFarm/Logs/automator.log && \
+    chmod 644 /root/EternalFarm/Logs/agent.log && \
+    chmod 644 /root/EternalFarm/Logs/checker.log && \
+    chmod 644 /root/EternalFarm/Logs/automator.log
+
+# Copy scripts
+COPY fix-vnc-issue.sh /app/fix-vnc-issue.sh
+COPY fix-auto-login.sh /app/fix-auto-login.sh
+RUN chmod +x /app/fix-vnc-issue.sh /app/fix-auto-login.sh
 
 # Expose ports
 EXPOSE 3333 5900 8080 22
