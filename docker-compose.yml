@@ -55,9 +55,14 @@ services:
       - ETERNAL_API_URL=https://api.eternalfarm.net
       - AUTH_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
       - API_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      # Individual EternalFarm service keys (explicitly set)
+      - AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - CHECKER_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - AUTOMATOR_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
+      - ./fix-auto-login.sh:/app/fix-auto-login.sh
       # Don't mount these directories to allow container to use the built-in files
       # - ./dashboard-production.html:/app/dashboard-production.html
       # - ./modern-dashboard.css:/app/modern-dashboard.css

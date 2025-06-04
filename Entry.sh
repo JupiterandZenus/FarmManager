@@ -279,5 +279,12 @@ echo "   - Access Farm Manager on port 3333"
 echo ""
 echo "🚀 Ready for bot farming operations!"
 
+# Apply auto-login fix
+if [ -f "/app/fix-auto-login.sh" ]; then
+    echo "🔧 Applying auto-login fix..."
+    chmod +x /app/fix-auto-login.sh
+    /app/fix-auto-login.sh
+fi
+
 # This script has completed successfully
 exit 0 
