@@ -73,14 +73,14 @@ services:
       - DREAMBOT_DIR=/root/DreamBot/BotData
       - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
       # EternalFarm Configuration
-      - ETERNALFARM_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
-      - ETERNAL_API_URL=https://api.eternalfarm.net
-      - AUTH_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
-      - API_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - ETERNALFARM_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
+      - ETERNAL_API_URL=https://api.eternalfarm.net     
+      - AUTH_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
+      - API_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
       # Individual EternalFarm service keys (explicitly set)
-      - AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
-      - CHECKER_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
-      - AUTOMATOR_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3     
+      - CHECKER_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
+      - AUTOMATOR_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
@@ -130,7 +130,7 @@ services:
     labels:
       # Core Database Labels
       - "com.farmboy.database.service=mariadb"
-      - "com.farmboy.database.type=mariadb"
+      - "com.farmboy.database.type=mariadb" 
       - "com.farmboy.database.version=latest"
       - "com.farmboy.database.provider=linuxserver.io"
       # Configuration Labels

@@ -14,32 +14,17 @@ export PATH=$JAVA_HOME/bin:$PATH
 
 echo "✅ Java Home set to: $JAVA_HOME"
 
-# Wait for X11 to be ready with more robust checking and auto-start if needed
-echo "⏳ Waiting for X11 display server..."
+# Wait for X11 to be ready (supervisord handles Xvfb startup)
+echo "⏳ Waiting for X11 display server (managed by supervisord)..."
 
-# Try to start X11 if not running
-if ! xset q &>/dev/null; then
-    echo "🔄 X11 not running, attempting to start X server..."
-    Xvfb :1 -screen 0 1920x1080x24 -ac &
-    export DISPLAY=:1
-    sleep 5
-fi
-
-# Check if X11 is now running
+# Just wait for existing X server instead of starting our own
 for i in {1..20}; do
     if xset q &>/dev/null; then
         echo "✅ X11 display server is ready"
         break
     fi
-    echo "   Attempt $i/20 - X11 not ready yet..."
+    echo "   Attempt $i/20 - Waiting for supervisord to start X11..."
     sleep 2
-    if [ $i -eq 10 ]; then
-        echo "🔄 Trying to restart X server..."
-        pkill Xvfb || true
-        Xvfb :1 -screen 0 1920x1080x24 -ac &
-        export DISPLAY=:1
-        sleep 5
-    fi
     if [ $i -eq 20 ]; then
         echo "⚠️ X11 display server not ready after 40 seconds, but continuing anyway..."
         echo "⚠️ Some graphical features may not work properly."
@@ -386,12 +371,16 @@ if [ ! -z "$DATABASE_URL" ]; then
         fi
     fi
     
+    # Deploy Prisma schema first to create tables
+    echo "🔧 Deploying Prisma schema to create tables..."
+    cd /app && npx prisma db push --accept-data-loss
+    
     # Generate Prisma client
     echo "🔧 Generating Prisma client..."
     cd /app && npx prisma generate
     echo "✅ Prisma client generated"
     
-    # Seed database if empty
+    # NOW seed database (tables exist)
     AGENT_COUNT=$(mysql -h mariadb -u farmboy -p"$MYSQL_PASSWORD" -e "SELECT COUNT(*) FROM farmboy_db.agents;" 2>/dev/null | tail -n 1)
     if [ "$AGENT_COUNT" = "0" ] || [ -z "$AGENT_COUNT" ]; then
         echo "🌱 Seeding database..."

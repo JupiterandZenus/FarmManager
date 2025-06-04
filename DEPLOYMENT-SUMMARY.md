@@ -35,6 +35,7 @@ chmod +x deploy.sh
 ```
 
 ### Option 3: Unraid Docker Template
+
 Use the XML templates provided in `README-Docker.md` to create containers through the Unraid WebUI.
 
 ## 🔧 Environment Configuration
