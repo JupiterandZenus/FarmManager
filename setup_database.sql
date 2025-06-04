@@ -31,8 +31,16 @@ CREATE INDEX IF NOT EXISTS idx_agent_last_synced ON Agent(last_synced);
 CREATE INDEX IF NOT EXISTS idx_agent_status ON Agent(status);
 CREATE INDEX IF NOT EXISTS idx_agent_last_seen ON Agent(last_seen);
 
--- Grant root user access from any host
-UPDATE mysql.user SET Host='%' WHERE User='root';
+-- Create farmboy user if it doesn't exist and grant all privileges
+CREATE USER IF NOT EXISTS 'farmboy'@'%' IDENTIFIED BY 'Sntioi004!';
+GRANT ALL PRIVILEGES ON farmboy_db.* TO 'farmboy'@'%';
+
+-- Ensure root user can connect from any host
+CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY 'Sntioi004!';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+
+-- Update existing root user host if it exists
+UPDATE mysql.user SET Host='%' WHERE User='root' AND Host='localhost';
 FLUSH PRIVILEGES;
 
 -- Show that setup is complete

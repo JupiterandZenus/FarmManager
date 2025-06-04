@@ -35,7 +35,13 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3333
-      - DATABASE_URL=mysql://root:Sntioi004!@mariadb:3306/farmboy_db
+      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - MYSQL_HOST=mariadb
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
       - DISPLAY=:1
       - VNC_PORT=5900
       - NOVNC_PORT=8080
@@ -62,7 +68,8 @@ services:
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
-      - ./fix-auto-login.sh:/app/fix-auto-login.sh
+      # Comment out problematic mounts for now
+      # - ./fix-auto-login.sh:/app/fix-auto-login.sh
       # Don't mount these directories to allow container to use the built-in files
       # - ./dashboard-production.html:/app/dashboard-production.html
       # - ./modern-dashboard.css:/app/modern-dashboard.css
@@ -87,10 +94,12 @@ services:
       - MYSQL_DATABASE=farmboy_db
       - MYSQL_USER=farmboy
       - MYSQL_PASSWORD=Sntioi004!
+      - MYSQL_ROOT_HOST=%
     volumes:
-      - /mnt/user/appdata/mariadb-fresh:/config
-      - ./prisma:/prisma
-      - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
+      - mariadb_data:/config
+      # Comment out problematic mounts for now
+      # - ./prisma:/prisma
+      # - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
     ports:
       - "3308:3306"
     restart: unless-stopped
@@ -107,6 +116,8 @@ volumes:
   farm_data:
     driver: local
   dreambot_data:
+    driver: local
+  mariadb_data:
     driver: local
 
 networks:

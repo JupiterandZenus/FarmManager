@@ -342,7 +342,7 @@ if [ ! -z "$DATABASE_URL" ]; then
     echo "🔄 Waiting for database to be ready..."
     # Wait for database to be ready
     for i in {1..30}; do
-        if mysqladmin ping -h mariadb -u root -p"$MYSQL_ROOT_PASSWORD" --silent; then
+        if mysqladmin ping -h mariadb -u farmboy -p"$MYSQL_PASSWORD" --silent; then
             echo "✅ Database is ready"
             break
         fi
@@ -354,12 +354,18 @@ if [ ! -z "$DATABASE_URL" ]; then
     done
     
     # Check if database exists and initialize if needed
-    if mysql -h mariadb -u root -p"$MYSQL_ROOT_PASSWORD" -e "USE farmboy_db;" 2>/dev/null; then
+    if mysql -h mariadb -u farmboy -p"$MYSQL_PASSWORD" -e "USE farmboy_db;" 2>/dev/null; then
         echo "✅ Database already exists"
     else
         echo "🔄 Initializing database..."
-        mysql -h mariadb -u root -p"$MYSQL_ROOT_PASSWORD" < /app/setup_database.sql
-        echo "✅ Database initialized"
+        # Try with farmboy user first
+        if mysql -h mariadb -u farmboy -p"$MYSQL_PASSWORD" farmboy_db < /app/setup_database.sql; then
+            echo "✅ Database initialized with farmboy user"
+        else
+            echo "⚠️ Trying with root user..."
+            mysql -h mariadb -u root -p"$MYSQL_ROOT_PASSWORD" < /app/setup_database.sql
+            echo "✅ Database initialized with root user"
+        fi
     fi
     
     # Generate Prisma client
@@ -368,7 +374,7 @@ if [ ! -z "$DATABASE_URL" ]; then
     echo "✅ Prisma client generated"
     
     # Seed database if empty
-    AGENT_COUNT=$(mysql -h mariadb -u root -p"$MYSQL_ROOT_PASSWORD" -e "SELECT COUNT(*) FROM farmboy_db.agents;" 2>/dev/null | tail -n 1)
+    AGENT_COUNT=$(mysql -h mariadb -u farmboy -p"$MYSQL_PASSWORD" -e "SELECT COUNT(*) FROM farmboy_db.agents;" 2>/dev/null | tail -n 1)
     if [ "$AGENT_COUNT" = "0" ] || [ -z "$AGENT_COUNT" ]; then
         echo "🌱 Seeding database..."
         cd /app && node prisma/seed.js
