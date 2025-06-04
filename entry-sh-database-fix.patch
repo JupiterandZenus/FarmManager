@@ -1,0 +1,18 @@
+# Deploy Prisma schema first to create tables
+echo "🔧 Deploying Prisma schema..."
+cd /app && npx prisma migrate deploy --schema=./prisma/schema.prisma
+
+# Generate Prisma client
+echo "🔧 Generating Prisma client..."
+cd /app && npx prisma generate --schema=./prisma/schema.prisma
+echo "✅ Prisma client generated"
+
+# Seed database if empty (now tables exist)
+AGENT_COUNT=$(mysql -h mariadb -u farmboy -p"$MYSQL_PASSWORD" -e "SELECT COUNT(*) FROM farmboy_db.agents;" 2>/dev/null | tail -n 1)
+if [ "$AGENT_COUNT" = "0" ] || [ -z "$AGENT_COUNT" ]; then
+    echo "🌱 Seeding database..."
+    cd /app && node prisma/seed.js
+    echo "✅ Database seeded"
+else
+    echo "✅ Database already has data, skipping seed"
+fi 
