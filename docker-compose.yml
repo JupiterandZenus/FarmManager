@@ -32,6 +32,22 @@ services:
       # Resource Labels
       - "com.farmboy.resources.memory=2g"
       - "com.farmboy.resources.cpus=2"
+      # Database Labels
+      - "com.farmboy.database.type=mariadb"
+      - "com.farmboy.database.user=farmboy"
+      - "com.farmboy.database.host=mariadb"
+      - "com.farmboy.database.port=3306"
+      - "com.farmboy.database.name=farmboy_db"
+      # EternalFarm Service Labels
+      - "com.farmboy.eternalfarm.agent.enabled=true"
+      - "com.farmboy.eternalfarm.checker.enabled=true"
+      - "com.farmboy.eternalfarm.automator.enabled=true"
+      - "com.farmboy.eternalfarm.keys.type=individual"
+      - "com.farmboy.eternalfarm.services=agent,checker,automator"
+      # Auto-login Labels
+      - "com.farmboy.autologin=enabled"
+      - "com.farmboy.autologin.version=1.0"
+      - "com.farmboy.autologin.services=dreambot,agent,checker,automator"
     environment:
       - NODE_ENV=production
       - PORT=3333
@@ -111,6 +127,24 @@ services:
       start_period: 60s
     networks:
       - farm-network
+    labels:
+      # Core Database Labels
+      - "com.farmboy.database.service=mariadb"
+      - "com.farmboy.database.type=mariadb"
+      - "com.farmboy.database.version=latest"
+      - "com.farmboy.database.provider=linuxserver.io"
+      # Configuration Labels
+      - "com.farmboy.database.root_host=%" 
+      - "com.farmboy.database.default_user=farmboy"
+      - "com.farmboy.database.default_db=farmboy_db"
+      - "com.farmboy.database.charset=utf8mb4"
+      - "com.farmboy.database.collation=utf8mb4_unicode_ci"
+      # Security Labels
+      - "com.farmboy.database.auth_method=mysql_native_password"
+      - "com.farmboy.database.secure_user=farmboy"
+      # Health Labels
+      - "com.farmboy.database.healthcheck=enabled"
+      - "com.farmboy.database.healthcheck.interval=30s"
 
 volumes:
   farm_data:

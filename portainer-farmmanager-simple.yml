@@ -22,6 +22,13 @@ services:
       - DISCORD_WEBHOOK_URL=YOUR_DISCORD_WEBHOOK_URL
       # Display settings for VNC
       - DISPLAY=:1
+      # Database Configuration
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - MYSQL_HOST=mariadb
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
@@ -32,8 +39,41 @@ services:
       - farm-network
     labels:
       - "com.farmboy.type=hybrid"
+      - "com.farmboy.version=0.2"
       - "com.farmboy.environment=production"
+      - "com.farmboy.maintainer=SupScotty"
+      # Service Labels
+      - "com.farmboy.service.vnc=enabled"
+      - "com.farmboy.service.novnc=enabled"
+      - "com.farmboy.service.ssh=enabled"
+      - "com.farmboy.service.web=enabled"
+      # Port Labels
+      - "com.farmboy.ports.vnc=5900"
+      - "com.farmboy.ports.novnc=8080"
+      - "com.farmboy.ports.web=3333"
+      - "com.farmboy.ports.ssh=2222"
+      # Integration Labels
+      - "com.farmboy.integration.dreambot=enabled"
+      - "com.farmboy.integration.eternalfarm=enabled"
+      - "com.farmboy.integration.discord=enabled"
+      # Resource Labels
+      - "com.farmboy.resources.memory=2g"
+      - "com.farmboy.resources.cpus=2"
+      # Database Labels
+      - "com.farmboy.database.type=mariadb"
+      - "com.farmboy.database.user=farmboy"
+      - "com.farmboy.database.host=mariadb"
+      - "com.farmboy.database.port=3306"
+      - "com.farmboy.database.name=farmboy_db"
+      # EternalFarm Service Labels
+      - "com.farmboy.eternalfarm.agent.enabled=true"
+      - "com.farmboy.eternalfarm.checker.enabled=true"
+      - "com.farmboy.eternalfarm.automator.enabled=true"
+      - "com.farmboy.eternalfarm.keys.type=individual"
+      - "com.farmboy.eternalfarm.services=agent,checker,automator"
+      # Auto-login Labels
       - "com.farmboy.autologin=enabled"
+      - "com.farmboy.autologin.version=1.0"
       - "com.farmboy.autologin.services=dreambot,agent,checker,automator"
 
   mariadb:
@@ -46,10 +86,12 @@ services:
       - MYSQL_DATABASE=farmboy_db
       - MYSQL_USER=farmboy
       - MYSQL_PASSWORD=Sntioi004!
+      - MYSQL_ROOT_HOST=%
     volumes:
       - mariadb_data:/config
-      - ./prisma:/prisma
-      - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
+      # Comment out problematic mounts for Portainer deployment
+      # - ./prisma:/prisma
+      # - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
     ports:
       - "3307:3306"
     restart: unless-stopped
@@ -61,6 +103,24 @@ services:
       start_period: 60s
     networks:
       - farm-network
+    labels:
+      # Core Database Labels
+      - "com.farmboy.database.service=mariadb"
+      - "com.farmboy.database.type=mariadb"
+      - "com.farmboy.database.version=latest"
+      - "com.farmboy.database.provider=linuxserver.io"
+      # Configuration Labels
+      - "com.farmboy.database.root_host=%" 
+      - "com.farmboy.database.default_user=farmboy"
+      - "com.farmboy.database.default_db=farmboy_db"
+      - "com.farmboy.database.charset=utf8mb4"
+      - "com.farmboy.database.collation=utf8mb4_unicode_ci"
+      # Security Labels
+      - "com.farmboy.database.auth_method=mysql_native_password"
+      - "com.farmboy.database.secure_user=farmboy"
+      # Health Labels
+      - "com.farmboy.database.healthcheck=enabled"
+      - "com.farmboy.database.healthcheck.interval=30s"
 
 volumes:
   farm_data:
