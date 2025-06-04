@@ -130,6 +130,10 @@ services:
       - "com.farmboy.eternalfarm.automator.enabled=true"
       - "com.farmboy.eternalfarm.keys.type=individual"
       - "com.farmboy.eternalfarm.services=agent,checker,automator"
+      # Auto-login Labels
+      - "com.farmboy.autologin=enabled"
+      - "com.farmboy.autologin.version=1.0"
+      - "com.farmboy.autologin.services=dreambot,agent,checker,automator"
 
   mariadb:
     image: lscr.io/linuxserver/mariadb:latest
