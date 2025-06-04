@@ -2951,7 +2951,7 @@ const server = http.createServer(async (req, res) => {
 
     // Handle static files (for web interface)
     if (pathname === '/' || pathname === '/index.html') {
-        fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
+        fs.readFile(path.join(__dirname, 'dashboard-production.html'), (err, data) => {
             if (err) {
                 res.writeHead(404);
                 res.end('File not found');
@@ -2964,14 +2964,28 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    if (pathname === '/app.js') {
-        fs.readFile(path.join(__dirname, 'app.js'), (err, data) => {
+    if (pathname === '/modern-dashboard.js') {
+        fs.readFile(path.join(__dirname, 'modern-dashboard.js'), (err, data) => {
             if (err) {
                 res.writeHead(404);
                 res.end('File not found');
                 return;
             }
             res.setHeader('Content-Type', 'application/javascript');
+            res.writeHead(200);
+            res.end(data);
+        });
+        return;
+    }
+
+    if (pathname === '/modern-dashboard.css') {
+        fs.readFile(path.join(__dirname, 'modern-dashboard.css'), (err, data) => {
+            if (err) {
+                res.writeHead(404);
+                res.end('File not found');
+                return;
+            }
+            res.setHeader('Content-Type', 'text/css');
             res.writeHead(200);
             res.end(data);
         });
@@ -2991,8 +3005,6 @@ const server = http.createServer(async (req, res) => {
         });
         return;
     }
-
-
 
     // Default 404
     res.writeHead(404);
