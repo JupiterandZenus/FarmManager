@@ -24,19 +24,32 @@ for i in {1..30}; do
     fi
 done
 
-# Create necessary directories
+# Create necessary directories with proper permissions
 echo "📁 Creating directories..."
 mkdir -p /root/DreamBot/BotData
 mkdir -p /appdata/EternalFarm
 mkdir -p /appdata/DreamBot/BotData
 mkdir -p /root/Desktop
 
-# Set proper permissions
+# Set proper permissions for directories
 chmod 755 /root/DreamBot
-chmod 755 /appdata/EternalFarm
-chmod 755 /appdata/DreamBot
+chmod -R 755 /appdata/EternalFarm
+chmod -R 755 /appdata/DreamBot
 
 echo "✅ Directory setup complete"
+
+# Create EternalFarm key files with proper permissions
+echo "🔑 Setting up EternalFarm keys..."
+echo "${AGENT_KEY}" > /appdata/EternalFarm/agent.key
+echo "${CHECKER_KEY}" > /appdata/EternalFarm/checker.key
+echo "${AUTOMATOR_KEY}" > /appdata/EternalFarm/api.key
+
+# Set proper permissions for key files
+chmod 600 /appdata/EternalFarm/agent.key
+chmod 600 /appdata/EternalFarm/checker.key
+chmod 600 /appdata/EternalFarm/api.key
+
+echo "✅ Key files created with secure permissions"
 
 # Download EternalFarm tools if not already present
 echo "📥 Checking EternalFarm tools..."
@@ -75,6 +88,26 @@ else
     echo "✅ EternalFarm Browser Automator already exists"
 fi
 
+# Generate DreamBot settings.json
+echo "⚙️ Generating DreamBot settings..."
+cat > /root/DreamBot/BotData/settings.json << EOF
+{
+    "username": "${DREAMBOT_USERNAME}",
+    "password": "${DREAMBOT_PASSWORD}",
+    "script": "${DREAMBOT_SCRIPT}",
+    "world": ${DREAMBOT_WORLD:-301},
+    "args": "${DREAMBOT_ARGS}",
+    "fps": 20,
+    "lowCpuMode": true,
+    "lowMemoryMode": false,
+    "covertMode": true,
+    "developerMode": true
+}
+EOF
+
+chmod 600 /root/DreamBot/BotData/settings.json
+echo "✅ DreamBot settings.json created"
+
 # Download DreamBot client if not already present
 echo "📥 Checking DreamBot client..."
 if [ ! -f "/root/DreamBot/BotData/client.jar" ]; then
@@ -86,14 +119,18 @@ else
     echo "✅ DreamBot client already exists"
 fi
 
-# Verify downloads
-echo "🔍 Verifying downloads..."
+# Verify downloads and permissions
+echo "🔍 Verifying setup..."
 echo "   EternalFarm Agent: $([ -f "/usr/local/bin/EternalFarmAgent" ] && echo "✅ Present" || echo "❌ Missing")"
 echo "   EternalFarm Checker: $([ -f "/usr/local/bin/EternalFarmChecker" ] && echo "✅ Present" || echo "❌ Missing")"
 echo "   EternalFarm Browser Automator: $([ -f "/usr/local/bin/EternalFarmBrowserAutomator" ] && echo "✅ Present" || echo "❌ Missing")"
 echo "   DreamBot Client: $([ -f "/root/DreamBot/BotData/client.jar" ] && echo "✅ Present" || echo "❌ Missing")"
+echo "   DreamBot Settings: $([ -f "/root/DreamBot/BotData/settings.json" ] && echo "✅ Present" || echo "❌ Missing")"
+echo "   Agent Key: $([ -f "/appdata/EternalFarm/agent.key" ] && echo "✅ Present" || echo "❌ Missing")"
+echo "   Checker Key: $([ -f "/appdata/EternalFarm/checker.key" ] && echo "✅ Present" || echo "❌ Missing")"
+echo "   Automator Key: $([ -f "/appdata/EternalFarm/api.key" ] && echo "✅ Present" || echo "❌ Missing")"
 
-# Set up desktop shortcuts (optional)
+# Set up desktop shortcuts
 echo "🖥️ Setting up desktop environment..."
 
 # Create desktop shortcut for EternalFarm Agent
@@ -103,7 +140,33 @@ Version=1.0
 Type=Application
 Name=EternalFarm Agent
 Comment=EternalFarm Agent Application
-Exec=/usr/local/bin/EternalFarmAgent --key-file=/appdata/EternalFarm/agent.key --show-gui
+Exec=xfce4-terminal --hold --title='EternalFarm Agent' --command='/usr/local/bin/EternalFarmAgent --key-file=/appdata/EternalFarm/agent.key --show-gui'
+Icon=utilities-terminal
+Terminal=false
+Categories=Utility;
+EOF
+
+# Create desktop shortcut for EternalFarm Checker
+cat > /root/Desktop/EternalFarm-Checker.desktop << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=EternalFarm Checker
+Comment=EternalFarm Checker Application
+Exec=xfce4-terminal --hold --title='EternalFarm Checker' --command='/usr/local/bin/EternalFarmChecker --key-file=/appdata/EternalFarm/checker.key --show-gui'
+Icon=utilities-terminal
+Terminal=false
+Categories=Utility;
+EOF
+
+# Create desktop shortcut for EternalFarm Browser Automator
+cat > /root/Desktop/EternalFarm-Automator.desktop << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=EternalFarm Browser Automator
+Comment=EternalFarm Browser Automator Application
+Exec=xfce4-terminal --hold --title='EternalFarm Browser Automator' --command='/usr/local/bin/EternalFarmBrowserAutomator --key-file=/appdata/EternalFarm/api.key --show-gui'
 Icon=utilities-terminal
 Terminal=false
 Categories=Utility;
@@ -140,7 +203,9 @@ echo "================================================="
 echo "✅ X11 Display: Ready"
 echo "✅ Java Environment: Configured"
 echo "✅ EternalFarm Tools: Downloaded"
+echo "✅ EternalFarm Keys: Created"
 echo "✅ DreamBot Client: Downloaded"
+echo "✅ DreamBot Settings: Generated"
 echo "✅ Desktop Shortcuts: Created"
 echo ""
 echo "📋 Next Steps:"
