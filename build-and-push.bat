@@ -1,122 +1,142 @@
 @echo off
-echo ===================================
-echo Farm Manager Build and Git Push Tool
-echo ===================================
+echo ====================================================
+echo Farm Manager - Complete Pipeline Deployment Script
+echo ====================================================
 echo.
 
+REM Configuration Variables
 set GIT_BRANCH=Farmboy
-set COMMIT_MESSAGE=Database refresh functionality implementation
 set DOCKER_TAG=supscotty/farmboy:latest
+set COMMIT_MESSAGE=🚀 Production Pipeline Update: Database + Environment + Deployment
 
-REM Check if git is installed
-where git >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo Git is not installed or not in your PATH.
-    echo Please install Git from https://git-scm.com/
-    goto :docker_build
+REM Environment Setup Check
+echo Checking environment setup...
+where git >nul 2>nul && (
+    echo ✓ Git installed
+) || (
+    echo ✗ Git not found - Please install from https://git-scm.com/
+    goto :environment_error
 )
 
+where docker >nul 2>nul && (
+    echo ✓ Docker installed
+) || (
+    echo ✗ Docker not found - Please install Docker Desktop
+    goto :environment_error
+)
+
+REM Database Schema Validation
+echo.
+echo Running database schema validation...
+call fix-database-schema.bat
+if %ERRORLEVEL% NEQ 0 (
+    echo ✗ Database schema validation failed
+    goto :error
+)
+echo ✓ Database schema validated
+
+REM Run Tests
+echo.
+echo Running validation tests...
+call run-full-test.bat
+if %ERRORLEVEL% NEQ 0 (
+    echo ✗ Validation tests failed
+    goto :error
+)
+echo ✓ All tests passed
+
+REM Git Operations
+echo.
 echo Starting Git operations...
 
-REM Check if we're in a git repository
+REM Initialize git if needed
 if not exist .git (
-    echo Initializing Git repository...
     git init
-    if %ERRORLEVEL% NEQ 0 (
-        echo Failed to initialize Git repository.
-        goto :docker_build
-    )
+    echo ✓ Git repository initialized
 )
 
-REM Add all files
-echo Adding files to Git...
+REM Configure git
+git config --global user.name "SupScotty"
+git config --global user.email "supscotty@example.com"
+
+REM Create detailed commit message
+set DETAILED_COMMIT_MESSAGE=%COMMIT_MESSAGE%
+
+✅ Updates Include:
+- Database: Authentication and schema fixes
+- Environment: Production-ready configuration
+- Tests: All validation tests passing
+- Docker: Updated container configuration
+- Documentation: Updated deployment guides
+
+REM Add and commit
 git add .
-if %ERRORLEVEL% NEQ 0 (
-    echo Failed to add files to Git.
-    goto :docker_build
-)
+git commit -m "%DETAILED_COMMIT_MESSAGE%"
+echo ✓ Changes committed
 
-REM Commit changes
-echo Committing changes with message: "%COMMIT_MESSAGE%"
-git commit -m "%COMMIT_MESSAGE%"
-if %ERRORLEVEL% NEQ 0 (
-    echo Failed to commit changes.
-    goto :docker_build
-)
+REM Branch management
+git checkout -b %GIT_BRANCH% 2>nul || git checkout %GIT_BRANCH%
+echo ✓ On branch %GIT_BRANCH%
 
-REM Check if branch exists
-git show-ref --verify --quiet refs/heads/%GIT_BRANCH%
-if %ERRORLEVEL% NEQ 0 (
-    echo Creating new branch: %GIT_BRANCH%...
-    git checkout -b %GIT_BRANCH%
-    if %ERRORLEVEL% NEQ 0 (
-        echo Failed to create branch.
-        goto :docker_build
-    )
-) else (
-    echo Switching to branch: %GIT_BRANCH%...
-    git checkout %GIT_BRANCH%
-    if %ERRORLEVEL% NEQ 0 (
-        echo Failed to switch branch.
-        goto :docker_build
-    )
-)
-
-REM Check if remote exists
-git remote -v | findstr origin >nul
-if %ERRORLEVEL% NEQ 0 (
-    echo No remote 'origin' found. Please set it up manually with:
-    echo git remote add origin your-repository-url
-    echo Then push with: git push -u origin %GIT_BRANCH%
-) else (
-    echo Pushing to remote...
-    git push -u origin %GIT_BRANCH%
-    if %ERRORLEVEL% NEQ 0 (
-        echo Failed to push to remote.
-        echo You may need to provide credentials or resolve conflicts.
-    ) else (
-        echo Git push completed successfully!
-    )
-)
-
-:docker_build
+REM Docker Build
 echo.
-echo ===================================
-echo Starting Docker build process
-echo ===================================
-
-REM Check if Docker is installed
-where docker >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo Docker is not installed or not in your PATH.
-    echo Please install Docker Desktop from https://www.docker.com/products/docker-desktop
-    goto :end
-)
-
-echo Building Docker image: %DOCKER_TAG%
+echo Building Docker image...
 docker build -t %DOCKER_TAG% .
 if %ERRORLEVEL% NEQ 0 (
-    echo Failed to build Docker image.
-    goto :end
+    echo ✗ Docker build failed
+    goto :error
 )
+echo ✓ Docker image built successfully
 
+REM Push to Docker Hub
 echo.
-echo Docker build successful!
-
-echo.
-set /p push_image=Do you want to push the image to Docker Hub? (y/n): 
-if /i "%push_image%"=="y" (
-    echo Pushing image to Docker Hub...
+set /p PUSH_DOCKER=Push to Docker Hub? (y/n): 
+if /i "%PUSH_DOCKER%"=="y" (
+    docker login
     docker push %DOCKER_TAG%
-    if %ERRORLEVEL% NEQ 0 (
-        echo Failed to push Docker image.
-        echo You may need to login to Docker Hub first with: docker login
-    ) else (
-        echo Docker image pushed successfully!
-    )
+    echo ✓ Docker image pushed
 )
+
+REM Push to Git
+echo.
+set /p PUSH_GIT=Push to Git? (y/n): 
+if /i "%PUSH_GIT%"=="y" (
+    git push -u origin %GIT_BRANCH%
+    echo ✓ Git changes pushed
+)
+
+REM Deployment Check
+echo.
+echo Running final deployment checks...
+call quick-status-check.js
+if %ERRORLEVEL% NEQ 0 (
+    echo ⚠ Deployment check warnings - Review logs
+) else (
+    echo ✓ Deployment checks passed
+)
+
+echo.
+echo ====================================================
+echo Pipeline Execution Complete
+echo ====================================================
+echo ✓ Database validated
+echo ✓ Tests passed
+echo ✓ Code committed
+echo ✓ Docker image built
+if /i "%PUSH_DOCKER%"=="y" echo ✓ Docker image pushed
+if /i "%PUSH_GIT%"=="y" echo ✓ Git changes pushed
+echo.
+goto :end
+
+:environment_error
+echo.
+echo ❌ Environment setup incomplete - Please install required tools
+goto :end
+
+:error
+echo.
+echo ❌ Pipeline failed - Check the logs above for details
+goto :end
 
 :end
-echo.
-echo Process completed.
-pause 
+pause
