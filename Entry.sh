@@ -324,6 +324,62 @@ else
     echo "⚠️ Window manager not yet ready (this is normal during startup)"
 fi
 
+# Make database refresh scripts executable
+echo "🔧 Setting up database refresh tools..."
+if [ -f "/app/refresh-database.js" ]; then
+    chmod +x /app/refresh-database.js
+    echo "✅ Database refresh script is executable"
+fi
+
+if [ -f "/app/refresh-database.sh" ]; then
+    chmod +x /app/refresh-database.sh
+    echo "✅ Database refresh shell script is executable"
+fi
+
+# Initialize database if needed
+echo "🔍 Checking database connection..."
+if [ ! -z "$DATABASE_URL" ]; then
+    echo "🔄 Waiting for database to be ready..."
+    # Wait for database to be ready
+    for i in {1..30}; do
+        if mysqladmin ping -h mariadb -u root -p"$MYSQL_ROOT_PASSWORD" --silent; then
+            echo "✅ Database is ready"
+            break
+        fi
+        echo "   Attempt $i/30 - Database not ready yet..."
+        sleep 2
+        if [ $i -eq 30 ]; then
+            echo "⚠️ Database not ready after 60 seconds, but continuing anyway..."
+        fi
+    done
+    
+    # Check if database exists and initialize if needed
+    if mysql -h mariadb -u root -p"$MYSQL_ROOT_PASSWORD" -e "USE farmboy_db;" 2>/dev/null; then
+        echo "✅ Database already exists"
+    else
+        echo "🔄 Initializing database..."
+        mysql -h mariadb -u root -p"$MYSQL_ROOT_PASSWORD" < /app/setup_database.sql
+        echo "✅ Database initialized"
+    fi
+    
+    # Generate Prisma client
+    echo "🔧 Generating Prisma client..."
+    cd /app && npx prisma generate
+    echo "✅ Prisma client generated"
+    
+    # Seed database if empty
+    AGENT_COUNT=$(mysql -h mariadb -u root -p"$MYSQL_ROOT_PASSWORD" -e "SELECT COUNT(*) FROM farmboy_db.agents;" 2>/dev/null | tail -n 1)
+    if [ "$AGENT_COUNT" = "0" ] || [ -z "$AGENT_COUNT" ]; then
+        echo "🌱 Seeding database..."
+        cd /app && node prisma/seed.js
+        echo "✅ Database seeded"
+    else
+        echo "✅ Database already has data, skipping seed"
+    fi
+else
+    echo "⚠️ DATABASE_URL not set, skipping database initialization"
+fi
+
 # Final status report
 echo ""
 echo "🎉 Entry.sh setup complete!"
@@ -335,6 +391,8 @@ echo "✅ EternalFarm Keys: Created"
 echo "✅ DreamBot Client: Downloaded"
 echo "✅ DreamBot Settings: Generated"
 echo "✅ Desktop Shortcuts: Created"
+echo "✅ Database Tools: Configured"
+echo "✅ Database: Initialized"
 echo ""
 echo "📋 Next Steps:"
 echo "   - EternalFarm services will be started by supervisord"

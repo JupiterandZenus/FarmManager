@@ -89,6 +89,8 @@ services:
       - MYSQL_PASSWORD=Sntioi004!
     volumes:
       - /mnt/user/appdata/mariadb-fresh:/config
+      - ./prisma:/prisma
+      - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
     ports:
       - "3308:3306"
     restart: unless-stopped

@@ -1,10 +1,10 @@
 -- Farm Manager Database Setup Script for Docker MariaDB
 
 -- Create the database with proper character set
-CREATE DATABASE IF NOT EXISTS farmmanager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS farmboy_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Use the database
-USE farmmanager;
+USE farmboy_db;
 
 -- Create Agent table if it doesn't exist
 CREATE TABLE IF NOT EXISTS Agent (

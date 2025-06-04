@@ -48,9 +48,17 @@ services:
       - MYSQL_PASSWORD=Sntioi004!
     volumes:
       - mariadb_data:/config
+      - ./prisma:/prisma
+      - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
     ports:
       - "3307:3306"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-pSntioi004!"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+      start_period: 60s
     networks:
       - farm-network
 
