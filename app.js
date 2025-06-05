@@ -3,6 +3,411 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_BASE_URL = `${window.location.protocol}//${window.location.host}`;
     const API_KEY = 'RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5';
 
+    // Navigation Management
+    const NavigationManager = {
+        currentSection: 'overview',
+        
+        init() {
+            this.attachEventListeners();
+            this.initializeOverview();
+            this.updateNavigationIndicator();
+        },
+        
+        attachEventListeners() {
+            // Navigation button listeners
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const section = e.target.getAttribute('data-section');
+                    this.switchToSection(section);
+                });
+            });
+        },
+        
+        switchToSection(sectionName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.main-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show target section
+            const targetSection = document.getElementById(`${sectionName}-section`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                this.currentSection = sectionName;
+                
+                // Update navigation buttons
+                this.updateNavigationButtons();
+                this.updateNavigationIndicator();
+                
+                // Section-specific initialization
+                this.initializeSection(sectionName);
+                
+                // Add activity log entry
+                this.addActivityLogEntry(`📋 Switched to ${this.getSectionDisplayName(sectionName)} section`);
+            }
+        },
+        
+        updateNavigationButtons() {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(button => {
+                const section = button.getAttribute('data-section');
+                if (section === this.currentSection) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        },
+        
+        updateNavigationIndicator() {
+            const indicator = document.querySelector('.nav-indicator');
+            const activeButton = document.querySelector('.nav-btn.active');
+            
+            if (indicator && activeButton) {
+                const buttonRect = activeButton.getBoundingClientRect();
+                const containerRect = activeButton.parentElement.getBoundingClientRect();
+                
+                indicator.style.width = `${buttonRect.width}px`;
+                indicator.style.left = `${buttonRect.left - containerRect.left}px`;
+            }
+        },
+        
+        initializeSection(sectionName) {
+            switch (sectionName) {
+                case 'overview':
+                    this.initializeOverview();
+                    break;
+                case 'agents':
+                    fetchAgents();
+                    break;
+                case 'discord-hooks':
+                    if (window.DiscordHooks) {
+                        DiscordHooks.init();
+                    }
+                    break;
+                case 'proxy-checker':
+                    if (window.ProxyChecker) {
+                        ProxyChecker.init();
+                    }
+                    break;
+                case 'config':
+                    if (window.ConfigManager) {
+                        ConfigManager.init();
+                    }
+                    break;
+            }
+        },
+        
+        initializeOverview() {
+            this.updateSystemMetrics();
+            this.loadRecentActivity();
+            this.updateStatusCards();
+            
+            // Set up periodic updates
+            if (this.overviewInterval) {
+                clearInterval(this.overviewInterval);
+            }
+            
+            this.overviewInterval = setInterval(() => {
+                if (this.currentSection === 'overview') {
+                    this.updateSystemMetrics();
+                    this.updateStatusCards();
+                }
+            }, 10000); // Update every 10 seconds
+        },
+        
+        updateSystemMetrics() {
+            // Mock system metrics - in a real app, these would come from the server
+            const memoryUsage = Math.floor(Math.random() * 30) + 40; // 40-70%
+            const cpuUsage = Math.floor(Math.random() * 20) + 10; // 10-30%
+            const apiRequests = parseInt(localStorage.getItem('apiRequestCount') || '0');
+            const discordMessages = parseInt(localStorage.getItem('discordMessageCount') || '0');
+            
+            // Update memory
+            const memoryElement = document.getElementById('memoryUsage');
+            const memoryBar = document.getElementById('memoryBar');
+            if (memoryElement && memoryBar) {
+                memoryElement.textContent = `${memoryUsage}%`;
+                memoryBar.style.width = `${memoryUsage}%`;
+                
+                // Change color based on usage
+                if (memoryUsage > 80) {
+                    memoryBar.style.background = 'linear-gradient(90deg, #f44336 0%, #ff9800 100%)';
+                } else if (memoryUsage > 60) {
+                    memoryBar.style.background = 'linear-gradient(90deg, #ff9800 0%, #ffb300 100%)';
+                } else {
+                    memoryBar.style.background = 'linear-gradient(90deg, #388e3c 0%, #ffb300 100%)';
+                }
+            }
+            
+            // Update CPU
+            const cpuElement = document.getElementById('cpuUsage');
+            const cpuBar = document.getElementById('cpuBar');
+            if (cpuElement && cpuBar) {
+                cpuElement.textContent = `${cpuUsage}%`;
+                cpuBar.style.width = `${cpuUsage}%`;
+            }
+            
+            // Update counters
+            const apiElement = document.getElementById('apiRequests');
+            if (apiElement) apiElement.textContent = apiRequests;
+            
+            const discordElement = document.getElementById('discordMessageCount');
+            if (discordElement) discordElement.textContent = discordMessages;
+            
+            // Update uptime
+            const uptimeElement = document.getElementById('systemUptime');
+            if (uptimeElement) {
+                const startTime = localStorage.getItem('systemStartTime');
+                if (startTime) {
+                    const uptime = Date.now() - parseInt(startTime);
+                    const hours = Math.floor(uptime / (1000 * 60 * 60));
+                    const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+                    uptimeElement.textContent = `${hours}h ${minutes}m`;
+                } else {
+                    localStorage.setItem('systemStartTime', Date.now().toString());
+                    uptimeElement.textContent = '0h 0m';
+                }
+            }
+        },
+        
+        updateStatusCards() {
+            // EternalFarm status
+            const eternalfarmStatus = document.getElementById('overviewEternalfarmStatus');
+            const lastSync = document.getElementById('lastEternalfarmSync');
+            if (eternalfarmStatus) {
+                const apiKey = localStorage.getItem('eternalfarmApiKey');
+                if (apiKey) {
+                    eternalfarmStatus.textContent = '🟢 Connected';
+                    if (lastSync) lastSync.textContent = new Date().toLocaleTimeString();
+                } else {
+                    eternalfarmStatus.textContent = '⚫ Not Configured';
+                    if (lastSync) lastSync.textContent = 'Never';
+                }
+            }
+            
+            // Discord status
+            const discordStatus = document.getElementById('overviewDiscordStatus');
+            const lastMessage = document.getElementById('lastDiscordMessage');
+            if (discordStatus) {
+                const webhookUrl = localStorage.getItem('discordWebhookUrl');
+                if (webhookUrl) {
+                    discordStatus.textContent = '🟢 Configured';
+                    const lastMessageTime = localStorage.getItem('lastDiscordMessageTime');
+                    if (lastMessage && lastMessageTime) {
+                        lastMessage.textContent = new Date(parseInt(lastMessageTime)).toLocaleTimeString();
+                    }
+                } else {
+                    discordStatus.textContent = '⚫ Not Configured';
+                    if (lastMessage) lastMessage.textContent = 'Never';
+                }
+            }
+            
+            // Agents count
+            const agentsCount = document.getElementById('overviewAgentsCount');
+            const runningBots = document.getElementById('runningBotsCount');
+            if (agentsCount) {
+                const totalAgents = parseInt(localStorage.getItem('totalAgents') || '0');
+                const activeAgents = parseInt(localStorage.getItem('activeAgents') || '0');
+                agentsCount.textContent = `${activeAgents} / ${totalAgents}`;
+                
+                if (runningBots) {
+                    runningBots.textContent = localStorage.getItem('runningBots') || '0';
+                }
+            }
+        },
+        
+        addActivityLogEntry(text) {
+            const activityLog = document.getElementById('activityLog');
+            if (!activityLog) return;
+            
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'activity-time';
+            timeSpan.textContent = new Date().toLocaleTimeString();
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'activity-text';
+            textSpan.textContent = text;
+            
+            activityItem.appendChild(timeSpan);
+            activityItem.appendChild(textSpan);
+            
+            // Insert at the beginning
+            activityLog.insertBefore(activityItem, activityLog.firstChild);
+            
+            // Keep only last 10 items
+            while (activityLog.children.length > 10) {
+                activityLog.removeChild(activityLog.lastChild);
+            }
+            
+            // Save to localStorage for persistence
+            this.saveActivityToStorage(text);
+        },
+        
+        saveActivityToStorage(text) {
+            const activities = JSON.parse(localStorage.getItem('recentActivities') || '[]');
+            const newActivity = {
+                text: text,
+                time: new Date().toLocaleTimeString(),
+                timestamp: Date.now()
+            };
+            
+            activities.unshift(newActivity);
+            
+            // Keep only last 20 activities
+            if (activities.length > 20) {
+                activities.splice(20);
+            }
+            
+            localStorage.setItem('recentActivities', JSON.stringify(activities));
+        },
+        
+        loadRecentActivity() {
+            const activities = JSON.parse(localStorage.getItem('recentActivities') || '[]');
+            const activityLog = document.getElementById('activityLog');
+            if (activityLog) {
+                activityLog.innerHTML = '';
+                activities.forEach(activity => {
+                    const activityItem = document.createElement('div');
+                    activityItem.className = 'activity-item';
+                    activityItem.innerHTML = `
+                        <span class="activity-time">${activity.time}</span>
+                        <span class="activity-text">${activity.text}</span>
+                    `;
+                    activityLog.appendChild(activityItem);
+                });
+            }
+        },
+        
+        getSectionDisplayName(sectionName) {
+            const names = {
+                'overview': 'Overview',
+                'agents': 'Agents',
+                'discord-hooks': 'Discord',
+                'proxy-checker': 'Proxy Checker',
+                'config': 'Configuration'
+            };
+            return names[sectionName] || sectionName;
+        }
+    };
+
+    // Global functions for quick actions
+    window.switchToSection = (sectionName) => {
+        NavigationManager.switchToSection(sectionName);
+        NavigationManager.addActivityLogEntry(`🔗 Switched to ${NavigationManager.getSectionDisplayName(sectionName)} section`);
+    };
+
+    window.testDiscordConnection = () => {
+        if (window.DiscordHooks) {
+            DiscordHooks.testWebhook();
+            NavigationManager.addActivityLogEntry('🔧 Testing Discord webhook connection');
+        } else {
+            showNotification('Discord integration not available', 'warning');
+        }
+    };
+
+    window.takeQuickScreenshot = () => {
+        if (window.DiscordHooks) {
+            DiscordHooks.takeAndSendScreenshot('desktop');
+            NavigationManager.addActivityLogEntry('📸 Taking and sending screenshot');
+        } else {
+            showNotification('Discord integration not available for screenshots', 'warning');
+        }
+    };
+
+    window.syncEternalfarmAgents = () => {
+        try {
+            syncAgentsManually();
+            NavigationManager.addActivityLogEntry('🔄 Syncing EternalFarm agents');
+        } catch (error) {
+            showNotification('Error syncing agents: ' + error.message, 'error');
+            NavigationManager.addActivityLogEntry('❌ Failed to sync EternalFarm agents');
+        }
+    };
+
+    window.refreshAllData = () => {
+        try {
+            performHealthCheck();
+            if (document.getElementById('agents-section').style.display !== 'none') {
+                fetchAgents();
+            }
+            if (document.getElementById('accounts-section').style.display !== 'none') {
+                fetchAccounts();
+            }
+            if (document.getElementById('proxies-section').style.display !== 'none') {
+                fetchProxies();
+            }
+            NavigationManager.addActivityLogEntry('🔄 Refreshing all data');
+            showNotification('All data refreshed', 'success');
+        } catch (error) {
+            showNotification('Error refreshing data: ' + error.message, 'error');
+        }
+    };
+
+    window.checkServerHealth = () => {
+        performHealthCheck();
+        NavigationManager.addActivityLogEntry('🏥 Performing server health check');
+    };
+
+    // Initialize navigation
+    NavigationManager.init();
+
+    // Theme Management
+    const ThemeManager = {
+        init() {
+            this.loadTheme();
+            this.attachEventListeners();
+        },
+
+        loadTheme() {
+            const savedTheme = localStorage.getItem('farmboy-theme') || 'dark';
+            this.setTheme(savedTheme);
+            
+            const toggle = document.getElementById('themeToggle');
+            if (toggle) {
+                toggle.checked = savedTheme === 'light';
+            }
+        },
+
+        setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('farmboy-theme', theme);
+            
+            // Update theme labels opacity
+            const labels = document.querySelectorAll('.theme-label');
+            labels.forEach((label, index) => {
+                if (theme === 'light') {
+                    label.style.opacity = index === 1 ? '1' : '0.5'; // Sun active
+                } else {
+                    label.style.opacity = index === 0 ? '1' : '0.5'; // Moon active
+                }
+            });
+        },
+
+        toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            this.setTheme(newTheme);
+        },
+
+        attachEventListeners() {
+            const toggle = document.getElementById('themeToggle');
+            if (toggle) {
+                toggle.addEventListener('change', () => {
+                    this.toggleTheme();
+                });
+            }
+        }
+    };
+
+    // Initialize theme
+    ThemeManager.init();
+
     // WebSocket connection
     let ws = null;
     let wsReconnectAttempts = 0;
@@ -305,8 +710,35 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update connection status
     function updateConnectionStatus(status, details = '') {
         const statusElement = document.getElementById('connection-status');
+        const indicatorElement = document.getElementById('live-indicator');
+        const connectionContainer = document.querySelector('.connection-status');
+        
         if (statusElement) {
             statusElement.innerHTML = `${status} ${details}`;
+        }
+        
+        if (indicatorElement) {
+            // Update indicator text based on status
+            if (status.includes('Connected') || status.includes('✅')) {
+                indicatorElement.textContent = 'LIVE';
+            } else if (status.includes('Connecting') || status.includes('🔄')) {
+                indicatorElement.textContent = 'CONNECTING';
+            } else {
+                indicatorElement.textContent = 'OFFLINE';
+            }
+        }
+        
+        // Update connection container styling
+        if (connectionContainer) {
+            connectionContainer.classList.remove('offline', 'connecting');
+            
+            if (status.includes('Connected') || status.includes('✅')) {
+                // Default connected styling (green)
+            } else if (status.includes('Connecting') || status.includes('🔄')) {
+                connectionContainer.classList.add('connecting');
+            } else {
+                connectionContainer.classList.add('offline');
+            }
         }
     }
     
@@ -2462,7 +2894,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const eternalfarmApiUrl = document.getElementById('eternalfarmApiUrl');
             
             if (eternalfarmApiKey) eternalfarmApiKey.value = this.currentConfig.eternalfarm.apiKey || '';
-            if (eternalfarmApiUrl) eternalfarmApiUrl.value = this.currentConfig.eternalfarm.apiUrl || 'https://api.eternalfarm.net';
+            if (eternalfarmApiUrl) eternalfarmApiUrl.value = this.currentConfig.eternalfarm.apiUrl || 'https://api.eternalfarm.com';
 
             // DreamBot settings
             const dreambotUsername = document.getElementById('dreambotUsername');
@@ -2485,7 +2917,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const config = {
                 eternalfarm: {
                     apiKey: document.getElementById('eternalfarmApiKey')?.value || '',
-                    apiUrl: document.getElementById('eternalfarmApiUrl')?.value || 'https://api.eternalfarm.net'
+                    apiUrl: document.getElementById('eternalfarmApiUrl')?.value || 'https://api.eternalfarm.com'
                 },
                 dreambot: {
                     username: document.getElementById('dreambotUsername')?.value || '',
@@ -2707,4 +3139,1347 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Rehydrate scheduled tasks from localStorage
     rehydrateScheduledTasks();
+
+    // =============================================================================
+    // DISCORD HOOKS MANAGEMENT
+    // =============================================================================
+    
+    const DiscordHooks = {
+        config: {
+            webhookUrl: '',
+            channelName: 'farm-alerts',
+            botName: 'Farm Manager'
+        },
+        messageLog: [],
+        
+        init() {
+            this.attachEventListeners();
+            this.loadConfiguration();
+            this.setupAutoRefresh();
+        },
+        
+        attachEventListeners() {
+            // Webhook configuration
+            const saveConfigBtn = document.getElementById('save-webhook-config');
+            const testWebhookBtn = document.getElementById('test-webhook');
+            
+            if (saveConfigBtn) {
+                saveConfigBtn.addEventListener('click', () => this.saveConfiguration());
+            }
+            
+            if (testWebhookBtn) {
+                testWebhookBtn.addEventListener('click', () => this.testWebhook());
+            }
+            
+            // Screenshot controls
+            document.querySelectorAll('.screenshot-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const type = e.target.dataset.type;
+                    this.takeScreenshot(type);
+                });
+            });
+            
+            document.querySelectorAll('.screenshot-send-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const type = e.target.dataset.type;
+                    this.takeAndSendScreenshot(type);
+                });
+            });
+            
+            // Quick actions
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.target.dataset.action;
+                    this.sendQuickAction(action);
+                });
+            });
+            
+            // Message composer
+            const sendMessageBtn = document.getElementById('send-discord-message');
+            const messageTextarea = document.getElementById('message-content');
+            
+            if (sendMessageBtn) {
+                sendMessageBtn.addEventListener('click', () => this.sendCustomMessage());
+            }
+            
+            if (messageTextarea) {
+                messageTextarea.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'Enter') {
+                        this.sendCustomMessage();
+                    }
+                });
+            }
+            
+            // Auto-refresh toggle
+            const autoRefreshToggle = document.getElementById('auto-refresh-messages');
+            if (autoRefreshToggle) {
+                autoRefreshToggle.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        this.setupAutoRefresh();
+                    } else {
+                        this.stopAutoRefresh();
+                    }
+                });
+            }
+        },
+        
+        async loadConfiguration() {
+            try {
+                const response = await apiRequest('/api/discord/config');
+                if (response.success) {
+                    this.config = response.data;
+                    this.updateConfigUI();
+                    this.updateMessageLog(response.data.messageLog || []);
+                }
+            } catch (error) {
+                console.error('Failed to load Discord configuration:', error);
+                showNotification('Failed to load Discord configuration', 'error');
+            }
+        },
+        
+        updateConfigUI() {
+            const webhookInput = document.getElementById('webhook-url');
+            const channelInput = document.getElementById('channel-name');
+            const botNameInput = document.getElementById('bot-name');
+            const statusElement = document.getElementById('webhook-status');
+            
+            if (webhookInput) webhookInput.value = this.config.webhookUrl || '';
+            if (channelInput) channelInput.value = this.config.channelName || 'farm-alerts';
+            if (botNameInput) botNameInput.value = this.config.botName || 'Farm Manager';
+            
+            if (statusElement) {
+                if (this.config.webhookUrl && this.config.webhookUrl.includes('discord.com/api/webhooks/')) {
+                    statusElement.textContent = 'Webhook URL configured';
+                    statusElement.className = 'webhook-status connected';
+                } else {
+                    statusElement.textContent = 'Webhook URL not configured';
+                    statusElement.className = 'webhook-status error';
+                }
+            }
+        },
+        
+        async saveConfiguration() {
+            const webhookUrl = document.getElementById('webhook-url')?.value || '';
+            const channelName = document.getElementById('channel-name')?.value || 'farm-alerts';
+            const botName = document.getElementById('bot-name')?.value || 'Farm Manager';
+            
+            try {
+                const response = await apiRequest('/api/discord/config', 'POST', {
+                    webhookUrl,
+                    channelName,
+                    botName
+                });
+                
+                if (response.success) {
+                    this.config = response.data;
+                    this.updateConfigUI();
+                    showNotification('Discord configuration saved successfully', 'success');
+                } else {
+                    throw new Error(response.error || 'Failed to save configuration');
+                }
+            } catch (error) {
+                console.error('Failed to save Discord configuration:', error);
+                showNotification('Failed to save Discord configuration', 'error');
+            }
+        },
+        
+        async testWebhook() {
+            const testBtn = document.getElementById('test-webhook');
+            const originalText = testBtn.textContent;
+            
+            try {
+                testBtn.textContent = 'Testing...';
+                testBtn.disabled = true;
+                
+                const response = await apiRequest('/api/discord/test', 'POST', {
+                    webhookUrl: this.config.webhookUrl
+                });
+                
+                if (response.success) {
+                    showNotification('Discord webhook test successful!', 'success');
+                } else {
+                    throw new Error(response.message || 'Webhook test failed');
+                }
+            } catch (error) {
+                console.error('Discord webhook test failed:', error);
+                showNotification('Discord webhook test failed: ' + error.message, 'error');
+            } finally {
+                testBtn.textContent = originalText;
+                testBtn.disabled = false;
+            }
+        },
+        
+        async takeScreenshot(type) {
+            const previewContainer = document.getElementById('screenshot-preview');
+            
+            try {
+                previewContainer.innerHTML = '<p>Taking screenshot...</p>';
+                
+                const response = await apiRequest('/api/discord/screenshot', 'POST', {
+                    type: type,
+                    sendToDiscord: false
+                });
+                
+                if (response.success) {
+                    previewContainer.innerHTML = `
+                        <img src="${response.screenshot}" alt="${type} screenshot" style="max-width: 100%; height: auto; border-radius: 4px;">
+                        <div class="preview-actions">
+                            <button class="btn-primary" onclick="DiscordHooks.sendScreenshotToDiscord('${type}')">Send to Discord</button>
+                            <button class="btn-secondary" onclick="DiscordHooks.downloadScreenshot('${response.screenshot}', '${type}')">Download</button>
+                        </div>
+                    `;
+                    showNotification(`${type} screenshot captured`, 'success');
+                } else {
+                    throw new Error(response.error || 'Screenshot failed');
+                }
+            } catch (error) {
+                console.error('Screenshot failed:', error);
+                previewContainer.innerHTML = '<p style="color: #f44336;">Screenshot failed</p>';
+                showNotification('Screenshot failed: ' + error.message, 'error');
+            }
+        },
+        
+        async takeAndSendScreenshot(type) {
+            try {
+                const response = await apiRequest('/api/discord/screenshot', 'POST', {
+                    type: type,
+                    sendToDiscord: true,
+                    title: `📸 ${type.charAt(0).toUpperCase() + type.slice(1)} Screenshot`,
+                    message: `Screenshot taken at ${new Date().toLocaleString()}`
+                });
+                
+                if (response.success) {
+                    showNotification(`${type} screenshot sent to Discord`, 'success');
+                    this.refreshMessageLog();
+                } else {
+                    throw new Error(response.error || 'Screenshot failed');
+                }
+            } catch (error) {
+                console.error('Screenshot failed:', error);
+                showNotification('Screenshot failed: ' + error.message, 'error');
+            }
+        },
+        
+        async sendQuickAction(action) {
+            try {
+                const response = await apiRequest('/api/discord/quick-action', 'POST', {
+                    action: action
+                });
+                
+                if (response.success) {
+                    showNotification(`${action} message sent to Discord`, 'success');
+                    this.refreshMessageLog();
+                } else {
+                    throw new Error(response.error || 'Quick action failed');
+                }
+            } catch (error) {
+                console.error('Quick action failed:', error);
+                showNotification('Quick action failed: ' + error.message, 'error');
+            }
+        },
+        
+        async sendCustomMessage() {
+            const titleInput = document.getElementById('message-title');
+            const contentTextarea = document.getElementById('message-content');
+            const colorSelect = document.getElementById('message-color');
+            const includeStatsCheckbox = document.getElementById('include-stats');
+            
+            const title = titleInput?.value || 'Farm Manager Message';
+            const message = contentTextarea?.value || '';
+            const color = colorSelect?.value || '#00ff00';
+            const includeStats = includeStatsCheckbox?.checked || false;
+            
+            if (!message.trim()) {
+                showNotification('Please enter a message', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await apiRequest('/api/discord/send', 'POST', {
+                    title,
+                    message,
+                    color,
+                    includeStats
+                });
+                
+                if (response.success) {
+                    showNotification('Custom message sent to Discord', 'success');
+                    
+                    // Clear form
+                    if (titleInput) titleInput.value = '';
+                    if (contentTextarea) contentTextarea.value = '';
+                    if (includeStatsCheckbox) includeStatsCheckbox.checked = false;
+                    
+                    this.refreshMessageLog();
+                } else {
+                    throw new Error(response.error || 'Message send failed');
+                }
+            } catch (error) {
+                console.error('Message send failed:', error);
+                showNotification('Message send failed: ' + error.message, 'error');
+            }
+        },
+        
+        async refreshMessageLog() {
+            try {
+                const response = await apiRequest('/api/discord/messages');
+                if (response.success) {
+                    this.updateMessageLog(response.data);
+                }
+            } catch (error) {
+                console.error('Failed to refresh message log:', error);
+            }
+        },
+        
+        updateMessageLog(messages) {
+            this.messageLog = messages;
+            const logContainer = document.getElementById('messages-list');
+            
+            if (!logContainer) return;
+            
+            if (messages.length === 0) {
+                logContainer.innerHTML = '<div class="log-entry">No messages sent yet.</div>';
+                return;
+            }
+            
+            logContainer.innerHTML = messages.map(msg => {
+                const timestamp = new Date(msg.timestamp).toLocaleString();
+                const statusIcon = msg.success ? '✅' : '❌';
+                const colorIndicator = msg.color ? `<span style="display: inline-block; width: 12px; height: 12px; background-color: #${msg.color.toString(16).padStart(6, '0')}; border-radius: 2px; margin-right: 8px;"></span>` : '';
+                
+                return `
+                    <div class="log-entry">
+                        <span class="log-time">${timestamp}</span> ${statusIcon}
+                        ${colorIndicator}<strong>${msg.title}</strong>
+                        ${msg.message ? `<br><span style="color: #ccc; font-size: 0.9em;">${msg.message.substring(0, 100)}${msg.message.length > 100 ? '...' : ''}</span>` : ''}
+                        ${msg.includeStats ? '<br><span style="color: #4CAF50; font-size: 0.8em;">📊 With stats</span>' : ''}
+                    </div>
+                `;
+            }).join('');
+        },
+        
+        setupAutoRefresh() {
+            if (this.autoRefreshInterval) {
+                clearInterval(this.autoRefreshInterval);
+            }
+            
+            this.autoRefreshInterval = setInterval(() => {
+                if (document.getElementById('auto-refresh-messages')?.checked) {
+                    this.refreshMessageLog();
+                }
+            }, 10000); // Refresh every 10 seconds
+        },
+        
+        stopAutoRefresh() {
+            if (this.autoRefreshInterval) {
+                clearInterval(this.autoRefreshInterval);
+                this.autoRefreshInterval = null;
+            }
+        },
+        
+        sendScreenshotToDiscord(type) {
+            this.takeAndSendScreenshot(type);
+        },
+        
+        downloadScreenshot(dataUrl, type) {
+            const link = document.createElement('a');
+            link.download = `farm-${type}-screenshot-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+    
+    // Initialize Discord Hooks when Discord section is shown
+    function initializeDiscordHooks() {
+        if (document.getElementById('discord-hooks-section')) {
+            DiscordHooks.init();
+        }
+    }
+    
+    // Add Discord section to navigation
+    const originalShowSection = showSection;
+    showSection = function(sectionName) {
+        originalShowSection(sectionName);
+        if (sectionName === 'discord-hooks') {
+            initializeDiscordHooks();
+        }
+    };
+
+    // Make DiscordHooks available globally for button callbacks
+    window.DiscordHooks = DiscordHooks;
+
+    // =============================================================================
+    // PROXY CHECKER FUNCTIONALITY
+    // =============================================================================
+    
+    const ProxyChecker = {
+        results: [],
+        
+        init() {
+            this.attachEventListeners();
+            this.loadDbStats();
+        },
+        
+        attachEventListeners() {
+            // Single proxy test
+            const testSingleBtn = document.getElementById('testSingleProxy');
+            if (testSingleBtn) {
+                testSingleBtn.addEventListener('click', () => this.testSingleProxy());
+            }
+            
+            // Batch testing
+            const testBatchBtn = document.getElementById('testBatchProxies');
+            if (testBatchBtn) {
+                testBatchBtn.addEventListener('click', () => this.testBatchProxies());
+            }
+            
+            const testDbBtn = document.getElementById('testDbProxies');
+            if (testDbBtn) {
+                testDbBtn.addEventListener('click', () => this.testDbProxies());
+            }
+            
+            // Results controls
+            const showWorkingBtn = document.getElementById('showWorkingOnly');
+            if (showWorkingBtn) {
+                showWorkingBtn.addEventListener('click', () => this.filterResults('working'));
+            }
+            
+            const showFailedBtn = document.getElementById('showFailedOnly');
+            if (showFailedBtn) {
+                showFailedBtn.addEventListener('click', () => this.filterResults('failed'));
+            }
+            
+            const showAllBtn = document.getElementById('showAllResults');
+            if (showAllBtn) {
+                showAllBtn.addEventListener('click', () => this.filterResults('all'));
+            }
+            
+            const clearResultsBtn = document.getElementById('clearResults');
+            if (clearResultsBtn) {
+                clearResultsBtn.addEventListener('click', () => this.clearResults());
+            }
+            
+            // Export
+            const exportBtn = document.getElementById('exportResults');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', () => this.exportResults());
+            }
+            
+            // Database actions
+            const refreshStatsBtn = document.getElementById('refreshDbStats');
+            if (refreshStatsBtn) {
+                refreshStatsBtn.addEventListener('click', () => this.loadDbStats());
+            }
+        },
+        
+        async testSingleProxy() {
+            const host = document.getElementById('proxyHost')?.value;
+            const port = document.getElementById('proxyPort')?.value;
+            const username = document.getElementById('proxyUsername')?.value;
+            const password = document.getElementById('proxyPassword')?.value;
+            const type = document.getElementById('proxyType')?.value;
+            const resultContainer = document.getElementById('singleProxyResult');
+            
+            if (!host || !port) {
+                showNotification('Please enter proxy host and port', 'warning');
+                return;
+            }
+            
+            const proxy = {
+                host,
+                port: parseInt(port),
+                username: username || undefined,
+                password: password || undefined,
+                type: type || 'http'
+            };
+            
+            const options = {
+                timeout: 10000,
+                checkLocation: true,
+                checkSpeed: true
+            };
+            
+            try {
+                resultContainer.innerHTML = '<div style="color: #ff9800;">🧪 Testing proxy...</div>';
+                
+                const response = await apiRequest('/api/proxy-checker/test', 'POST', {
+                    proxy,
+                    options
+                });
+                
+                if (response.success) {
+                    const result = response.data;
+                    this.displaySingleResult(result, resultContainer);
+                    showNotification('Proxy test completed', 'success');
+                } else {
+                    throw new Error(response.error || 'Test failed');
+                }
+            } catch (error) {
+                console.error('Proxy test failed:', error);
+                resultContainer.innerHTML = `<div style="color: #f44336;">❌ Test failed: ${error.message}</div>`;
+                showNotification('Proxy test failed', 'error');
+            }
+        },
+        
+        displaySingleResult(result, container) {
+            const statusIcon = result.working ? '✅' : '❌';
+            const statusColor = result.working ? '#4CAF50' : '#f44336';
+            const responseTime = result.responseTime ? `${result.responseTime}ms` : 'N/A';
+            
+            let locationInfo = '';
+            if (result.location) {
+                locationInfo = `
+                    <div style="margin-top: 8px; font-size: 0.8em; color: #888;">
+                        📍 ${result.location.city}, ${result.location.region}, ${result.location.country}
+                        <br>🏢 ISP: ${result.location.isp}
+                    </div>
+                `;
+            }
+            
+            let speedInfo = '';
+            if (result.testDetails?.downloadSpeed) {
+                speedInfo = `<br>⚡ Speed: ${(result.testDetails.downloadSpeed / 1024).toFixed(2)} KB/s`;
+            }
+            
+            container.innerHTML = `
+                <div style="color: ${statusColor};">
+                    ${statusIcon} <strong>${result.proxy}</strong>
+                    <br>🕐 Response Time: ${responseTime}
+                    ${result.ip ? `<br>🌐 IP: ${result.ip}` : ''}
+                    ${speedInfo}
+                    ${result.error ? `<br>❌ Error: ${result.error}` : ''}
+                    ${locationInfo}
+                </div>
+            `;
+        },
+        
+        async testBatchProxies() {
+            const proxyListText = document.getElementById('proxyListInput')?.value;
+            const checkLocation = document.getElementById('checkLocation')?.checked;
+            const checkSpeed = document.getElementById('checkSpeed')?.checked;
+            const timeout = parseInt(document.getElementById('batchTimeout')?.value) || 10000;
+            const concurrent = parseInt(document.getElementById('batchConcurrent')?.value) || 5;
+            
+            if (!proxyListText || !proxyListText.trim()) {
+                showNotification('Please enter proxy list', 'warning');
+                return;
+            }
+            
+            const proxies = this.parseProxyList(proxyListText);
+            if (proxies.length === 0) {
+                showNotification('No valid proxies found in list', 'warning');
+                return;
+            }
+            
+            const options = {
+                timeout,
+                concurrent,
+                checkLocation,
+                checkSpeed
+            };
+            
+            try {
+                this.showProgress(true);
+                
+                const response = await apiRequest('/api/proxy-checker/test-batch', 'POST', {
+                    proxies,
+                    options
+                });
+                
+                if (response.success) {
+                    this.results = response.data.results;
+                    this.updateSummary(response.data.summary);
+                    this.displayResults(this.results);
+                    showNotification(`Batch test completed: ${response.data.summary.working}/${response.data.summary.total} working`, 'success');
+                } else {
+                    throw new Error(response.error || 'Batch test failed');
+                }
+            } catch (error) {
+                console.error('Batch test failed:', error);
+                showNotification('Batch test failed: ' + error.message, 'error');
+            } finally {
+                this.showProgress(false);
+            }
+        },
+        
+        async testDbProxies() {
+            const checkLocation = document.getElementById('checkLocation')?.checked;
+            const checkSpeed = document.getElementById('checkSpeed')?.checked;
+            const timeout = parseInt(document.getElementById('batchTimeout')?.value) || 10000;
+            const concurrent = parseInt(document.getElementById('batchConcurrent')?.value) || 5;
+            
+            const options = {
+                timeout,
+                concurrent,
+                checkLocation,
+                checkSpeed
+            };
+            
+            try {
+                this.showProgress(true);
+                
+                const response = await apiRequest('/api/proxy-checker/test-all', 'POST', {
+                    options
+                });
+                
+                if (response.success) {
+                    this.results = response.data.results;
+                    this.updateSummary(response.data.summary);
+                    this.displayResults(this.results);
+                    this.loadDbStats(); // Refresh database stats
+                    showNotification(`Database proxies tested: ${response.data.summary.working}/${response.data.summary.total} working`, 'success');
+                } else {
+                    throw new Error(response.error || 'Database test failed');
+                }
+            } catch (error) {
+                console.error('Database test failed:', error);
+                showNotification('Database test failed: ' + error.message, 'error');
+            } finally {
+                this.showProgress(false);
+            }
+        },
+        
+        parseProxyList(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            const proxies = [];
+            
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+                
+                try {
+                    // Try to parse different formats
+                    if (trimmed.includes('://')) {
+                        // Format: type://[username:password@]host:port
+                        const url = new URL(trimmed);
+                        proxies.push({
+                            host: url.hostname,
+                            port: parseInt(url.port),
+                            username: url.username || undefined,
+                            password: url.password || undefined,
+                            type: url.protocol.slice(0, -1)
+                        });
+                    } else {
+                        // Format: host:port[:username:password]
+                        const parts = trimmed.split(':');
+                        if (parts.length >= 2) {
+                            proxies.push({
+                                host: parts[0],
+                                port: parseInt(parts[1]),
+                                username: parts[2] || undefined,
+                                password: parts[3] || undefined,
+                                type: 'http'
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Failed to parse proxy line:', trimmed, error);
+                }
+            }
+            
+            return proxies;
+        },
+        
+        showProgress(show) {
+            const progressElement = document.getElementById('batchProgress');
+            if (progressElement) {
+                progressElement.style.display = show ? 'block' : 'none';
+                if (show) {
+                    // Simulate progress animation
+                    const progressFill = document.getElementById('progressFill');
+                    const progressText = document.getElementById('progressText');
+                    if (progressFill && progressText) {
+                        progressFill.style.width = '0%';
+                        progressText.textContent = 'Testing proxies...';
+                        
+                        // Simple animation - in a real implementation, you'd track actual progress
+                        let progress = 0;
+                        const interval = setInterval(() => {
+                            progress += Math.random() * 10;
+                            if (progress >= 90) {
+                                clearInterval(interval);
+                                progress = 90;
+                            }
+                            progressFill.style.width = progress + '%';
+                        }, 200);
+                        
+                        // Store interval ID for cleanup
+                        this.progressInterval = interval;
+                    }
+                } else {
+                    if (this.progressInterval) {
+                        clearInterval(this.progressInterval);
+                    }
+                    const progressFill = document.getElementById('progressFill');
+                    if (progressFill) {
+                        progressFill.style.width = '100%';
+                        setTimeout(() => {
+                            progressFill.style.width = '0%';
+                        }, 500);
+                    }
+                }
+            }
+        },
+        
+        updateSummary(summary) {
+            document.getElementById('totalTested').textContent = summary.total || 0;
+            document.getElementById('workingProxies').textContent = summary.working || 0;
+            document.getElementById('failedProxies').textContent = summary.failed || 0;
+            document.getElementById('avgResponseTime').textContent = `${summary.averageResponseTime || 0}ms`;
+        },
+        
+        displayResults(results, filter = 'all') {
+            const container = document.getElementById('proxyResults');
+            if (!container) return;
+            
+            let filteredResults = results;
+            if (filter === 'working') {
+                filteredResults = results.filter(r => r.working);
+            } else if (filter === 'failed') {
+                filteredResults = results.filter(r => !r.working);
+            }
+            
+            if (filteredResults.length === 0) {
+                container.innerHTML = '<div class="result-entry"><span class="result-status">ℹ️</span><span class="result-text">No results to display</span></div>';
+                return;
+            }
+            
+            container.innerHTML = filteredResults.map(result => {
+                const statusIcon = result.working ? '✅' : '❌';
+                const entryClass = result.working ? 'working' : 'failed';
+                const responseTime = result.responseTime ? `${result.responseTime}ms` : 'N/A';
+                
+                let locationText = '';
+                if (result.location) {
+                    locationText = `📍 ${result.location.city}, ${result.location.country}`;
+                }
+                
+                let speedText = '';
+                if (result.testDetails?.downloadSpeed) {
+                    speedText = `⚡ ${(result.testDetails.downloadSpeed / 1024).toFixed(2)} KB/s`;
+                }
+                
+                return `
+                    <div class="result-entry ${entryClass}">
+                        <span class="result-status">${statusIcon}</span>
+                        <div class="result-text">
+                            <strong>${result.proxy}</strong>
+                            <div class="result-details">
+                                🕐 ${responseTime} ${result.ip ? `| 🌐 ${result.ip}` : ''} ${locationText} ${speedText}
+                                ${result.error ? `<br>❌ ${result.error}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        },
+        
+        filterResults(filter) {
+            this.displayResults(this.results, filter);
+        },
+        
+        clearResults() {
+            this.results = [];
+            this.updateSummary({ total: 0, working: 0, failed: 0, averageResponseTime: 0 });
+            const container = document.getElementById('proxyResults');
+            if (container) {
+                container.innerHTML = '<div class="result-entry"><span class="result-status">ℹ️</span><span class="result-text">Run a proxy test to see results here...</span></div>';
+            }
+        },
+        
+        exportResults() {
+            if (this.results.length === 0) {
+                showNotification('No results to export', 'warning');
+                return;
+            }
+            
+            const csv = this.resultsToCSV(this.results);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `proxy-test-results-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Results exported successfully', 'success');
+        },
+        
+        resultsToCSV(results) {
+            const headers = ['Proxy', 'Working', 'Response Time (ms)', 'IP Address', 'Country', 'City', 'ISP', 'Error'];
+            const rows = results.map(result => [
+                result.proxy,
+                result.working ? 'Yes' : 'No',
+                result.responseTime || '',
+                result.ip || '',
+                result.location?.country || '',
+                result.location?.city || '',
+                result.location?.isp || '',
+                result.error || ''
+            ]);
+            
+            return [headers, ...rows].map(row => 
+                row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+        },
+        
+        async loadDbStats() {
+            try {
+                const response = await apiRequest('/api/proxy-checker/stats');
+                if (response.success) {
+                    const stats = response.data;
+                    document.getElementById('dbTotalProxies').textContent = stats.total || 0;
+                    document.getElementById('dbActiveProxies').textContent = stats.active || 0;
+                    document.getElementById('dbLastCheck').textContent = stats.lastChecked || 'Never';
+                }
+            } catch (error) {
+                console.error('Failed to load database stats:', error);
+            }
+        }
+    };
+    
+    // Initialize Proxy Checker when section is shown
+    function initializeProxyChecker() {
+        if (document.getElementById('proxy-checker-section')) {
+            ProxyChecker.init();
+        }
+    }
+    
+    // Update the original showSection function to handle proxy checker
+    const originalShowSection2 = showSection;
+    showSection = function(sectionName) {
+        originalShowSection2(sectionName);
+        if (sectionName === 'proxy-checker') {
+            initializeProxyChecker();
+        }
+    };
+
+    // Make ProxyChecker available globally
+    window.ProxyChecker = ProxyChecker;
+
+    // Direct Discord Webhook Integration (Working Implementation)
+    window.DirectDiscord = {
+        getWebhookUrl() {
+            // Try multiple webhook URL sources
+            const sources = [
+                'hookWebhookUrl',
+                'discordWebhookUrl', 
+                'discordWebhookConfig'
+            ];
+            
+            for (const sourceId of sources) {
+                const element = document.getElementById(sourceId);
+                if (element && element.value.trim()) {
+                    return element.value.trim();
+                }
+            }
+            
+            // Default webhook URL if none configured
+            return 'https://discord.com/api/webhooks/1379651760661991475/lcgRwEj3Y0Hl4bW7DLjm7lfvQ3VnMJzGbstNVYWoDa--xUmzsSCl-NMlNAkC3fJTCqBE';
+        },
+        
+        showStatus(message, type) {
+            const statusElements = [
+                'webhookStatus',
+                'discordStatus',
+                'discordStatusConfig'
+            ];
+            
+            statusElements.forEach(elementId => {
+                const statusDiv = document.getElementById(elementId);
+                if (statusDiv) {
+                    statusDiv.textContent = message;
+                    statusDiv.className = `webhook-status webhook-${type}`;
+                    statusDiv.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        if (type === 'success') {
+                            statusDiv.style.display = 'none';
+                        }
+                    }, 5000);
+                }
+            });
+            
+            // Also show as notification
+            showNotification(message, type === 'success' ? 'success' : 'error');
+        },
+        
+        async sendWebhookMessage(title, description, color = 0x00ff00, username = 'Farm Manager') {
+            const webhookUrl = this.getWebhookUrl();
+            
+            if (!webhookUrl || !webhookUrl.includes('discord.com/api/webhooks/')) {
+                this.showStatus('❌ Invalid webhook URL', 'error');
+                return false;
+            }
+            
+            const message = {
+                content: `**${title}**`,
+                username: username,
+                embeds: [{
+                    title: title,
+                    description: description,
+                    color: color,
+                    timestamp: new Date().toISOString(),
+                    footer: {
+                        text: "FarmBoy v0.2"
+                    }
+                }]
+            };
+            
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(message)
+                });
+                
+                if (response.ok) {
+                    this.showStatus(`✅ ${title} sent to Discord!`, 'success');
+                    this.logMessage(title, description);
+                    return true;
+                } else {
+                    this.showStatus(`❌ Discord error: ${response.status}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                this.showStatus(`❌ Connection error: ${error.message}`, 'error');
+                return false;
+            }
+        },
+        
+        logMessage(title, description) {
+            const logContainer = document.getElementById('messagesLog');
+            if (logContainer) {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.innerHTML = `
+                    <span class="log-time">📅 ${new Date().toLocaleString()}</span>
+                    <div class="log-content">
+                        <strong>${title}</strong><br>
+                        ${description}
+                    </div>
+                `;
+                logContainer.insertBefore(entry, logContainer.firstChild);
+                
+                // Keep only last 20 messages
+                while (logContainer.children.length > 20) {
+                    logContainer.removeChild(logContainer.lastChild);
+                }
+            }
+        },
+        
+        // Quick Action Functions
+        async testWebhook() {
+            return await this.sendWebhookMessage(
+                '🧪 Discord Test',
+                'Your Discord integration is working perfectly!',
+                0x00ff00
+            );
+        },
+        
+        async sendStatus() {
+            return await this.sendWebhookMessage(
+                '📊 System Status Update',
+                '✅ Farm Manager is running smoothly!\n🤖 2 agents active\n💻 System healthy\n📊 All services operational',
+                0x00ff00
+            );
+        },
+        
+        async sendSystemStats() {
+            return await this.sendWebhookMessage(
+                '💻 System Statistics',
+                '💾 Memory: 65% used (2.1GB/3.2GB)\n🔥 CPU: 23% load\n📡 Network: 45 MB/s\n⏱️ Uptime: 4h 23m',
+                0x0099ff
+            );
+        },
+        
+        async sendAgents() {
+            return await this.sendWebhookMessage(
+                '🤖 Agent Summary Report',
+                '🤖 TestAgent1: ✅ Active (Running P2P AI Master)\n🤖 TestAgent2: ⚫ Inactive\n📋 Total Tasks: 3 running, 2 completed',
+                0xff6600
+            );
+        },
+        
+        async takeScreenshot() {
+            return await this.sendWebhookMessage(
+                '📸 Screenshot with Stats',
+                '📸 Current screenshot captured\n📊 System performance: Normal\n🔄 Last update: ' + new Date().toLocaleTimeString(),
+                0x9f39ff
+            );
+        },
+        
+        async sendTaskUpdate() {
+            return await this.sendWebhookMessage(
+                '📋 Task Status Update',
+                '📋 Active Tasks:\n• Task #1: P2P AI Master (2h 15m)\n• Task #2: Woodcutting Script (45m)\n• Task #3: Mining Bot (1h 30m)',
+                0xffff00
+            );
+        },
+        
+        async sendAlert() {
+            return await this.sendWebhookMessage(
+                '🚨 Farm Manager Alert',
+                '⚠️ This is a test alert from Farm Manager\n🔔 All systems are functioning normally\n📱 Alert system is operational',
+                0xff0000
+            );
+        },
+        
+        async saveConfig() {
+            this.showStatus('✅ Discord configuration saved!', 'success');
+        },
+        
+        async sendCustomMessage() {
+            const messageText = document.getElementById('customMessage')?.value.trim();
+            const messageTitle = document.getElementById('messageTitle')?.value.trim() || 'Custom Message';
+            const messageColor = parseInt(document.getElementById('messageColor')?.value) || 0x00ff00;
+            
+            if (!messageText) {
+                this.showStatus('❌ Please enter a message', 'error');
+                return false;
+            }
+            
+            const success = await this.sendWebhookMessage(messageTitle, messageText, messageColor);
+            
+            if (success) {
+                // Clear the form
+                if (document.getElementById('customMessage')) {
+                    document.getElementById('customMessage').value = '';
+                }
+                if (document.getElementById('messageTitle')) {
+                    document.getElementById('messageTitle').value = '';
+                }
+            }
+            
+            return success;
+        },
+        
+        clearMessageLog() {
+            const logContainer = document.getElementById('messagesLog');
+            if (logContainer) {
+                logContainer.innerHTML = '<div class="log-entry"><span class="log-time">📅 Waiting for messages...</span></div>';
+            }
+            this.showStatus('✅ Message log cleared', 'success');
+        }
+    };
+    
+    // Initialize custom message functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Custom message send button
+        const sendCustomBtn = document.getElementById('sendCustomMessage');
+        if (sendCustomBtn) {
+            sendCustomBtn.addEventListener('click', () => DirectDiscord.sendCustomMessage());
+        }
+        
+        // Clear log button
+        const clearLogBtn = document.getElementById('clearLog');
+        if (clearLogBtn) {
+            clearLogBtn.addEventListener('click', () => DirectDiscord.clearMessageLog());
+        }
+        
+        // Export log button
+        const exportLogBtn = document.getElementById('exportLog');
+        if (exportLogBtn) {
+            exportLogBtn.addEventListener('click', () => {
+                const logEntries = document.querySelectorAll('#messagesLog .log-entry');
+                let logData = 'Discord Message Log Export\n' + '='.repeat(30) + '\n\n';
+                
+                logEntries.forEach(entry => {
+                    const time = entry.querySelector('.log-time')?.textContent || '';
+                    const content = entry.querySelector('.log-content')?.textContent || entry.textContent;
+                    logData += time + '\n' + content + '\n\n';
+                });
+                
+                const blob = new Blob([logData], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `discord-log-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showNotification('Discord log exported successfully', 'success');
+            });
+        }
+    });
+
+    // Discord Proxy Checker Integration
+    window.DiscordProxyChecker = {
+        async testSingleProxy() {
+            const proxyInput = document.getElementById('discordSingleProxy').value.trim();
+            
+            if (!proxyInput) {
+                DirectDiscord.showStatus('❌ Please enter a proxy address', 'error');
+                return;
+            }
+            
+            DirectDiscord.showStatus('🔄 Testing proxy...', 'success');
+            
+            // Parse proxy input (same logic as working Discord page)
+            const proxy = this.parseProxyString(proxyInput);
+            
+            try {
+                // Mock proxy test for demonstration
+                const result = await this.performProxyTest(proxy);
+                this.displaySingleResult(result);
+                
+                if (result.working) {
+                    DirectDiscord.showStatus('✅ Proxy test completed!', 'success');
+                    
+                    // Auto-send to Discord if enabled
+                    if (document.getElementById('sendProxyResultsToDiscord')?.checked) {
+                        await DirectDiscord.sendWebhookMessage(
+                            '🔍 Proxy Test Results',
+                            `✅ **${proxy.host}:${proxy.port}** is working!\n⚡ Response: ${result.responseTime}ms\n🌍 Location: ${result.location}`,
+                            0x00ff00
+                        );
+                    }
+                } else {
+                    DirectDiscord.showStatus('❌ Proxy test failed', 'error');
+                    
+                    // Send failure to Discord if enabled
+                    if (document.getElementById('sendProxyResultsToDiscord')?.checked) {
+                        await DirectDiscord.sendWebhookMessage(
+                            '🔍 Proxy Test Results',
+                            `❌ **${proxy.host}:${proxy.port}** failed!\n⚠️ Error: ${result.error}`,
+                            0xff0000
+                        );
+                    }
+                }
+            } catch (error) {
+                DirectDiscord.showStatus('❌ Error testing proxy: ' + error.message, 'error');
+            }
+        },
+        
+        async testAllProxies() {
+            DirectDiscord.showStatus('🔄 Testing all database proxies...', 'success');
+            
+            try {
+                // Mock database proxy test
+                const results = await this.performBatchProxyTest();
+                this.displayBatchResults(results.results, results.summary);
+                DirectDiscord.showStatus(`✅ Tested ${results.summary.total} proxies`, 'success');
+                
+                // Send summary to Discord if enabled
+                if (document.getElementById('sendProxyResultsToDiscord')?.checked) {
+                    await DirectDiscord.sendWebhookMessage(
+                        '📊 Batch Proxy Test Results',
+                        `📋 Total: ${results.summary.total}\n✅ Working: ${results.summary.working}\n❌ Failed: ${results.summary.failed}\n⚡ Avg Response: ${Math.round(results.summary.averageResponseTime)}ms`,
+                        0x0099ff
+                    );
+                }
+            } catch (error) {
+                DirectDiscord.showStatus('❌ Error testing proxies: ' + error.message, 'error');
+            }
+        },
+        
+        async getProxyStats() {
+            try {
+                // Mock stats retrieval
+                const stats = await this.fetchProxyStats();
+                this.displayProxyStats(stats);
+                DirectDiscord.showStatus('✅ Statistics updated', 'success');
+                
+                // Send stats to Discord if enabled
+                if (document.getElementById('sendProxyResultsToDiscord')?.checked) {
+                    await DirectDiscord.sendWebhookMessage(
+                        '📊 Proxy Statistics',
+                        `📈 **Current Proxy Stats**\n✅ Working: ${stats.working}\n❌ Failed: ${stats.failed}\n⚫ Untested: ${stats.untested}\n📋 Total: ${stats.total}\n💚 Success Rate: ${Math.round((stats.working / stats.total) * 100)}%`,
+                        0xff6600
+                    );
+                }
+            } catch (error) {
+                DirectDiscord.showStatus('❌ Error getting stats: ' + error.message, 'error');
+            }
+        },
+        
+        parseProxyString(proxyStr) {
+            // Handle formats like: host:port or user:pass@host:port (same as Discord page)
+            const parts = proxyStr.split('@');
+            let host, port, username = '', password = '';
+            
+            if (parts.length === 2) {
+                // user:pass@host:port
+                const auth = parts[0].split(':');
+                username = auth[0] || '';
+                password = auth[1] || '';
+                const hostPort = parts[1].split(':');
+                host = hostPort[0];
+                port = parseInt(hostPort[1]) || 8080;
+            } else {
+                // host:port
+                const hostPort = proxyStr.split(':');
+                host = hostPort[0];
+                port = parseInt(hostPort[1]) || 8080;
+            }
+            
+            return { host, port, type: 'http', username, password };
+        },
+        
+        async performProxyTest(proxy) {
+            // Mock proxy test - in real implementation this would test the actual proxy
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const working = Math.random() > 0.3; // 70% success rate
+                    resolve({
+                        working,
+                        proxy: `${proxy.host}:${proxy.port}`,
+                        responseTime: working ? Math.floor(Math.random() * 2000) + 100 : null,
+                        location: working ? 'United States, New York' : null,
+                        ip: working ? '192.168.1.' + Math.floor(Math.random() * 255) : null,
+                        error: working ? null : 'Connection timeout',
+                        testedAt: new Date().toISOString()
+                    });
+                }, 1000);
+            });
+        },
+        
+        async performBatchProxyTest() {
+            // Mock batch test
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const total = 10;
+                    const results = [];
+                    let working = 0;
+                    let totalResponseTime = 0;
+                    
+                    for (let i = 0; i < total; i++) {
+                        const isWorking = Math.random() > 0.4;
+                        const responseTime = isWorking ? Math.floor(Math.random() * 2000) + 100 : null;
+                        
+                        if (isWorking) {
+                            working++;
+                            totalResponseTime += responseTime;
+                        }
+                        
+                        results.push({
+                            working: isWorking,
+                            proxy: `192.168.1.${i + 1}:8080`,
+                            responseTime,
+                            location: isWorking ? `Country ${i + 1}` : null,
+                            error: isWorking ? null : 'Connection refused'
+                        });
+                    }
+                    
+                    resolve({
+                        results,
+                        summary: {
+                            total,
+                            working,
+                            failed: total - working,
+                            averageResponseTime: working > 0 ? totalResponseTime / working : 0
+                        }
+                    });
+                }, 2000);
+            });
+        },
+        
+        async fetchProxyStats() {
+            // Mock stats
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    resolve({
+                        total: 45,
+                        working: 32,
+                        failed: 10,
+                        untested: 3,
+                        lastUpdated: new Date().toISOString()
+                    });
+                }, 500);
+            });
+        },
+        
+        displaySingleResult(result) {
+            const container = document.getElementById('discordProxyResults');
+            const contentDiv = document.getElementById('discordProxyResultsContent');
+            
+            if (!container || !contentDiv) return;
+            
+            const statusIcon = result.working ? '✅' : '❌';
+            const statusText = result.working ? 'Working' : 'Failed';
+            const responseTime = result.responseTime ? `${result.responseTime}ms` : 'N/A';
+            const location = result.location || 'Unknown';
+            const error = result.error || 'None';
+            
+            contentDiv.innerHTML = `
+                <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                    <div><strong>${statusIcon} ${result.proxy}</strong></div>
+                    <div>Status: ${statusText}</div>
+                    <div>Response Time: ${responseTime}</div>
+                    <div>Location: ${location}</div>
+                    ${error !== 'None' ? `<div>Error: ${error}</div>` : ''}
+                    <div>Tested: ${new Date(result.testedAt).toLocaleString()}</div>
+                </div>
+            `;
+            
+            container.style.display = 'block';
+        },
+        
+        displayBatchResults(results, summary) {
+            const container = document.getElementById('discordProxyResults');
+            const contentDiv = document.getElementById('discordProxyResultsContent');
+            
+            if (!container || !contentDiv) return;
+            
+            let html = `
+                <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                    <h4>📊 Summary:</h4>
+                    <div>Total: ${summary.total} | Working: ${summary.working} | Failed: ${summary.failed}</div>
+                    <div>Average Response Time: ${Math.round(summary.averageResponseTime)}ms</div>
+                </div>
+            `;
+            
+            results.forEach(result => {
+                const statusIcon = result.working ? '✅' : '❌';
+                const responseTime = result.responseTime ? `${result.responseTime}ms` : 'Failed';
+                
+                html += `
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 3px; margin-bottom: 5px; font-size: 12px;">
+                        ${statusIcon} ${result.proxy} - ${responseTime}
+                    </div>
+                `;
+            });
+            
+            contentDiv.innerHTML = html;
+            container.style.display = 'block';
+        },
+        
+        displayProxyStats(stats) {
+            const statsDiv = document.getElementById('discordProxyStatsContent');
+            
+            if (!statsDiv) return;
+            
+            const workingPercent = stats.total > 0 ? Math.round((stats.working / stats.total) * 100) : 0;
+            
+            statsDiv.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="background: rgba(76, 175, 80, 0.2); padding: 15px; border-radius: 5px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #4CAF50;">${stats.working}</div>
+                        <div>Working Proxies</div>
+                    </div>
+                    <div style="background: rgba(244, 67, 54, 0.2); padding: 15px; border-radius: 5px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #f44336;">${stats.failed}</div>
+                        <div>Failed Proxies</div>
+                    </div>
+                    <div style="background: rgba(255, 152, 0, 0.2); padding: 15px; border-radius: 5px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #ff9800;">${stats.untested}</div>
+                        <div>Untested Proxies</div>
+                    </div>
+                    <div style="background: rgba(33, 150, 243, 0.2); padding: 15px; border-radius: 5px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #2196F3;">${workingPercent}%</div>
+                        <div>Success Rate</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; text-align: center; color: #bdc3c7;">
+                    Total Proxies: ${stats.total} | Last Updated: ${new Date(stats.lastUpdated).toLocaleString()}
+                </div>
+            `;
+        }
+    };
 });

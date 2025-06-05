@@ -1,122 +1,440 @@
 version: '3.8'
 
 services:
-  farm-admin-hybrid:
-    image: ghcr.io/jupiterandzenus/farmmanager:latest
-    container_name: farm-admin-hybrid
-    restart: unless-stopped
-    
-    # Build from the new repository if you prefer building locally
-    # build:
-    #   context: https://github.com/JupiterandZenus/FarmManager.git
-    #   dockerfile: Dockerfile.hybrid
-    
+  farm-admin:
+    image: supscotty/farmboy:production
     ports:
-      - "3001:3001"   # Farm Manager Web Interface
       - "5900:5900"   # VNC Server
-      - "8080:8080"   # noVNC Web Interface
-      - "22:22"       # SSH Access
-    
+      - "8080:8080"   # noVNC Web Client
+      - "3333:3333"   # Farm Manager Web Interface
+      - "2222:22"     # SSH Access
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      NODE_ENV: ${NODE_ENV}
-      PORT: ${PORT}
-      API_KEY: ${API_KEY}
-      ETERNALFARM_AGENT_KEY: ${ETERNALFARM_AGENT_KEY}
-      ETERNAL_FARM_KEY: ${ETERNAL_FARM_KEY}
-      ETERNAL_AUTH_KEY: ${ETERNAL_AUTH_KEY}
-      VNC_PASSWORD: ${VNC_PASSWORD}
-      DISPLAY: ${DISPLAY}
-      TZ: ${TZ}
-    
+      - NODE_ENV=production
+      - PORT=3333
+      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
+      - API_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - ETERNALFARM_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      # DreamBot Configuration for Bot Launching
+      - DREAMBOT_USERNAME=${DREAMBOT_USERNAME:-}
+      - DREAMBOT_PASSWORD=${DREAMBOT_PASSWORD:-}
+      - DREAMBOT_SCRIPT=${DREAMBOT_SCRIPT:-}
+      - DREAMBOT_WORLD=${DREAMBOT_WORLD:-301}
+      - DREAMBOT_ARGS=${DREAMBOT_ARGS:---no-splash --developer-mode}
+      - DREAMBOT_DIR=/root/DreamBot/BotData
+      - DREAMBOT_CLIENT_PATH=/root/DreamBot/BotData/client.jar
+      - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
+      # Legacy DreamBot variables (for backward compatibility)
+      - DREAMBOT_USER=${DREAMBOT_USER:-}
+      - DREAMBOT_PASS=${DREAMBOT_PASS:-}
+      # Proxy Configuration
+      - PROXY_HOST=${PROXY_HOST:-}
+      - PROXY_PORT=${PROXY_PORT:-}
+      - PROXY_USER=${PROXY_USER:-}
+      - PROXY_PASS=${PROXY_PASS:-}
+      # DreamBot Dynamic Settings Configuration
+      - DREAMBOT_CPU_SAVER=${DREAMBOT_CPU_SAVER:-true}
+      - DREAMBOT_FPS=${DREAMBOT_FPS:-20}
+      - DREAMBOT_RENDER_DISTANCE=${DREAMBOT_RENDER_DISTANCE:-25}
+      - DREAMBOT_LOW_MEMORY=${DREAMBOT_LOW_MEMORY:-false}
+      - DREAMBOT_LOW_DETAIL=${DREAMBOT_LOW_DETAIL:-false}
+      - DREAMBOT_MOUSE_SPEED=${DREAMBOT_MOUSE_SPEED:-100}
+      - DREAMBOT_USE_RANDOM_WORLD=${DREAMBOT_USE_RANDOM_WORLD:-true}
+      - DREAMBOT_USE_CUSTOM_WORLD=${DREAMBOT_USE_CUSTOM_WORLD:-false}
+      - DREAMBOT_WORLD=${DREAMBOT_WORLD:--8}
+      - DREAMBOT_DEVELOPER_MODE=${DREAMBOT_DEVELOPER_MODE:-false}
+      - DREAMBOT_FRESH_START=${DREAMBOT_FRESH_START:-false}
+      - DREAMBOT_DISABLE_SECURITY_MANAGER=${DREAMBOT_DISABLE_SECURITY_MANAGER:-false}
+      - DREAMBOT_COVERT_MODE=${DREAMBOT_COVERT_MODE:-true}
+      - DREAMBOT_SDN_INTEGRATION=${DREAMBOT_SDN_INTEGRATION:-true}
+      - DREAMBOT_AUTO_ADD_ACCOUNTS=${DREAMBOT_AUTO_ADD_ACCOUNTS:-true}
+      - DREAMBOT_DRAW_SCRIPT_PAINT=${DREAMBOT_DRAW_SCRIPT_PAINT:-true}
+      - DREAMBOT_CLIENT_RENDERING=${DREAMBOT_CLIENT_RENDERING:-false}
+      - DREAMBOT_DISABLE_SOUNDS=${DREAMBOT_DISABLE_SOUNDS:-true}
+      - DREAMBOT_DISABLE_ANIMATION=${DREAMBOT_DISABLE_ANIMATION:-false}
+      - DREAMBOT_ROOF_SOLVER_ACTIVE=${DREAMBOT_ROOF_SOLVER_ACTIVE:-true}
+      - DREAMBOT_DISMISS_SOLVERS_ACTIVE=${DREAMBOT_DISMISS_SOLVERS_ACTIVE:-true}
+      - DREAMBOT_NOTIFY_ON_BAN=${DREAMBOT_NOTIFY_ON_BAN:-true}
+      - DREAMBOT_NOTIFY_ON_DEATH=${DREAMBOT_NOTIFY_ON_DEATH:-true}
+      - DREAMBOT_NOTIFY_ON_LEVEL_UP=${DREAMBOT_NOTIFY_ON_LEVEL_UP:-true}
+      - DREAMBOT_NOTIFY_ON_LEVEL_UP_AMOUNT=${DREAMBOT_NOTIFY_ON_LEVEL_UP_AMOUNT:-5}
+      - DREAMBOT_NOTIFY_ON_PET=${DREAMBOT_NOTIFY_ON_PET:-true}
+      - DREAMBOT_NOTIFY_ON_VALUABLE_DROP=${DREAMBOT_NOTIFY_ON_VALUABLE_DROP:-true}
+      - DREAMBOT_NOTIFY_ON_VALUABLE_DROP_AMOUNT=${DREAMBOT_NOTIFY_ON_VALUABLE_DROP_AMOUNT:-250000}
+      - DREAMBOT_NOTIFY_ON_UNTRADEABLE_DROP=${DREAMBOT_NOTIFY_ON_UNTRADEABLE_DROP:-true}
+      - DREAMBOT_SCRIPT_WEBHOOK_ACCESS_ALLOWED=${DREAMBOT_SCRIPT_WEBHOOK_ACCESS_ALLOWED:-true}
+      - DREAMBOT_MENTION_ON_BAN=${DREAMBOT_MENTION_ON_BAN:-true}
+      - DREAMBOT_LAST_RAN_SCRIPT=${DREAMBOT_LAST_RAN_SCRIPT:-Premium:1.312:P2P Master AI}
+      - DREAMBOT_FAVORITE_SCRIPTS=${DREAMBOT_FAVORITE_SCRIPTS:-P2P Master AI,# NMZ,Dreamy AIO Skiller Elite Lifetime,Guester - Lifetime}
+      - DREAMBOT_LAST_CANVAS_SIZE=${DREAMBOT_LAST_CANVAS_SIZE:-765:503}
+      - DREAMBOT_GAME_LAYOUT=${DREAMBOT_GAME_LAYOUT:-Force resizable (modern)}
+      - DREAMBOT_STOPS_AFTER_UPDATES=${DREAMBOT_STOPS_AFTER_UPDATES:-true}
+      - DREAMBOT_SETTINGS_VERSION=${DREAMBOT_SETTINGS_VERSION:-3}
+      # EternalFarm Individual Service Keys
+      - AGENT_KEY=${AGENT_KEY:-RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5}
+      - CHECKER_KEY=${CHECKER_KEY:-RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5}
+      - AUTOMATOR_KEY=${AUTOMATOR_KEY:-RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5}
+      - ETERNAL_API_URL=https://api.eternalfarm.net
+      - ETERNAL_FARM_KEY=${ETERNAL_FARM_KEY:-}
+      - ETERNAL_AUTH_KEY=${ETERNAL_AUTH_KEY:-}
+      - DISPLAY=:1
+      - JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      # Database Configuration
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - MYSQL_HOST=mariadb
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
     volumes:
       - farm_data:/app/data
-      - farm_logs:/var/log
-      - farm_vnc:/root/.vnc
-      - farm_dreambot:/root/DreamBot
-    
-    networks:
-      - farm-network
-    
+      - dreambot_data:/root/DreamBot
+    restart: unless-stopped
     depends_on:
       - mariadb
-    
+    networks:
+      - farm-network
+    entrypoint: ["/bin/bash", "-c", "chmod +x /app/Entry.sh && echo '#!/bin/bash\nset -e\n\n# Create fix-auto-login.sh script\ncat > /app/fix-auto-login.sh << \"EOF\"\n$$(cat /fix-auto-login)\nEOF\nchmod +x /app/fix-auto-login.sh\n\n# Run Entry.sh\n/app/Entry.sh' > /tmp/entrypoint.sh && chmod +x /tmp/entrypoint.sh && /tmp/entrypoint.sh"]
+    configs:
+      - source: fix-auto-login
+        target: /fix-auto-login
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 120s
-    
+      start_period: 40s
     labels:
+      # Core Application Labels
+      - "com.farmboy.type=hybrid"
+      - "com.farmboy.version=0.2"
+      - "com.farmboy.environment=production"
+      - "com.farmboy.maintainer=SupScotty"
+      # Service Labels
+      - "com.farmboy.service.vnc=enabled"
+      - "com.farmboy.service.novnc=enabled"
+      - "com.farmboy.service.ssh=enabled"
+      - "com.farmboy.service.web=enabled"
+      # Port Labels
+      - "com.farmboy.ports.vnc=5900"
+      - "com.farmboy.ports.novnc=8080"
+      - "com.farmboy.ports.web=3333"
+      - "com.farmboy.ports.ssh=2222"
+      # Integration Labels
+      - "com.farmboy.integration.dreambot=enabled"
+      - "com.farmboy.integration.eternalfarm=enabled"
+      - "com.farmboy.integration.discord=enabled"
+      # Resource Labels
+      - "com.farmboy.resources.memory=2g"
+      - "com.farmboy.resources.cpus=2"
+      # Database Labels
+      - "com.farmboy.database.type=mariadb"
+      - "com.farmboy.database.user=farmboy"
+      - "com.farmboy.database.host=mariadb"
+      - "com.farmboy.database.port=3306"
+      - "com.farmboy.database.name=farmboy_db"
+      - "com.farmboy.database.auth.fixed=true"
+      - "com.farmboy.database.connection=mysql://farmboy:***@mariadb:3306/farmboy_db"
+      # Traefik Labels
       - "traefik.enable=true"
-      - "traefik.http.routers.farm-admin.rule=Host(`farm.yourdomain.com`)"
-      - "traefik.http.services.farm-admin.loadbalancer.server.port=3001"
+      - "traefik.http.routers.farm-admin.rule=Host(`farm-admin.local`)"
+      - "traefik.http.services.farm-admin.loadbalancer.server.port=3333"
+      # EternalFarm Service Labels
+      - "com.farmboy.eternalfarm.agent.enabled=true"
+      - "com.farmboy.eternalfarm.checker.enabled=true"
+      - "com.farmboy.eternalfarm.automator.enabled=true"
+      - "com.farmboy.eternalfarm.keys.type=individual"
+      - "com.farmboy.eternalfarm.services=agent,checker,automator"
+      # Auto-login Labels
+      - "com.farmboy.autologin=enabled"
+      - "com.farmboy.autologin.version=1.0"
+      - "com.farmboy.autologin.services=dreambot,agent,checker,automator"
 
   mariadb:
-    image: mariadb:10.11
-    container_name: farm-mariadb
-    restart: unless-stopped
-    
+    image: lscr.io/linuxserver/mariadb:latest
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_CHARSET: ${MYSQL_CHARSET}
-      MYSQL_COLLATION: ${MYSQL_COLLATION}
-    
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - TZ=Etc/UTC
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
+      - MYSQL_ROOT_HOST=%
     volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql:ro
-    
-    networks:
-      - farm-network
-    
+      - mariadb_data:/config
+      # Comment out problematic mounts for Portainer deployment
+      # - ./prisma:/prisma
+      # - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
-      interval: 30s
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-pSntioi004!"]
       timeout: 10s
       retries: 5
-      start_period: 30s
-
-  # Optional: Redis for caching and session management
-  redis:
-    image: redis:7-alpine
-    container_name: farm-redis
-    restart: unless-stopped
-    
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-    
-    volumes:
-      - redis_data:/data
-    
+      interval: 30s
+      start_period: 60s
     networks:
       - farm-network
-    
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    labels:
+      # Core Database Labels
+      - "com.farmboy.database.service=mariadb"
+      - "com.farmboy.database.type=mariadb"
+      - "com.farmboy.database.version=latest"
+      - "com.farmboy.database.provider=linuxserver.io"
+      # Configuration Labels
+      - "com.farmboy.database.root_host=%" 
+      - "com.farmboy.database.default_user=farmboy"
+      - "com.farmboy.database.default_db=farmboy_db"
+      - "com.farmboy.database.charset=utf8mb4"
+      - "com.farmboy.database.collation=utf8mb4_unicode_ci"
+      # Security Labels
+      - "com.farmboy.database.auth_method=mysql_native_password"
+      - "com.farmboy.database.secure_user=farmboy"
+      # Health Labels
+      - "com.farmboy.database.healthcheck=enabled"
+      - "com.farmboy.database.healthcheck.interval=30s"
 
 volumes:
   farm_data:
-    driver: local
-  farm_logs:
-    driver: local
-  farm_vnc:
-    driver: local
-  farm_dreambot:
-    driver: local
+  dreambot_data:
   mariadb_data:
-    driver: local
-  redis_data:
-    driver: local
 
 networks:
   farm-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16 
+
+configs:
+  fix-auto-login:
+    content: |
+      #!/bin/bash
+      set -e
+
+      echo "🔧 Fix Auto-Login Script for EternalFarm and DreamBot"
+      echo "==================================================="
+
+      # Create necessary directories
+      mkdir -p /appdata/DreamBot/BotData
+      mkdir -p /root/DreamBot/BotData
+      mkdir -p /root/EternalFarm/Logs
+      
+      # Create empty log files if they don't exist
+      touch /root/EternalFarm/Logs/agent.log
+      touch /root/EternalFarm/Logs/checker.log
+      touch /root/EternalFarm/Logs/automator.log
+      
+      # Set proper permissions
+      chmod 755 /root/EternalFarm
+      chmod 755 /root/EternalFarm/Logs
+      chmod 644 /root/EternalFarm/Logs/agent.log
+      chmod 644 /root/EternalFarm/Logs/checker.log
+      chmod 644 /root/EternalFarm/Logs/automator.log
+      chmod 755 /root/DreamBot
+      chmod 755 /root/DreamBot/BotData
+      
+      # Create DreamBot settings
+      echo "📝 Creating DreamBot settings file..."
+      cat > /root/DreamBot/BotData/settings.json << 'EOF'
+      {
+        "breaks": [],
+        "cpuSaver": true,
+        "disableCPUSaverWhenNotRunning": false,
+        "enableCPUSaverWhenMinimized": false,
+        "ignoreVisualInjections": false,
+        "isAlwaysOnTop": false,
+        "clientRendering": false,
+        "drawScriptPaint": true,
+        "useRandomWorld": true,
+        "useCustomWorld": false,
+        "hasSeenAccountWarning": false,
+        "fps": 20,
+        "renderDistance": 25,
+        "customWorld": -8,
+        "disableSecurityManager": false,
+        "developerMode": false,
+        "freshStart": false,
+        "sdnIntegration": true,
+        "covertMode": true,
+        "mouseSpeed": 100,
+        "autoAddAccounts": true,
+        "lastRanScript": "Premium:1.312:P2P Master AI",
+        "favoriteScripts": [
+          "P2P Master AI",
+          "# NMZ",
+          "Dreamy AIO Skiller Elite Lifetime",
+          "Guester - Lifetime"
+        ],
+        "lastUsedUsername": "316388619",
+        "lastScriptCategories": 7,
+        "lastCanvasSize": "765:503",
+        "gameLayout": "Force resizable (modern)",
+        "roofSolverActive": true,
+        "dismissSolversActive": true,
+        "disableRegionRendering": false,
+        "disableTileRendering": false,
+        "disableTileUnderlayRendering": false,
+        "disableTileOverlayRendering": false,
+        "stopWidgetUpdates": false,
+        "stopWidgetDraw": false,
+        "noClickWalk": false,
+        "noInputLogin": false,
+        "menuInjection": false,
+        "disableAnimation": false,
+        "disableModelDrawing": false,
+        "disableSounds": true,
+        "deleteAccountOnBan": false,
+        "lowMemory": false,
+        "lowDetail": false,
+        "worldHopOnLoginError": false,
+        "settingsVersion": 3,
+        "discordWebhook": "https://discord.com/api/webhooks/1358933950210379816/Pdfyxcilip-xI3-q5ILOl9eRCl0nhEICZHZuvbyQm9aARgzI7GuHQExqBj1NNfkScPvV",
+        "notifyOnScriptStart": false,
+        "notifyOnScriptStop": false,
+        "notifyOnScriptPause": false,
+        "notifyOnScheduleStart": false,
+        "notifyOnScheduleStop": false,
+        "notifyOnBreakStart": false,
+        "notifyOnBreakStop": false,
+        "notifyOnBan": true,
+        "notifyOnDeath": true,
+        "notifyOnLevelUp": true,
+        "notifyOnLevelUpAmount": 5,
+        "notifyOnPet": true,
+        "notifyOnValuableDrop": true,
+        "notifyOnValuableDropAmount": 250000,
+        "notifyOnUntradeableDrop": true,
+        "scriptWebhookAccessAllowed": true,
+        "mentionOnBan": true,
+        "movesMouseOffscreen": true,
+        "stopsAfterUpdates": true
+      }
+      EOF
+      chmod 600 /root/DreamBot/BotData/settings.json
+
+      # Copy DreamBot settings to appdata location as backup
+      cp /root/DreamBot/BotData/settings.json /appdata/DreamBot/BotData/settings.json
+      chmod 600 /appdata/DreamBot/BotData/settings.json
+
+      # Create agent config to auto-login
+      echo "📝 Creating EternalFarm Agent auto-login config..."
+      mkdir -p /root/.eternalfarm
+      cat > /root/.eternalfarm/agent.config << EOF
+      {
+        "key_path": "/appdata/EternalFarm/agent.key",
+        "remember_key": true,
+        "auto_login": true,
+        "log_file": "/root/EternalFarm/Logs/agent.log"
+      }
+      EOF
+      chmod 600 /root/.eternalfarm/agent.config
+      
+      # Pre-populate the key directly into the EternalFarm app's expected location
+      AGENT_KEY="${AGENT_KEY:-${ETERNALFARM_AGENT_KEY:-${API_KEY:-}}}"
+      echo "${AGENT_KEY}" > /root/EternalFarm/Logs/agent.key
+      chmod 600 /root/EternalFarm/Logs/agent.key
+
+      # Create checker config to auto-login
+      echo "📝 Creating EternalFarm Checker auto-login config..."
+      cat > /root/.eternalfarm/checker.config << EOF
+      {
+        "key_path": "/appdata/EternalFarm/checker.key",
+        "remember_key": true,
+        "auto_login": true,
+        "log_file": "/root/EternalFarm/Logs/checker.log"
+      }
+      EOF
+      chmod 600 /root/.eternalfarm/checker.config
+      
+      # Pre-populate the key directly into the EternalFarm app's expected location
+      CHECKER_KEY="${CHECKER_KEY:-${ETERNALFARM_AGENT_KEY:-${API_KEY:-}}}"
+      echo "${CHECKER_KEY}" > /root/EternalFarm/Logs/checker.key
+      chmod 600 /root/EternalFarm/Logs/checker.key
+
+      # Create browser automator config to auto-login
+      echo "📝 Creating EternalFarm Browser Automator auto-login config..."
+      cat > /root/.eternalfarm/browser-automator.config << EOF
+      {
+        "key_path": "/appdata/EternalFarm/api.key",
+        "remember_key": true,
+        "auto_login": true,
+        "log_file": "/root/EternalFarm/Logs/automator.log"
+      }
+      EOF
+      chmod 600 /root/.eternalfarm/browser-automator.config
+      
+      # Pre-populate the key directly into the EternalFarm app's expected location
+      AUTOMATOR_KEY="${AUTOMATOR_KEY:-${ETERNALFARM_AGENT_KEY:-${API_KEY:-}}}"
+      echo "${AUTOMATOR_KEY}" > /root/EternalFarm/Logs/automator.key
+      chmod 600 /root/EternalFarm/Logs/automator.key
+
+      # Update desktop shortcuts to use the auto-login
+      echo "🖥️ Updating desktop shortcuts..."
+      
+      # Update EternalFarm Agent desktop shortcut (keep visible in terminal)
+      cat > /root/Desktop/EternalFarm-Agent.desktop << EOF
+      [Desktop Entry]
+      Version=1.0
+      Type=Application
+      Name=EternalFarm Agent
+      Comment=EternalFarm Agent Application
+      Exec=xfce4-terminal --hold --title='EternalFarm Agent' --command='/usr/local/bin/EternalFarmAgent --auto-login --key-file=/root/EternalFarm/Logs/agent.key --show-gui'
+      Icon=utilities-terminal
+      Terminal=false
+      Categories=Utility;
+      EOF
+      
+      # Update EternalFarm Checker desktop shortcut (run in background)
+      cat > /root/Desktop/EternalFarm-Checker.desktop << EOF
+      [Desktop Entry]
+      Version=1.0
+      Type=Application
+      Name=EternalFarm Checker
+      Comment=EternalFarm Checker Application
+      Exec=/usr/local/bin/EternalFarmChecker --auto-login --key-file=/root/EternalFarm/Logs/checker.key --headless
+      Icon=utilities-terminal
+      Terminal=false
+      Categories=Utility;
+      EOF
+      
+      # Update EternalFarm Browser Automator desktop shortcut (run in background)
+      cat > /root/Desktop/EternalFarm-Automator.desktop << EOF
+      [Desktop Entry]
+      Version=1.0
+      Type=Application
+      Name=EternalFarm Browser Automator
+      Comment=EternalFarm Browser Automator Application
+      Exec=/usr/local/bin/EternalFarmBrowserAutomator --auto-login --key-file=/root/EternalFarm/Logs/automator.key --headless
+      Icon=utilities-terminal
+      Terminal=false
+      Categories=Utility;
+      EOF
+
+      # Make desktop files executable
+      chmod +x /root/Desktop/*.desktop
+
+      # Ensure all keys exist and have content
+      echo "🔑 Checking EternalFarm keys..."
+      echo "${CHECKER_KEY}" > /appdata/EternalFarm/checker.key
+      echo "${AUTOMATOR_KEY}" > /appdata/EternalFarm/api.key
+
+      chmod 600 /appdata/EternalFarm/checker.key
+      chmod 600 /appdata/EternalFarm/api.key
+
+      # Echo status
+      echo "✅ Auto-login fix completed"
+      echo "==================================================="
+      echo "The following files have been updated:"
+      echo "  - /appdata/DreamBot/BotData/settings.json"
+      echo "  - /root/DreamBot/BotData/settings.json"
+      echo "  - /root/.eternalfarm/agent.config"
+      echo "  - /root/.eternalfarm/checker.config" 
+      echo "  - /root/.eternalfarm/browser-automator.config"
+      echo "  - /root/EternalFarm/Logs/agent.key"
+      echo "  - /root/EternalFarm/Logs/checker.key"
+      echo "  - /root/EternalFarm/Logs/automator.key"
+      echo "  - Desktop shortcuts updated with auto-login parameter"
+      echo ""
+      echo "Please restart the EternalFarm applications and DreamBot client"
+
+      exit 0 

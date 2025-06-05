@@ -1,0 +1,7 @@
+version: '3.8'
+
+services:
+  farm-admin-hybrid:
+    build:
+      context: .
+      dockerfile: Dockerfile 

@@ -1,0 +1,171 @@
+version: '3.8'
+
+services:
+  farm-admin-local:
+    container_name: farm-admin-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5901:5900"   # VNC Server (local port 5901)
+      - "8081:8080"   # noVNC Web Client (local port 8081)
+      - "3334:3333"   # Farm Manager Web Interface (local port 3334)
+      - "2223:22"     # SSH Access (local port 2223)
+    environment:
+      - NODE_ENV=development
+      - PORT=3333
+      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb-local:3306/farmboy_db
+      - DISPLAY=:1
+      - VNC_PORT=5900
+      - NOVNC_PORT=8080
+      - JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64
+      
+      # API Configuration
+      - API_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - ETERNALFARM_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      
+      # EternalFarm Individual Service Keys
+      - AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - CHECKER_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - AUTOMATOR_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - ETERNAL_API_URL=https://api.eternalfarm.net
+      
+      # EternalFarm Service Configuration
+      - ETERNALFARM_KEYS_TYPE=individual
+      - ETERNALFARM_SERVICES_ENABLED=agent,checker,automator
+      - ETERNALFARM_KEY_VALIDATION=true
+      
+      # Individual Service Endpoints
+      - AGENT_ENDPOINT=https://api.eternalfarm.net/agent
+      - CHECKER_ENDPOINT=https://api.eternalfarm.net/checker
+      - AUTOMATOR_ENDPOINT=https://api.eternalfarm.net/automator
+      
+      # EternalFarm Tools (optional)
+      - ETERNAL_FARM_KEY=${ETERNAL_FARM_KEY:-}
+      - ETERNAL_AUTH_KEY=${ETERNAL_AUTH_KEY:-}
+      
+      # Discord Integration (optional)
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      
+      # DreamBot Configuration for Bot Launching
+      - DREAMBOT_USERNAME=${DREAMBOT_USERNAME:-}
+      - DREAMBOT_PASSWORD=${DREAMBOT_PASSWORD:-}
+      - DREAMBOT_SCRIPT=${DREAMBOT_SCRIPT:-}
+      - DREAMBOT_WORLD=${DREAMBOT_WORLD:-301}
+      - DREAMBOT_ARGS=${DREAMBOT_ARGS:---no-splash --developer-mode}
+      - DREAMBOT_DIR=/root/DreamBot/BotData
+      - DREAMBOT_CLIENT_PATH=/root/DreamBot/BotData/client.jar
+      - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
+      
+      # Legacy DreamBot variables (for backward compatibility)
+      - DREAMBOT_USER=${DREAMBOT_USER:-}
+      - DREAMBOT_PASS=${DREAMBOT_PASS:-}
+      
+      # Proxy Configuration (optional)
+      - PROXY_HOST=${PROXY_HOST:-}
+      - PROXY_PORT=${PROXY_PORT:-}
+      - PROXY_USER=${PROXY_USER:-}
+      - PROXY_PASS=${PROXY_PASS:-}
+      
+      # Development Settings
+      - DEBUG=true
+      - LOG_LEVEL=debug
+      
+      # DreamBot Dynamic Settings Configuration
+      - DREAMBOT_CPU_SAVER=${DREAMBOT_CPU_SAVER:-true}
+      - DREAMBOT_FPS=${DREAMBOT_FPS:-20}
+      - DREAMBOT_RENDER_DISTANCE=${DREAMBOT_RENDER_DISTANCE:-25}
+      - DREAMBOT_LOW_MEMORY=${DREAMBOT_LOW_MEMORY:-false}
+      - DREAMBOT_LOW_DETAIL=${DREAMBOT_LOW_DETAIL:-false}
+      - DREAMBOT_MOUSE_SPEED=${DREAMBOT_MOUSE_SPEED:-100}
+      - DREAMBOT_USE_RANDOM_WORLD=${DREAMBOT_USE_RANDOM_WORLD:-true}
+      - DREAMBOT_USE_CUSTOM_WORLD=${DREAMBOT_USE_CUSTOM_WORLD:-false}
+      - DREAMBOT_WORLD=${DREAMBOT_WORLD:--8}
+      - DREAMBOT_DEVELOPER_MODE=${DREAMBOT_DEVELOPER_MODE:-false}
+      - DREAMBOT_FRESH_START=${DREAMBOT_FRESH_START:-false}
+      - DREAMBOT_DISABLE_SECURITY_MANAGER=${DREAMBOT_DISABLE_SECURITY_MANAGER:-false}
+      - DREAMBOT_COVERT_MODE=${DREAMBOT_COVERT_MODE:-true}
+      - DREAMBOT_SDN_INTEGRATION=${DREAMBOT_SDN_INTEGRATION:-true}
+      - DREAMBOT_AUTO_ADD_ACCOUNTS=${DREAMBOT_AUTO_ADD_ACCOUNTS:-true}
+      - DREAMBOT_DRAW_SCRIPT_PAINT=${DREAMBOT_DRAW_SCRIPT_PAINT:-true}
+      - DREAMBOT_CLIENT_RENDERING=${DREAMBOT_CLIENT_RENDERING:-false}
+      - DREAMBOT_DISABLE_SOUNDS=${DREAMBOT_DISABLE_SOUNDS:-true}
+      - DREAMBOT_DISABLE_ANIMATION=${DREAMBOT_DISABLE_ANIMATION:-false}
+      - DREAMBOT_ROOF_SOLVER_ACTIVE=${DREAMBOT_ROOF_SOLVER_ACTIVE:-true}
+      - DREAMBOT_DISMISS_SOLVERS_ACTIVE=${DREAMBOT_DISMISS_SOLVERS_ACTIVE:-true}
+      - DREAMBOT_NOTIFY_ON_BAN=${DREAMBOT_NOTIFY_ON_BAN:-true}
+      - DREAMBOT_NOTIFY_ON_DEATH=${DREAMBOT_NOTIFY_ON_DEATH:-true}
+      - DREAMBOT_NOTIFY_ON_LEVEL_UP=${DREAMBOT_NOTIFY_ON_LEVEL_UP:-true}
+      - DREAMBOT_NOTIFY_ON_LEVEL_UP_AMOUNT=${DREAMBOT_NOTIFY_ON_LEVEL_UP_AMOUNT:-5}
+      - DREAMBOT_NOTIFY_ON_PET=${DREAMBOT_NOTIFY_ON_PET:-true}
+      - DREAMBOT_NOTIFY_ON_VALUABLE_DROP=${DREAMBOT_NOTIFY_ON_VALUABLE_DROP:-true}
+      - DREAMBOT_NOTIFY_ON_VALUABLE_DROP_AMOUNT=${DREAMBOT_NOTIFY_ON_VALUABLE_DROP_AMOUNT:-250000}
+      - DREAMBOT_NOTIFY_ON_UNTRADEABLE_DROP=${DREAMBOT_NOTIFY_ON_UNTRADEABLE_DROP:-true}
+      - DREAMBOT_SCRIPT_WEBHOOK_ACCESS_ALLOWED=${DREAMBOT_SCRIPT_WEBHOOK_ACCESS_ALLOWED:-true}
+      - DREAMBOT_MENTION_ON_BAN=${DREAMBOT_MENTION_ON_BAN:-true}
+      - DREAMBOT_LAST_RAN_SCRIPT=${DREAMBOT_LAST_RAN_SCRIPT:-Premium:1.312:P2P Master AI}
+      - DREAMBOT_FAVORITE_SCRIPTS=${DREAMBOT_FAVORITE_SCRIPTS:-P2P Master AI,# NMZ,Dreamy AIO Skiller Elite Lifetime,Guester - Lifetime}
+      - DREAMBOT_LAST_CANVAS_SIZE=${DREAMBOT_LAST_CANVAS_SIZE:-765:503}
+      - DREAMBOT_GAME_LAYOUT=${DREAMBOT_GAME_LAYOUT:-Force resizable (modern)}
+      - DREAMBOT_STOPS_AFTER_UPDATES=${DREAMBOT_STOPS_AFTER_UPDATES:-true}
+      - DREAMBOT_SETTINGS_VERSION=${DREAMBOT_SETTINGS_VERSION:-3}
+      
+    volumes:
+      - farm_data_local:/app/data
+      - dreambot_data_local:/root/DreamBot
+      - ./logs:/app/logs  # Mount logs directory for easier debugging
+      - ./generate-dreambot-settings.js:/app/generate-dreambot-settings.js:ro  # Dynamic settings generator
+    restart: unless-stopped
+    depends_on:
+      mariadb-local:
+        condition: service_healthy
+    networks:
+      - farm-network-local
+    labels:
+      - "farm.manager.version=v0.2-local"
+      - "farm.manager.features=bot-launching,vnc,discord,eternalfarm-individual-keys"
+      - "farm.manager.description=Farm Manager Local Testing with Individual EternalFarm Service Keys"
+      - "farm.manager.environment=development"
+      - "farm.eternalfarm.agent.enabled=true"
+      - "farm.eternalfarm.checker.enabled=true"
+      - "farm.eternalfarm.automator.enabled=true"
+      - "farm.eternalfarm.keys.type=individual"
+      - "farm.eternalfarm.services=agent,checker,automator"
+
+  mariadb-local:
+    container_name: farm-mariadb-local
+    image: lscr.io/linuxserver/mariadb:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - TZ=Etc/UTC
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
+    volumes:
+      - mariadb_data_local:/config
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "3307:3306"  # Expose on different port to avoid conflicts
+    restart: unless-stopped
+    networks:
+      - farm-network-local
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-pSntioi004!"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+      start_period: 60s
+
+volumes:
+  farm_data_local:
+    driver: local
+  dreambot_data_local:
+    driver: local
+  mariadb_data_local:
+    driver: local
+
+networks:
+  farm-network-local:
+    driver: bridge 

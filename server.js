@@ -9,10 +9,10 @@ const WebSocket = require('ws');
 const fetch = require('node-fetch');
 const os = require('os');
 
-// Initialize Prisma Client
-const prisma = new PrismaClient();
+// Enhanced task handlers with bot launching
+const { createTaskStartHandler, createTaskStopHandler } = require('./enhanced-task-handler');
 
-// Load environment variables from config.env
+// Load environment variables from config.env FIRST
 require('dotenv').config({ path: './config.env' });
 
 // API Configuration
@@ -30,6 +30,9 @@ const wsClients = new Set();
 // Uptime tracking
 const UPTIME_START = Date.now();
 
+// Initialize Prisma Client
+const prisma = new PrismaClient();
+
 // WebSocket broadcast function
 function broadcastToClients(type, data) {
     const message = JSON.stringify({ type, data, timestamp: new Date().toISOString() });
@@ -42,8 +45,9 @@ function broadcastToClients(type, data) {
 }
 
 // Enhanced Discord notification function with rich embeds
-async function sendDiscordNotification(title, message, color = 0x00ff00, status = "🟢 Online", stats = null) {
-    if (!DISCORD_WEBHOOK_URL) {
+async function sendDiscordNotification(title, message, color = 0x00ff00, status = "🟢 Online", stats = null, imageUrl = null, webhookUrl = null) {
+    const hookUrl = webhookUrl || DISCORD_WEBHOOK_URL;
+    if (!hookUrl) {
         console.log('⚠️ Discord webhook URL not configured');
         return;
     }
@@ -88,10 +92,15 @@ async function sendDiscordNotification(title, message, color = 0x00ff00, status 
         color: color,
         timestamp: new Date().toISOString(),
         footer: {
-            text: `Farm Manager v0.1 | Uptime: ${formatUptime(process.uptime())}`
+            text: `Farm Manager v0.2 | Uptime: ${formatUptime(process.uptime())}`
         },
         fields: fields
     };
+
+    // Add image if provided
+    if (imageUrl) {
+        embed.image = { url: imageUrl };
+    }
 
     const payload = {
         username: "Farm Manager",
@@ -100,13 +109,13 @@ async function sendDiscordNotification(title, message, color = 0x00ff00, status 
     };
 
     try {
-        const webhookUrl = new URL(DISCORD_WEBHOOK_URL);
+        const webhookUrlObj = new URL(hookUrl);
         const postData = JSON.stringify(payload);
 
         const options = {
-            hostname: webhookUrl.hostname,
+            hostname: webhookUrlObj.hostname,
             port: 443,
-            path: webhookUrl.pathname,
+            path: webhookUrlObj.pathname,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -703,6 +712,491 @@ async function restartServices() {
             reject(error);
         }
     });
+}
+
+// =============================================================================
+// DISCORD HOOKS AND SCREENSHOT FUNCTIONALITY
+// =============================================================================
+
+// Global variable to store Discord webhook configuration
+let discordConfig = {
+    webhookUrl: DISCORD_WEBHOOK_URL || '',
+    channelName: 'farm-alerts',
+    botName: 'Farm Manager',
+    messageLog: []
+};
+
+// Screenshot functionality using system commands
+async function takeScreenshot(type = 'desktop') {
+    return new Promise((resolve, reject) => {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `/tmp/screenshot-${type}-${timestamp}.png`;
+        
+        let command;
+        switch (type) {
+            case 'vnc':
+                // Take screenshot of VNC display
+                command = `DISPLAY=:1 xwd -root | convert xwd:- png:${filename}`;
+                break;
+            case 'web':
+                // Use puppeteer for web interface screenshot
+                return takeWebScreenshot().then(resolve).catch(reject);
+            case 'full':
+            case 'desktop':
+            default:
+                // Take screenshot of main desktop
+                command = `DISPLAY=:0 xwd -root | convert xwd:- png:${filename} || DISPLAY=:1 xwd -root | convert xwd:- png:${filename}`;
+                break;
+        }
+        
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Screenshot error: ${error.message}`);
+                reject(error);
+                return;
+            }
+            
+            // Check if file was created
+            if (fs.existsSync(filename)) {
+                console.log(`✅ Screenshot saved: ${filename}`);
+                resolve(filename);
+            } else {
+                reject(new Error('Screenshot file was not created'));
+            }
+        });
+    });
+}
+
+// Web interface screenshot using puppeteer
+async function takeWebScreenshot() {
+    try {
+        const puppeteer = require('puppeteer');
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        
+        const page = await browser.newPage();
+        await page.setViewport({ width: 1920, height: 1080 });
+        
+        const localUrl = `http://localhost:${PORT}`;
+        await page.goto(localUrl, { waitUntil: 'networkidle0' });
+        
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `/tmp/screenshot-web-${timestamp}.png`;
+        
+        await page.screenshot({ 
+            path: filename, 
+            fullPage: true,
+            quality: 90 
+        });
+        
+        await browser.close();
+        console.log(`✅ Web screenshot saved: ${filename}`);
+        return filename;
+        
+    } catch (error) {
+        console.error('Web screenshot error:', error);
+        throw error;
+    }
+}
+
+// Upload screenshot to a temporary image host (for Discord)
+async function uploadScreenshot(filename) {
+    try {
+        // For now, we'll convert to base64 and return it
+        // In production, you might want to upload to imgur, cloudinary, etc.
+        const imageBuffer = fs.readFileSync(filename);
+        const base64Image = imageBuffer.toString('base64');
+        const dataUrl = `data:image/png;base64,${base64Image}`;
+        
+        // Clean up the temporary file
+        fs.unlinkSync(filename);
+        
+        return dataUrl;
+    } catch (error) {
+        console.error('Upload screenshot error:', error);
+        throw error;
+    }
+}
+
+// Enhanced Discord notification with screenshot support
+async function sendDiscordMessage(options = {}) {
+    const {
+        title = 'Farm Manager Update',
+        message = '',
+        color = 0x00ff00,
+        includeStats = false,
+        includeTimestamp = true,
+        screenshot = null,
+        webhookUrl = null
+    } = options;
+    
+    let stats = null;
+    if (includeStats) {
+        stats = await collectSystemStatistics();
+    }
+    
+    let imageUrl = null;
+    if (screenshot) {
+        try {
+            imageUrl = await uploadScreenshot(screenshot);
+        } catch (error) {
+            console.error('Failed to upload screenshot:', error);
+        }
+    }
+    
+    const result = await sendDiscordNotification(
+        title,
+        message,
+        color,
+        "🟢 Online",
+        stats,
+        imageUrl,
+        webhookUrl
+    );
+    
+    // Log the message
+    const logEntry = {
+        timestamp: new Date().toISOString(),
+        title,
+        message,
+        color,
+        includeStats,
+        success: !!result
+    };
+    
+    discordConfig.messageLog.unshift(logEntry);
+    
+    // Keep only last 50 messages
+    if (discordConfig.messageLog.length > 50) {
+        discordConfig.messageLog = discordConfig.messageLog.slice(0, 50);
+    }
+    
+    // Broadcast to WebSocket clients
+    broadcastToClients('discord-message-sent', logEntry);
+    
+    return result;
+}
+
+// Test Discord webhook
+async function testDiscordWebhook(webhookUrl) {
+    try {
+        const testResult = await sendDiscordNotification(
+            '🧪 Discord Webhook Test',
+            'This is a test message from Farm Manager. If you can see this, the webhook is working correctly!',
+            0x0099ff,
+            "🧪 Testing",
+            null,
+            null,
+            webhookUrl
+        );
+        
+        return { success: true, message: 'Test message sent successfully!' };
+    } catch (error) {
+        return { success: false, message: error.message };
+    }
+}
+
+// =============================================================================
+// PROXY CHECKER FUNCTIONALITY
+// =============================================================================
+
+// Try to load proxy dependencies, fallback to built-in modules if not available
+let axios, SocksProxyAgent, HttpsProxyAgent, HttpProxyAgent;
+let useAdvancedProxyTesting = true;
+
+try {
+    axios = require('axios');
+    ({ SocksProxyAgent } = require('socks-proxy-agent'));
+    ({ HttpsProxyAgent } = require('https-proxy-agent'));
+    ({ HttpProxyAgent } = require('http-proxy-agent'));
+    console.log('✅ Advanced proxy testing modules loaded');
+} catch (error) {
+    console.log('⚠️ Advanced proxy modules not available, using basic testing');
+    useAdvancedProxyTesting = false;
+}
+
+const net = require('net');
+
+// Basic proxy checker using built-in modules
+async function checkProxyBasic(proxyConfig, testOptions = {}) {
+    const { host, port, type = 'http' } = proxyConfig;
+    const { timeout = 10000 } = testOptions;
+    
+    return new Promise((resolve) => {
+        const startTime = Date.now();
+        
+        const result = {
+            proxy: `${type}://${host}:${port}`,
+            working: false,
+            responseTime: null,
+            ip: null,
+            location: null,
+            error: null,
+            testDetails: {
+                testType: 'basic_tcp',
+                timestamp: new Date().toISOString()
+            }
+        };
+        
+        const socket = new net.Socket();
+        
+        const timer = setTimeout(() => {
+            socket.destroy();
+            result.error = 'Connection timeout';
+            resolve(result);
+        }, timeout);
+        
+        socket.connect(port, host, () => {
+            const endTime = Date.now();
+            result.responseTime = endTime - startTime;
+            result.working = true;
+            clearTimeout(timer);
+            socket.destroy();
+            resolve(result);
+        });
+        
+        socket.on('error', (error) => {
+            clearTimeout(timer);
+            result.error = error.message;
+            if (error.code === 'ECONNREFUSED') {
+                result.error = 'Connection refused - proxy server not responding';
+            } else if (error.code === 'ETIMEDOUT') {
+                result.error = 'Connection timeout - proxy server too slow or unreachable';
+            } else if (error.code === 'ENOTFOUND') {
+                result.error = 'Host not found - check proxy address';
+            }
+            socket.destroy();
+            resolve(result);
+        });
+    });
+}
+
+// Proxy checker with comprehensive testing
+async function checkProxy(proxyConfig, testOptions = {}) {
+    // Use basic testing if advanced modules are not available
+    if (!useAdvancedProxyTesting) {
+        return await checkProxyBasic(proxyConfig, testOptions);
+    }
+    const {
+        host,
+        port,
+        username,
+        password,
+        type = 'http'
+    } = proxyConfig;
+    
+    const {
+        timeout = 10000,
+        testUrl = 'https://httpbin.org/ip',
+        checkLocation = true,
+        checkSpeed = true
+    } = testOptions;
+    
+    const results = {
+        proxy: `${type}://${host}:${port}`,
+        working: false,
+        responseTime: null,
+        ip: null,
+        location: null,
+        error: null,
+        testDetails: {}
+    };
+    
+    try {
+        const startTime = Date.now();
+        
+        // Create proxy agent based on type
+        let agent;
+        const proxyUrl = username && password ? 
+            `${type}://${username}:${password}@${host}:${port}` :
+            `${type}://${host}:${port}`;
+            
+        switch (type.toLowerCase()) {
+            case 'socks4':
+            case 'socks5':
+                agent = new SocksProxyAgent(proxyUrl);
+                break;
+            case 'https':
+                agent = new HttpsProxyAgent(proxyUrl);
+                break;
+            case 'http':
+            default:
+                agent = new HttpProxyAgent(proxyUrl);
+                break;
+        }
+        
+        // Test basic connectivity
+        const response = await axios.get(testUrl, {
+            httpsAgent: agent,
+            httpAgent: agent,
+            timeout: timeout,
+            headers: {
+                'User-Agent': 'Farm-Manager-Proxy-Checker/1.0'
+            }
+        });
+        
+        const endTime = Date.now();
+        results.responseTime = endTime - startTime;
+        results.working = true;
+        
+        // Extract IP from response
+        if (response.data && response.data.origin) {
+            results.ip = response.data.origin.split(',')[0].trim();
+        }
+        
+        // Get location info if requested
+        if (checkLocation && results.ip) {
+            try {
+                const locationResponse = await axios.get(`http://ip-api.com/json/${results.ip}`, {
+                    timeout: 5000
+                });
+                
+                if (locationResponse.data.status === 'success') {
+                    results.location = {
+                        country: locationResponse.data.country,
+                        countryCode: locationResponse.data.countryCode,
+                        region: locationResponse.data.regionName,
+                        city: locationResponse.data.city,
+                        isp: locationResponse.data.isp,
+                        timezone: locationResponse.data.timezone
+                    };
+                }
+            } catch (locationError) {
+                console.log('Location lookup failed:', locationError.message);
+            }
+        }
+        
+        // Additional speed test if requested
+        if (checkSpeed && results.working) {
+            try {
+                const speedTestStart = Date.now();
+                await axios.get('https://httpbin.org/bytes/1024', {
+                    httpsAgent: agent,
+                    httpAgent: agent,
+                    timeout: timeout
+                });
+                const speedTestEnd = Date.now();
+                results.testDetails.downloadSpeed = Math.round(1024 / ((speedTestEnd - speedTestStart) / 1000)); // bytes per second
+            } catch (speedError) {
+                console.log('Speed test failed:', speedError.message);
+            }
+        }
+        
+        results.testDetails = {
+            ...results.testDetails,
+            statusCode: response.status,
+            testUrl: testUrl,
+            timestamp: new Date().toISOString()
+        };
+        
+    } catch (error) {
+        results.working = false;
+        results.error = error.message;
+        
+        // Categorize common errors
+        if (error.code === 'ECONNREFUSED') {
+            results.error = 'Connection refused - proxy server not responding';
+        } else if (error.code === 'ETIMEDOUT') {
+            results.error = 'Connection timeout - proxy server too slow or unreachable';
+        } else if (error.code === 'ENOTFOUND') {
+            results.error = 'Host not found - check proxy address';
+        } else if (error.response && error.response.status === 407) {
+            results.error = 'Proxy authentication required - check username/password';
+        }
+    }
+    
+    return results;
+}
+
+// Batch proxy checker
+async function checkMultipleProxies(proxies, testOptions = {}) {
+    const { concurrent = 5 } = testOptions;
+    const results = [];
+    
+    // Process proxies in batches to avoid overwhelming the system
+    for (let i = 0; i < proxies.length; i += concurrent) {
+        const batch = proxies.slice(i, i + concurrent);
+        const batchPromises = batch.map(proxy => checkProxy(proxy, testOptions));
+        
+        try {
+            const batchResults = await Promise.allSettled(batchPromises);
+            batchResults.forEach((result, index) => {
+                if (result.status === 'fulfilled') {
+                    results.push({
+                        ...result.value,
+                        originalIndex: i + index
+                    });
+                } else {
+                    results.push({
+                        proxy: `${batch[index].type || 'http'}://${batch[index].host}:${batch[index].port}`,
+                        working: false,
+                        error: result.reason.message,
+                        originalIndex: i + index
+                    });
+                }
+            });
+        } catch (error) {
+            console.error('Batch proxy check error:', error);
+        }
+        
+        // Add small delay between batches to be respectful
+        if (i + concurrent < proxies.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+    }
+    
+    return results;
+}
+
+// Get proxy health statistics
+async function getProxyHealthStats() {
+    try {
+        const proxies = await prisma.proxy.findMany();
+        
+        const stats = {
+            total: proxies.length,
+            active: proxies.filter(p => p.is_active).length,
+            inactive: proxies.filter(p => !p.is_active).length,
+            byType: {},
+            byCategory: {},
+            lastChecked: null
+        };
+        
+        // Count by type
+        proxies.forEach(proxy => {
+            const type = proxy.type || 'unknown';
+            stats.byType[type] = (stats.byType[type] || 0) + 1;
+        });
+        
+        // Count by category
+        const categoryCounts = await prisma.proxy.groupBy({
+            by: ['category_id'],
+            _count: { id: true },
+            include: {
+                category: true
+            }
+        });
+        
+        stats.byCategory = categoryCounts.reduce((acc, item) => {
+            const categoryName = item.category?.name || 'Uncategorized';
+            acc[categoryName] = item._count.id;
+            return acc;
+        }, {});
+        
+        return stats;
+    } catch (error) {
+        console.error('Error getting proxy health stats:', error);
+        return {
+            total: 0,
+            active: 0,
+            inactive: 0,
+            byType: {},
+            byCategory: {},
+            error: error.message
+        };
+    }
 }
 
 // =============================================================================
@@ -1643,41 +2137,7 @@ const server = http.createServer(async (req, res) => {
                 const taskId = parseInt(taskStartMatch[1]);
                 let body = '';
                 req.on('data', chunk => body += chunk.toString());
-                req.on('end', async () => {
-                    try {
-                        const { agent_id, account_id } = JSON.parse(body);
-                        const task = await prisma.task.update({
-                            where: { id: taskId },
-                            data: {
-                                status: 'running',
-                                agent_id: agent_id,
-                                account_id: account_id,
-                                started_at: new Date()
-                            },
-                            include: {
-                                account: true,
-                                agent: true,
-                                bot: true
-                            }
-                        });
-
-                        // Broadcast task start to all connected clients
-                        broadcastToClients('task_started', {
-                            task: task,
-                            message: `Task ${task.id} started on agent ${task.agent?.name || agent_id}`
-                        });
-
-                        res.writeHead(200);
-                        res.end(JSON.stringify({ 
-                            message: "Task started successfully",
-                            data: task 
-                        }));
-                    } catch (error) {
-                        console.error('Error starting task:', error);
-                        res.writeHead(400);
-                        res.end(JSON.stringify({ error: error.message }));
-                    }
-                });
+                req.on('end', () => handleTaskStart(taskId, body, res));
                 return;
             }
 
@@ -1686,39 +2146,7 @@ const server = http.createServer(async (req, res) => {
                 const taskId = parseInt(taskStopMatch[1]);
                 let body = '';
                 req.on('data', chunk => body += chunk.toString());
-                req.on('end', async () => {
-                    try {
-                        const { agent_id, account_id } = JSON.parse(body);
-                        const task = await prisma.task.update({
-                            where: { id: taskId },
-                            data: {
-                                status: 'stopped',
-                                completed_at: new Date()
-                            },
-                            include: {
-                                account: true,
-                                agent: true,
-                                bot: true
-                            }
-                        });
-
-                        // Broadcast task stop to all connected clients
-                        broadcastToClients('task_stopped', {
-                            task: task,
-                            message: `Task ${task.id} stopped`
-                        });
-
-                        res.writeHead(200);
-                        res.end(JSON.stringify({ 
-                            message: "Task stopped successfully",
-                            data: task 
-                        }));
-                    } catch (error) {
-                        console.error('Error stopping task:', error);
-                        res.writeHead(400);
-                        res.end(JSON.stringify({ error: error.message }));
-                    }
-                });
+                req.on('end', () => handleTaskStop(taskId, body, res));
                 return;
             }
 
@@ -1998,6 +2426,490 @@ const server = http.createServer(async (req, res) => {
             }
 
             // =============================================================================
+            // DISCORD HOOKS MANAGEMENT ENDPOINTS  
+            // =============================================================================
+
+            // Handle Discord configuration and management
+            if (pathname.startsWith('/api/discord')) {
+                // Get Discord configuration and message log
+                if (pathname === '/api/discord/config' && req.method === 'GET') {
+                    try {
+                        res.writeHead(200);
+                        res.end(JSON.stringify({
+                            success: true,
+                            data: {
+                                webhookUrl: discordConfig.webhookUrl,
+                                channelName: discordConfig.channelName,
+                                botName: discordConfig.botName,
+                                messageLog: discordConfig.messageLog
+                            }
+                        }));
+                    } catch (error) {
+                        console.error('Error getting Discord config:', error);
+                        res.writeHead(500);
+                        res.end(JSON.stringify({ 
+                            success: false, 
+                            error: 'Failed to get Discord configuration' 
+                        }));
+                    }
+                    return;
+                }
+
+                // Update Discord configuration
+                if (pathname === '/api/discord/config' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const configData = JSON.parse(body);
+                            
+                            // Update in-memory configuration
+                            if (configData.webhookUrl !== undefined) {
+                                discordConfig.webhookUrl = configData.webhookUrl;
+                                process.env.DISCORD_WEBHOOK_URL = configData.webhookUrl;
+                            }
+                            if (configData.channelName !== undefined) {
+                                discordConfig.channelName = configData.channelName;
+                            }
+                            if (configData.botName !== undefined) {
+                                discordConfig.botName = configData.botName;
+                            }
+
+                            // Write to config file for persistence
+                            await writeConfigToFile({
+                                discord: {
+                                    webhookUrl: discordConfig.webhookUrl
+                                }
+                            });
+
+                            res.writeHead(200);
+                            res.end(JSON.stringify({
+                                success: true,
+                                message: 'Discord configuration updated successfully',
+                                data: {
+                                    webhookUrl: discordConfig.webhookUrl,
+                                    channelName: discordConfig.channelName,
+                                    botName: discordConfig.botName
+                                }
+                            }));
+                        } catch (error) {
+                            console.error('Error updating Discord config:', error);
+                            res.writeHead(400);
+                            res.end(JSON.stringify({ 
+                                success: false, 
+                                error: 'Failed to update Discord configuration' 
+                            }));
+                        }
+                    });
+                    return;
+                }
+
+                // Test Discord webhook
+                if (pathname === '/api/discord/test' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const { webhookUrl } = JSON.parse(body);
+                            const testResult = await testDiscordWebhook(webhookUrl || discordConfig.webhookUrl);
+                            
+                            res.writeHead(200);
+                            res.end(JSON.stringify({
+                                success: testResult.success,
+                                message: testResult.message
+                            }));
+                        } catch (error) {
+                            console.error('Error testing Discord webhook:', error);
+                            res.writeHead(500);
+                            res.end(JSON.stringify({ 
+                                success: false, 
+                                error: 'Failed to test Discord webhook' 
+                            }));
+                        }
+                    });
+                    return;
+                }
+
+                // Send custom Discord message
+                if (pathname === '/api/discord/send' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const messageData = JSON.parse(body);
+                            
+                            // Parse color from hex to integer
+                            let color = 0x00ff00; // Default green
+                            if (messageData.color) {
+                                if (typeof messageData.color === 'string' && messageData.color.startsWith('#')) {
+                                    color = parseInt(messageData.color.slice(1), 16);
+                                } else if (typeof messageData.color === 'number') {
+                                    color = messageData.color;
+                                }
+                            }
+
+                            const result = await sendDiscordMessage({
+                                title: messageData.title || 'Farm Manager Message',
+                                message: messageData.message || '',
+                                color: color,
+                                includeStats: messageData.includeStats || false,
+                                screenshot: messageData.screenshot || null,
+                                webhookUrl: messageData.webhookUrl || null
+                            });
+
+                            res.writeHead(200);
+                            res.end(JSON.stringify({
+                                success: true,
+                                message: 'Discord message sent successfully'
+                            }));
+                        } catch (error) {
+                            console.error('Error sending Discord message:', error);
+                            res.writeHead(500);
+                            res.end(JSON.stringify({ 
+                                success: false, 
+                                error: 'Failed to send Discord message' 
+                            }));
+                        }
+                    });
+                    return;
+                }
+
+                // Take screenshot
+                if (pathname === '/api/discord/screenshot' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const { type = 'desktop', sendToDiscord = false, title = '', message = '' } = JSON.parse(body);
+                            
+                            console.log(`📸 Taking ${type} screenshot...`);
+                            const screenshotPath = await takeScreenshot(type);
+                            
+                            if (sendToDiscord) {
+                                // Send screenshot to Discord
+                                await sendDiscordMessage({
+                                    title: title || `📸 ${type.charAt(0).toUpperCase() + type.slice(1)} Screenshot`,
+                                    message: message || `Screenshot taken at ${new Date().toLocaleString()}`,
+                                    color: 0x0099ff,
+                                    screenshot: screenshotPath
+                                });
+                                
+                                res.writeHead(200);
+                                res.end(JSON.stringify({
+                                    success: true,
+                                    message: 'Screenshot taken and sent to Discord',
+                                    screenshotPath: screenshotPath
+                                }));
+                            } else {
+                                // Return screenshot as base64
+                                const imageBuffer = fs.readFileSync(screenshotPath);
+                                const base64Image = imageBuffer.toString('base64');
+                                const dataUrl = `data:image/png;base64,${base64Image}`;
+                                
+                                // Clean up file
+                                fs.unlinkSync(screenshotPath);
+                                
+                                res.writeHead(200);
+                                res.end(JSON.stringify({
+                                    success: true,
+                                    message: 'Screenshot taken successfully',
+                                    screenshot: dataUrl
+                                }));
+                            }
+                        } catch (error) {
+                            console.error('Error taking screenshot:', error);
+                            res.writeHead(500);
+                            res.end(JSON.stringify({ 
+                                success: false, 
+                                error: 'Failed to take screenshot' 
+                            }));
+                        }
+                    });
+                    return;
+                }
+
+                // Quick action endpoints
+                if (pathname === '/api/discord/quick-action' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const { action } = JSON.parse(body);
+                            let title, message, color = 0x00ff00;
+                            let includeStats = false;
+
+                            switch (action) {
+                                case 'status':
+                                    title = '📊 Farm Manager Status';
+                                    message = `System is running normally.\nUptime: ${formatUptime(process.uptime())}`;
+                                    includeStats = true;
+                                    color = 0x00ff00;
+                                    break;
+                                case 'stats':
+                                    title = '📈 System Statistics';
+                                    message = 'Current system performance metrics:';
+                                    includeStats = true;
+                                    color = 0x0099ff;
+                                    break;
+                                case 'agents':
+                                    const agents = await prisma.agent.findMany();
+                                    title = '🤖 Agent Summary';
+                                    message = `Total agents: ${agents.length}\nActive: ${agents.filter(a => a.is_active).length}\nInactive: ${agents.filter(a => !a.is_active).length}`;
+                                    color = 0x9c27b0;
+                                    break;
+                                case 'accounts':
+                                    const accounts = await prisma.account.findMany();
+                                    title = '👥 Account Summary';
+                                    message = `Total accounts: ${accounts.length}\nActive: ${accounts.filter(a => a.status !== 'banned').length}`;
+                                    color = 0xff9800;
+                                    break;
+                                default:
+                                    throw new Error('Unknown quick action');
+                            }
+
+                            await sendDiscordMessage({
+                                title,
+                                message,
+                                color,
+                                includeStats
+                            });
+
+                            res.writeHead(200);
+                            res.end(JSON.stringify({
+                                success: true,
+                                message: `${action} message sent to Discord`
+                            }));
+                        } catch (error) {
+                            console.error('Error sending quick action:', error);
+                            res.writeHead(500);
+                            res.end(JSON.stringify({ 
+                                success: false, 
+                                error: 'Failed to send quick action message' 
+                            }));
+                        }
+                    });
+                    return;
+                }
+
+                // Get message log
+                if (pathname === '/api/discord/messages' && req.method === 'GET') {
+                    try {
+                        res.writeHead(200);
+                        res.end(JSON.stringify({
+                            success: true,
+                            data: discordConfig.messageLog
+                        }));
+                    } catch (error) {
+                        console.error('Error getting message log:', error);
+                        res.writeHead(500);
+                        res.end(JSON.stringify({ 
+                            success: false, 
+                            error: 'Failed to get message log' 
+                        }));
+                    }
+                    return;
+                }
+
+                // If no Discord route matches
+                res.writeHead(404);
+                res.end(JSON.stringify({ 
+                    success: false,
+                    error: "Discord endpoint not found" 
+                }));
+                return;
+            }
+
+            // =============================================================================
+            // PROXY CHECKER ENDPOINTS
+            // =============================================================================
+            
+            // Handle proxy checking endpoints
+            if (pathname.startsWith('/api/proxy-checker')) {
+                // Test a single proxy
+                if (pathname === '/api/proxy-checker/test' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const { proxy, options = {} } = JSON.parse(body);
+                            
+                            if (!proxy || !proxy.host || !proxy.port) {
+                                throw new Error('Proxy host and port are required');
+                            }
+                            
+                            const result = await checkProxy(proxy, options);
+                            
+                            res.writeHead(200);
+                            res.end(JSON.stringify({
+                                success: true,
+                                data: result
+                            }));
+                        } catch (error) {
+                            console.error('Proxy test error:', error);
+                            res.writeHead(500);
+                            res.end(JSON.stringify({ 
+                                success: false, 
+                                error: error.message 
+                            }));
+                        }
+                    });
+                    return;
+                }
+                
+                // Test multiple proxies (batch)
+                if (pathname === '/api/proxy-checker/test-batch' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const { proxies, options = {} } = JSON.parse(body);
+                            
+                            if (!Array.isArray(proxies) || proxies.length === 0) {
+                                throw new Error('Proxies array is required');
+                            }
+                            
+                            const results = await checkMultipleProxies(proxies, options);
+                            
+                            res.writeHead(200);
+                            res.end(JSON.stringify({
+                                success: true,
+                                data: results,
+                                summary: {
+                                    total: results.length,
+                                    working: results.filter(r => r.working).length,
+                                    failed: results.filter(r => !r.working).length,
+                                    averageResponseTime: Math.round(
+                                        results.filter(r => r.responseTime)
+                                                .reduce((sum, r) => sum + r.responseTime, 0) / 
+                                        results.filter(r => r.responseTime).length || 0
+                                    )
+                                }
+                            }));
+                        } catch (error) {
+                            console.error('Batch proxy test error:', error);
+                            res.writeHead(500);
+                            res.end(JSON.stringify({ 
+                                success: false, 
+                                error: error.message 
+                            }));
+                        }
+                    });
+                    return;
+                }
+                
+                // Test all proxies from database
+                if (pathname === '/api/proxy-checker/test-all' && req.method === 'POST') {
+                    let body = '';
+                    req.on('data', chunk => body += chunk.toString());
+                    req.on('end', async () => {
+                        try {
+                            const { options = {} } = JSON.parse(body);
+                            
+                            // Get all proxies from database
+                            const dbProxies = await prisma.proxy.findMany({
+                                where: { is_active: true }
+                            });
+                            
+                            if (dbProxies.length === 0) {
+                                res.writeHead(200);
+                                res.end(JSON.stringify({
+                                    success: true,
+                                    data: [],
+                                    message: 'No active proxies found in database'
+                                }));
+                                return;
+                            }
+                            
+                            // Convert database proxies to test format
+                            const proxiesToTest = dbProxies.map(proxy => ({
+                                id: proxy.id,
+                                host: proxy.host,
+                                port: proxy.port,
+                                username: proxy.username,
+                                password: proxy.password,
+                                type: proxy.type || 'http'
+                            }));
+                            
+                            const results = await checkMultipleProxies(proxiesToTest, options);
+                            
+                            // Update database with results
+                            for (const result of results) {
+                                const proxyId = proxiesToTest[result.originalIndex]?.id;
+                                if (proxyId) {
+                                    try {
+                                        await prisma.proxy.update({
+                                            where: { id: proxyId },
+                                            data: {
+                                                last_checked: new Date(),
+                                                is_active: result.working,
+                                                // Store test results in a JSON field if your schema supports it
+                                                // test_results: result
+                                            }
+                                        });
+                                    } catch (updateError) {
+                                        console.error(`Failed to update proxy ${proxyId}:`, updateError);
+                                    }
+                                }
+                            }
+                            
+                            res.writeHead(200);
+                            res.end(JSON.stringify({
+                                success: true,
+                                data: results,
+                                summary: {
+                                    total: results.length,
+                                    working: results.filter(r => r.working).length,
+                                    failed: results.filter(r => !r.working).length,
+                                    averageResponseTime: Math.round(
+                                        results.filter(r => r.responseTime)
+                                                .reduce((sum, r) => sum + r.responseTime, 0) / 
+                                        results.filter(r => r.responseTime).length || 0
+                                    )
+                                }
+                            }));
+                        } catch (error) {
+                            console.error('Test all proxies error:', error);
+                            res.writeHead(500);
+                            res.end(JSON.stringify({ 
+                                success: false, 
+                                error: error.message 
+                            }));
+                        }
+                    });
+                    return;
+                }
+                
+                // Get proxy health statistics
+                if (pathname === '/api/proxy-checker/stats' && req.method === 'GET') {
+                    try {
+                        const stats = await getProxyHealthStats();
+                        
+                        res.writeHead(200);
+                        res.end(JSON.stringify({
+                            success: true,
+                            data: stats
+                        }));
+                    } catch (error) {
+                        console.error('Proxy stats error:', error);
+                        res.writeHead(500);
+                        res.end(JSON.stringify({ 
+                            success: false, 
+                            error: error.message 
+                        }));
+                    }
+                    return;
+                }
+                
+                // If no proxy checker route matches
+                res.writeHead(404);
+                res.end(JSON.stringify({ 
+                    success: false,
+                    error: "Proxy checker endpoint not found" 
+                }));
+                return;
+            }
+
+            // =============================================================================
             // END CONFIGURATION MANAGEMENT ENDPOINTS
             // =============================================================================
 
@@ -2039,7 +2951,7 @@ const server = http.createServer(async (req, res) => {
 
     // Handle static files (for web interface)
     if (pathname === '/' || pathname === '/index.html') {
-        fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
+        fs.readFile(path.join(__dirname, 'dashboard-production.html'), (err, data) => {
             if (err) {
                 res.writeHead(404);
                 res.end('File not found');
@@ -2052,14 +2964,42 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    if (pathname === '/app.js') {
-        fs.readFile(path.join(__dirname, 'app.js'), (err, data) => {
+    if (pathname === '/index-discord.html') {
+        fs.readFile(path.join(__dirname, 'index-discord.html'), (err, data) => {
+            if (err) {
+                res.writeHead(404);
+                res.end('File not found');
+                return;
+            }
+            res.setHeader('Content-Type', 'text/html');
+            res.writeHead(200);
+            res.end(data);
+        });
+        return;
+    }
+
+    if (pathname === '/modern-dashboard.js') {
+        fs.readFile(path.join(__dirname, 'modern-dashboard.js'), (err, data) => {
             if (err) {
                 res.writeHead(404);
                 res.end('File not found');
                 return;
             }
             res.setHeader('Content-Type', 'application/javascript');
+            res.writeHead(200);
+            res.end(data);
+        });
+        return;
+    }
+
+    if (pathname === '/modern-dashboard.css') {
+        fs.readFile(path.join(__dirname, 'modern-dashboard.css'), (err, data) => {
+            if (err) {
+                res.writeHead(404);
+                res.end('File not found');
+                return;
+            }
+            res.setHeader('Content-Type', 'text/css');
             res.writeHead(200);
             res.end(data);
         });
@@ -2084,6 +3024,10 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(404);
     res.end('Page not found');
 });
+
+// Initialize enhanced task handlers
+const handleTaskStart = createTaskStartHandler(prisma, broadcastToClients, sendDiscordNotification, DISCORD_WEBHOOK_URL);
+const handleTaskStop = createTaskStopHandler(prisma, broadcastToClients, sendDiscordNotification, DISCORD_WEBHOOK_URL);
 
 // Start server with database connection test
 async function startServer() {

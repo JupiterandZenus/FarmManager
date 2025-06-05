@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -134,6 +135,7 @@ model Task {
   completed_at  DateTime?
   error_message String?   @db.Text
   result_data   String?   @db.LongText
+  process_id    Int?      // DreamBot process ID
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
   account       Account?  @relation(fields: [account_id], references: [id])

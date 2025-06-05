@@ -3,22 +3,67 @@ version: '3.8'
 services:
   farm-admin-hybrid:
     container_name: farm-admin-hybrid
-    image: supscotty/farmboy:latest
+    image: supscotty/farmboy:production-fixed2
     ports:
       - "5900:5900"   # VNC Server
-      - "8080:8080"   # noVNC Web Client
+      - "8082:8080"   # noVNC Web Client (host port 8082 mapped to container port 8080)
       - "3333:3333"   # Farm Manager Web Interface
       - "2222:22"     # SSH Access
+    labels:
+      # Core Application Labels
+      - "com.farmboy.type=hybrid"
+      - "com.farmboy.version=0.2"
+      - "com.farmboy.environment=production"
+      - "com.farmboy.maintainer=SupScotty"
+      # Service Labels
+      - "com.farmboy.service.vnc=enabled"
+      - "com.farmboy.service.novnc=enabled"
+      - "com.farmboy.service.ssh=enabled"
+      - "com.farmboy.service.web=enabled"
+      # Port Labels
+      - "com.farmboy.ports.vnc=5900"
+      - "com.farmboy.ports.novnc=8082"
+      - "com.farmboy.ports.web=3333"
+      - "com.farmboy.ports.ssh=2222"
+      # Integration Labels
+      - "com.farmboy.integration.dreambot=enabled"
+      - "com.farmboy.integration.eternalfarm=enabled"
+      - "com.farmboy.integration.discord=enabled"
+      # Resource Labels
+      - "com.farmboy.resources.memory=2g"
+      - "com.farmboy.resources.cpus=2"
+      # Database Labels
+      - "com.farmboy.database.type=mariadb"
+      - "com.farmboy.database.user=farmboy"
+      - "com.farmboy.database.host=mariadb"
+      - "com.farmboy.database.port=3306"
+      - "com.farmboy.database.name=farmboy_db"
+      # EternalFarm Service Labels
+      - "com.farmboy.eternalfarm.agent.enabled=true"
+      - "com.farmboy.eternalfarm.checker.enabled=true"
+      - "com.farmboy.eternalfarm.automator.enabled=true"
+      - "com.farmboy.eternalfarm.keys.type=individual"
+      - "com.farmboy.eternalfarm.services=agent,checker,automator"
+      # Auto-login Labels
+      - "com.farmboy.autologin=enabled"
+      - "com.farmboy.autologin.version=1.0"
+      - "com.farmboy.autologin.services=dreambot,agent,checker,automator"
     environment:
       - NODE_ENV=production
       - PORT=3333
-      - DATABASE_URL=mysql://root:Sntioi004!@mariadb:3306/farmboy_db
+      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - MYSQL_HOST=mariadb
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
       - DISPLAY=:1
       - VNC_PORT=5900
       - NOVNC_PORT=8080
       - JAVA_HOME=/usr/lib/jvm/temurin-8-jdk-amd64
       # Discord Integration
-      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1358933950210379816/Pdfyxcilip-xI3-q5ILOl9eRCl0nhEICZHZuvbyQm9aARgzI7GuHQExqBj1NNfkScPvV
       # DreamBot Configuration
       - DREAMBOT_USERNAME=${DREAMBOT_USERNAME:-}
       - DREAMBOT_PASSWORD=${DREAMBOT_PASSWORD:-}
@@ -28,18 +73,31 @@ services:
       - DREAMBOT_DIR=/root/DreamBot/BotData
       - DREAMBOT_CLIENT_URL=https://dreambot.org/DBLauncher.jar
       # EternalFarm Configuration
-      - ETERNALFARM_AGENT_KEY=your_actual_api_key_here
-      - ETERNAL_API_URL=${ETERNAL_API_URL:-https://api.eternalfarm.net}
-      - AUTH_AGENT_KEY=${ETERNALFARM_AGENT_KEY:-YOUR_API_KEY_HERE}
+      - ETERNALFARM_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - ETERNAL_API_URL=https://api.eternalfarm.net     
+      - AUTH_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - API_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      # Individual EternalFarm service keys (explicitly set)
+      - AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5     
+      - CHECKER_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - AUTOMATOR_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
     volumes:
       - farm_data:/app/data
       - dreambot_data:/root/DreamBot
+      # Comment out problematic mounts for now
+      # - ./fix-auto-login.sh:/app/fix-auto-login.sh
+      # Don't mount these directories to allow container to use the built-in files
+      # - ./dashboard-production.html:/app/dashboard-production.html
+      # - ./modern-dashboard.css:/app/modern-dashboard.css
+      # - ./modern-dashboard.js:/app/modern-dashboard.js
+      # - ./style.css:/app/style.css
     restart: unless-stopped
     depends_on:
       mariadb:
         condition: service_healthy
     networks:
       - farm-network
+    entrypoint: ["/bin/bash", "-c", "chmod +x /app/Entry.sh && /app/Entry.sh"]
 
   mariadb:
     container_name: farm-admin-mariadb-fresh
@@ -52,8 +110,12 @@ services:
       - MYSQL_DATABASE=farmboy_db
       - MYSQL_USER=farmboy
       - MYSQL_PASSWORD=Sntioi004!
+      - MYSQL_ROOT_HOST=%
     volumes:
-      - /mnt/user/appdata/mariadb-fresh:/config
+      - mariadb_data:/config
+      # Comment out problematic mounts for now
+      # - ./prisma:/prisma
+      # - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql
     ports:
       - "3308:3306"
     restart: unless-stopped
@@ -65,11 +127,31 @@ services:
       start_period: 60s
     networks:
       - farm-network
+    labels:
+      # Core Database Labels
+      - "com.farmboy.database.service=mariadb"
+      - "com.farmboy.database.type=mariadb" 
+      - "com.farmboy.database.version=latest"
+      - "com.farmboy.database.provider=linuxserver.io"
+      # Configuration Labels
+      - "com.farmboy.database.root_host=%" 
+      - "com.farmboy.database.default_user=farmboy"
+      - "com.farmboy.database.default_db=farmboy_db"
+      - "com.farmboy.database.charset=utf8mb4"
+      - "com.farmboy.database.collation=utf8mb4_unicode_ci"
+      # Security Labels
+      - "com.farmboy.database.auth_method=mysql_native_password"
+      - "com.farmboy.database.secure_user=farmboy"
+      # Health Labels
+      - "com.farmboy.database.healthcheck=enabled"
+      - "com.farmboy.database.healthcheck.interval=30s"
 
 volumes:
   farm_data:
     driver: local
   dreambot_data:
+    driver: local
+  mariadb_data:
     driver: local
 
 networks:

@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  farm-admin:
+    image: supscotty/farmboy:production
+    ports:
+      - "5900:5900"   # VNC Server
+      - "8080:8080"   # noVNC Web Client  
+      - "3333:3333"   # Farm Manager Web Interface
+      - "2222:22"     # SSH Access
+    environment:
+      - NODE_ENV=production
+      - PORT=3333
+      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
+      
+      # EternalFarm Individual Service Keys  
+      - AGENT_KEY=${AGENT_KEY:-RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5}
+      - CHECKER_KEY=${CHECKER_KEY:-RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5}
+      - AUTOMATOR_KEY=${AUTOMATOR_KEY:-RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5}
+      
+      # Database Configuration
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - MYSQL_HOST=mariadb
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
+      - MYSQL_ROOT_HOST=%
+      
+      # DreamBot Configuration
+      - DREAMBOT_USERNAME=${DREAMBOT_USERNAME:-}
+      - DREAMBOT_PASSWORD=${DREAMBOT_PASSWORD:-}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+      
+      # Display Configuration
+      - DISPLAY=:1
+      - DISPLAY_WIDTH=1920
+      - DISPLAY_HEIGHT=1080
+      - VNC_PASSWORD=${VNC_PASSWORD:-farmboy123}
+      
+      # Startup Configuration
+      - SUPERVISORD_CONFIG=/etc/supervisord.conf
+      - STARTUP_DELAY=10
+      - ENABLE_X11_AUTOSTART=true
+      - DATABASE_INIT_PRIORITY=5
+      - SERVICES_INIT_PRIORITY=10
+      
+    volumes:
+      - farm_data:/app/data
+      - dreambot_data:/root/DreamBot
+      - eternalfarm_data:/root/EternalFarm
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - farm-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3333/health || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      # Production Unraid Labels
+      - "com.farmboy.environment=unraid-production"
+      - "com.farmboy.type=hybrid"
+      - "com.farmboy.version=1.0-production"
+      - "com.farmboy.database.ready=true"
+      - "com.farmboy.vnc.enabled=true"
+      - "com.farmboy.novnc.enabled=true"
+      - "com.farmboy.eternalfarm.configured=true"
+      - "com.farmboy.x11.autostart=true"
+      - "com.farmboy.supervisord.configured=true"
+      - "com.farmboy.database.initialization=sequential"
+
+  mariadb:
+    image: lscr.io/linuxserver/mariadb:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=Sntioi004!
+      - TZ=Etc/UTC
+      - MYSQL_DATABASE=farmboy_db
+      - MYSQL_USER=farmboy
+      - MYSQL_PASSWORD=Sntioi004!
+      - MYSQL_ROOT_HOST=%
+    volumes:
+      - mariadb_data:/config
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "farmboy", "-pSntioi004!"]
+      timeout: 10s
+      retries: 10
+      interval: 15s
+      start_period: 30s
+    networks:
+      - farm-network
+    labels:
+      - "com.farmboy.database.service=mariadb"
+      - "com.farmboy.database.production=true"
+      - "com.farmboy.database.initialized=true"
+
+volumes:
+  farm_data:
+  dreambot_data:
+  eternalfarm_data:
+  mariadb_data:
+
+networks:
+  farm-network:
+    driver: bridge 

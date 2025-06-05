@@ -3,17 +3,25 @@ version: '3.8'
 services:
   farm-admin:
     build:
-      context: https://github.com/swarnes1/farm-admin.git
+      context: .
       dockerfile: Dockerfile
     ports:
-      - "3333:3000"
+      - "3000:3000"
+      - "5900:5900"  # VNC
+      - "8080:8080"  # noVNC
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
-      - API_KEY=rBoolrmakSG77Ol5CidsnWvmdyvjpzXfppuR0J4e-LYtn2zZLABzIyJVn5TeHpuv
-      - ETERNALFARM_AGENT_KEY=RZbfSKKe3qCtHVk0ty3H41yJc403rMNzdj73v7ar6Owp5kfQjuLiyaRrOsoe81N5
+      - PORT=3000
+      - DATABASE_URL=mysql://root:qQgc^pS0yqZ6SrJm$fKU@mariadb:3306/farmmanager
+      - ETERNALFARM_AGENT_KEY=P52FE7-I2G19W-C2S4R8-BQZZFP-1FADWV-V3
       - ETERNAL_API_URL=https://api.eternalfarm.net
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - TZ=UTC
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - farm_data:/app/data
+      - dreambot_data:/root/DreamBot
     depends_on:
       mariadb:
         condition: service_healthy
@@ -30,17 +38,16 @@ services:
   mariadb:
     image: mariadb:10.6
     environment:
-      - MYSQL_ROOT_PASSWORD=Sntioi004!
-      - MYSQL_DATABASE=farmboy_db
-      - MYSQL_USER=farmboy
-      - MYSQL_PASSWORD=Sntioi004!
+      - MYSQL_ROOT_PASSWORD=qQgc^pS0yqZ6SrJm$fKU
+      - MYSQL_DATABASE=farmmanager
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./setup_database.sql:/docker-entrypoint-initdb.d/setup_database.sql:ro
     networks:
       - farm-admin-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pSntioi004!"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pqQgc^pS0yqZ6SrJm$fKU"]
       interval: 30s
       timeout: 15s
       retries: 15
@@ -48,6 +55,10 @@ services:
 
 volumes:
   mariadb_data:
+    driver: local
+  farm_data:
+    driver: local
+  dreambot_data:
     driver: local
 
 networks:

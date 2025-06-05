@@ -7,7 +7,7 @@ services:
       context: https://github.com/swarnes1/farm-admin.git
       dockerfile: Dockerfile
     ports:
-      - "3333:3000"
+      - "3333:3333"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=mysql://farmboy:Sntioi004!@mariadb:3306/farmboy_db
@@ -16,7 +16,7 @@ services:
       - ETERNAL_API_URL=https://api.eternalfarm.net
       - ETERNAL_FARM_KEY=${ETERNAL_FARM_KEY:-}
       - ETERNAL_AUTH_KEY=${ETERNAL_AUTH_KEY:-}
-      - PORT=3000
+      - PORT=3333
       - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1358933950210379816/Pdfyxcilip-xI3-q5ILOl9eRCl0nhEICZHZuvbyQm9aARgzI7GuHQExqBj1NNfkScPvV
     depends_on:
       mariadb:
@@ -25,7 +25,7 @@ services:
       - farm-admin-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
       interval: 30s
       timeout: 10s
       retries: 5
