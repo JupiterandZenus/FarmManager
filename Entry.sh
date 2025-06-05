@@ -10,11 +10,11 @@ fi
 
 # Fix supervisord configuration to remove missing environment variables
 # Note: fix-supervisord-config.sh is designed for host execution, not container
-echo "🔧 Applying inline supervisord configuration fix..."
-sed -i 's/DREAMBOT_SCRIPT="%(ENV_DREAMBOT_SCRIPT)s",//g' /etc/supervisord.conf
-sed -i 's/DREAMBOT_WORLD="%(ENV_DREAMBOT_WORLD)s",//g' /etc/supervisord.conf
-sed -i 's/DREAMBOT_ARGS="%(ENV_DREAMBOT_ARGS)s"//g' /etc/supervisord.conf
-sed -i 's/,\s*$//' /etc/supervisord.conf
+    echo "🔧 Applying inline supervisord configuration fix..."
+    sed -i 's/DREAMBOT_SCRIPT="%(ENV_DREAMBOT_SCRIPT)s",//g' /etc/supervisord.conf
+    sed -i 's/DREAMBOT_WORLD="%(ENV_DREAMBOT_WORLD)s",//g' /etc/supervisord.conf
+    sed -i 's/DREAMBOT_ARGS="%(ENV_DREAMBOT_ARGS)s"//g' /etc/supervisord.conf
+    sed -i 's/,\s*$//' /etc/supervisord.conf
 
 # Start supervisord if not running
 if ! pgrep supervisord > /dev/null; then
