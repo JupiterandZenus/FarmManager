@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   farm-admin:
-    image: supscotty/farmboy:latest
+    image: supscotty/farmboy:production
     ports:
       - "5900:5900"   # VNC Server
       - "8080:8080"   # noVNC Web Client  

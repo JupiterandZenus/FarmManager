@@ -3,7 +3,7 @@ version: '3.8'
 services:
   farm-admin-hybrid:
     container_name: farm-admin-hybrid
-    image: supscotty/farmboy:latest
+    image: supscotty/farmboy:production
     ports:
       - "5900:5900"   # VNC Server
       - "8082:8080"   # noVNC Web Client (host port 8082 mapped to container port 8080)

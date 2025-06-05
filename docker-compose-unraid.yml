@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   farm-admin:
-    image: supscotty/farmboy:latest
+    image: supscotty/farmboy:production
     container_name: farm-admin-hybrid
     ports:
       - "5900:5900"   # VNC Server
